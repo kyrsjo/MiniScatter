@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------
 # Setup the project
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
-project(AntiPcells)
+project(MiniScatter)
 
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
@@ -29,15 +29,15 @@ find_package(ROOT)
 # Setup Geant4 include directories and compile definitions
 # Setup include directory for this project
 #
-message("skal være her ")
 if(ROOT_FOUND)
-message("er vi her ")
-add_definitions(-DG4ANALYSIS_USE_ROOT)
-include(${Geant4_USE_FILE})
-include_directories(${ROOT_INCLUDE_DIR} ${Geant4_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/include)
+  message( STATUS "ROOT was found, all is well." )
+  add_definitions(-DG4ANALYSIS_USE_ROOT)
+  include(${Geant4_USE_FILE})
+  include_directories(${ROOT_INCLUDE_DIR} ${Geant4_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/include)
 else()
-include(${Geant4_USE_FILE})
-include_directories(${PROJECT_SOURCE_DIR}/include)
+  message( FATAL_ERROR "Root was not found, aborting!" )
+  include(${Geant4_USE_FILE})
+  include_directories(${PROJECT_SOURCE_DIR}/include)
 endif()
 
 
@@ -51,25 +51,25 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(AntiPcells AntiPcells.cc ${sources} ${headers})
+add_executable(MiniScatter MiniScatter.cc ${sources} ${headers})
 
-message(${ROOT_FOUND})
+#message(${ROOT_FOUND})
 if(ROOT_FOUND)
-target_link_libraries(AntiPcells ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
+  target_link_libraries(MiniScatter ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
 else()
-target_link_libraries(AntiPcells ${Geant4_LIBRARIES})
+  target_link_libraries(MiniScatter ${Geant4_LIBRARIES})
 endif()
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
-# build AntiPcells. This is so that we can run the executable directly because it
+# build MiniScatter. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
-set(EXAMPLEAntiPcells_SCRIPTS
- vis.mac
+set(MiniScatter_SCRIPTS
+  vis.mac
 )
 
-foreach(_script ${EXAMPLEAntiPcells_SCRIPTS})
+foreach(_script ${MiniScatter_SCRIPTS})
   configure_file(
     ${PROJECT_SOURCE_DIR}/${_script}
     ${PROJECT_BINARY_DIR}/${_script}
@@ -81,9 +81,9 @@ endforeach()
 # For internal Geant4 use - but has no effect if you build this
 # example standalone
 #
-#add_custom_target(AntiPcells DEPENDS AntiPcells)
+#add_custom_target(MiniScatter DEPENDS MiniScatter)
 
 #----------------------------------------------------------------------------
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
-install(TARGETS AntiPcells DESTINATION bin)
+install(TARGETS MiniScatter DESTINATION bin)
