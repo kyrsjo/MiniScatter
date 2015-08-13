@@ -54,8 +54,6 @@
 #include "G4UIExecutive.hh"
 #endif
 
-//#include "TH1.h"
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv)
@@ -72,7 +70,7 @@ int main(int argc,char** argv)
   QGSP_FTFP_BERT* physlist = new QGSP_FTFP_BERT(verbose);
   runManager->SetUserInitialization(physlist);
   physlist->RegisterPhysics(new G4EmUserPhysics());
-  physlist->SetDefaultCutValue( 0.00001*mm) ;
+  //physlist->SetDefaultCutValue( 0.00001*mm) ;
   
   // Set user action classes
   PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector);

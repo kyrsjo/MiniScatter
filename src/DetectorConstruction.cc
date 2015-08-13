@@ -62,21 +62,11 @@ DetectorConstruction::DetectorConstruction()
   :SiliconMaterial(0),ThermalOMaterial(0),AlMaterial(0),
    solidWorld(0),logicWorld(0),physiWorld(0),
    solidSilicon(0),logicSilicon(0),physiSilicon(0),
-   solidThermalO(0),logicThermalO(0),physiThermalO(0),
-  solidDopSi(0),logicDopSi(0),physiDopSi(0),
-  solidAl(0),logicAl(0),physiAl(0),
-  magField(0)
+   magField(0)
 {
   // default parameter values of the Silicon
   SiliconThickness = 0.023*cm;
-  //  SiliconThickness = 2.0*cm;
 
-  ThermalOThickness = 0.0*mm;
-  DopSiThickness = 0.0*mm;
-  AlThickness = 0.0*mm;
-  ThermalOThickness = 0.0;
-  DopSiThickness = 0.0;
-  AlThickness = 0.0;
   SiliconSizeX       = 1.408*cm;
   SiliconSizeY	= 1.408*cm;
   xpixels = 256;
@@ -140,11 +130,12 @@ G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
   G4LogicalVolumeStore::GetInstance()->Clean();
   G4SolidStore::GetInstance()->Clean();
   
-  // complete the World parameters definition
-  ComputeWorldParameters();  
   //     
   // World
   //
+
+  WorldSizeX  = 200*cm;
+  WorldSizeYZ = 200*cm;
   solidWorld = new G4Box("World",				//its name
 			 (WorldSizeX/2)*mm,(WorldSizeYZ/2)*mm,(WorldSizeYZ/2)*mm);	//its size, divide by two to get the right size
   
@@ -179,105 +170,8 @@ G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
 				       0);                //copy number
     }
   
-  if (ThermalOThickness > 0.) 
-    {
-      solidThermalO = new G4Box("ThermalOLayer",		//its name
-				ThermalOThickness/2, SiliconSizeY/2,SiliconSizeX/2); 
-      
-      logicThermalO = new G4LogicalVolume(solidThermalO,    //its solid
-					  ThermalOMaterial, //its material
-					  "ThermalOLayer"); //name
-      
-      //tenker oss forand som negavie x retning. Da legger vi oksidasjonslaget forand silicon laget
-      physiThermalO = new G4PVPlacement(0,		   //no rotation
-					G4ThreeVector(-((SiliconThickness/2)+(ThermalOThickness/2)),0.,0.0*cm),  //its position
-					logicThermalO,     //its logical volume		    
-					"ThermalOLayer", //its name
-					logicWorld,        //its mother
-					false,             //no boulean operat
-					0);                //copy number  
-    }
-  
-  if (DopSiThickness > 0.) 
-    {
-      solidDopSi = new G4Box("DopedSiliconLayer",		//its name
-			     DopSiThickness/2, SiliconSizeY/2,SiliconSizeX/2); 
-      
-      logicDopSi = new G4LogicalVolume(solidDopSi,    //its solid
-				       SiliconMaterial, //its material
-				       "DopedSilicon"); //name
-      
-      physiDopSi = new G4PVPlacement(0,		   //no rotation
-				     G4ThreeVector(-((SiliconThickness/2)+(ThermalOThickness)+(DopSiThickness/2))  ,0.,0.0*cm),  //its position
-				     logicDopSi,     //its logical volume		    
-				     "DopedSilicon", //its name
-				     logicWorld,        //its mother
-				     false,             //no boulean operat
-				     0);                //copy number
-    }
-  
-  if (AlThickness > 0.) 
-    {
-      solidAl = new G4Box("AlLayer",		//its name
-			  AlThickness/2, SiliconSizeY/2,SiliconSizeX/2); 
-      
-      logicAl = new G4LogicalVolume(solidAl,    //its solid
-				    AlMaterial, //its material
-				    "Al"); //name
-      
-      physiAl = new G4PVPlacement(0,		   //no rotation
-				  G4ThreeVector(-((SiliconThickness/2)+(ThermalOThickness)+(DopSiThickness)+(AlThickness/2))  ,0.,0.0*cm),  //its position
-				  logicAl,     //its logical volume		    
-				  "Al", //its name
-				  logicWorld,        //its mother
-				  false,             //no boulean operat
-				  0);                //copy number      
-    }
-
-  
-   
-   G4VSolid* cellSolid = new G4Box("Cell_Solid", // Name                                                             
-  				  (SiliconThickness/2),         // x half length                                                    
-  				  (ypixel_pitch/2.0),         // y half length                                                    
-  				  (xpixel_pitch/2.00));      // z half length                                                    
- 
-
-  G4LogicalVolume* cellLogical   
-    = new G4LogicalVolume(cellSolid,       // Solid                                                                 
-  			  SiliconMaterial,             // Material                                                              
-                          "Cell_Logical"); // Name                                                                  
-
-
-  
-   G4VSolid* stripSolid = new G4Box("strip_Solid", // Name                                                             
-  				  (SiliconThickness/2),         // x half length                                                    
-  				  (SiliconSizeX/2.0),         // y half length                                                    
-  				  (xpixel_pitch/2.00));      // z half length                                                    
- 
-
-  G4LogicalVolume* stripLogi
-    = new G4LogicalVolume(stripSolid,       // Solid                                                                 
-  			  SiliconMaterial,             // Material                                                              
-                          "Strip_Logical"); // Name                                                                  
  
   // //G4VPVParameterisation* cellParam = new AntiPTestCellParameterisation();
-
-  G4VPhysicalVolume* stripPhysi=new G4PVReplica("Cell_Physical",    // Name                                                                 
-  			stripLogi,                                                          
-  			physiSilicon,                                                        
-  			kZAxis,                                                               
-  			xpixels,                                                                    
-  			1.408*cm/xpixels);         
-  
-  // //her legges alle cellene inn i silicon volumet
-  G4VPhysicalVolume* physiStrip=new G4PVReplica("Strip_Physical",    // Name                                                                 
-  			cellLogical,                                                          
-  			stripPhysi,                                                        
-  			kYAxis,                                                               
-  			xpixels,                                                                    
-  			1.408*cm/xpixels);         
-  
-
   
   G4VSensitiveDetector* detector = new AntiPSD("/mydet/Silicon");
   // Get pointer to detector manager                                                     
@@ -285,7 +179,7 @@ G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
   // Register detector with manager                                                      
   SDman->AddNewDetector(detector);
   // Attach detector to volume defining calorimeter cells                                
-  cellLogical->SetSensitiveDetector(detector);
+  logicSilicon->SetSensitiveDetector(detector);
                                          
   //Visualization attributes
   
@@ -307,20 +201,5 @@ void DetectorConstruction::SetSiliconMaterial(G4String materialChoice)
 	G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
 	if (pttoMaterial) SiliconMaterial = pttoMaterial;
 }
-
-//------------------------------------------------------------------------------
-
-void DetectorConstruction::SetSiliconThickness(G4double val)
-{
-	// change Silicon thickness and recompute the calorimeter parameters
-	SiliconThickness = val;
-}
-
-//------------------------------------------------------------------------------
-void DetectorConstruction::ComputeWorldParameters()
-{
-  WorldSizeX = 200*cm; WorldSizeYZ = 200*cm;
-}
-
 
 //------------------------------------------------------------------------------

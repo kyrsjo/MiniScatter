@@ -61,8 +61,10 @@ void AntiPSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent)
   hitsCollectionOfThisEvent->AddHitsCollection(fHitsCollectionID, fHitsCollection);
 }
 
-G4bool AntiPSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
-{
+G4bool AntiPSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
+  
+  //cout<< "HIT!" << aStep << endl;
+
   G4Track* theTrack = aStep->GetTrack();
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   G4int particleID = particleType->GetPDGEncoding();
@@ -77,8 +79,8 @@ G4bool AntiPSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
   const G4ThreeVector& hitPos = preStepPoint->GetPosition();  
   G4TouchableHistory* theTouchable = (G4TouchableHistory*)(preStepPoint->GetTouchable());
-  AntiPHit* aHit = 0;  
-  G4int copyNo = theTouchable->GetReplicaNumber(0);           // Copy number of volume.  
+  AntiPHit* aHit = 0;
+  G4int copyNo = theTouchable->GetReplicaNumber(0);           // Copy number of volume.
   //Copy number is the number for the pixel  
   aHit = new AntiPHit(copyNo);  // Create a Hit object.
   //add different varibles to the hit objekt

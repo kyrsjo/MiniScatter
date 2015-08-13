@@ -1,4 +1,3 @@
-//
 // ********************************************************************
 // * License and Disclaimer                                           *
 // *                                                                  *
@@ -61,14 +60,12 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
   public:
   void SetSiliconMaterial (G4String); 
-  void SetSiliconThickness(G4double);     
   void SetMagField(G4double);
   G4VPhysicalVolume* Construct();
 public:
   G4double GetWorldSizeX()           {G4cout<<"returning "<<WorldSizeX<<G4endl; return WorldSizeX;}; 
   G4double GetWorldSizeYZ()          {return WorldSizeYZ;};
   
-  G4double GetSiliconThickness()       {return SiliconThickness;}; 
   G4double GetSiliconSizeX()          {return SiliconSizeX;};
   G4double GetSiliconSizeY()          {return SiliconSizeY;};
   G4int GetNXpixels(){return xpixels;};
@@ -104,14 +101,6 @@ private:
   G4double ypixel_pitch;
 
   G4double           SiliconThickness;
-  G4double           ThermalOThickness;
-  G4double           DopSiThickness;
-  G4double           AlThickness;
-  G4double           innerRChamber;
-  G4double           outerRChamber;
-  G4double           lengthChamber;
-  
-
 
   G4Material*        defaultMaterial;
   G4double           WorldSizeYZ;
@@ -125,68 +114,13 @@ private:
   G4LogicalVolume*   logicSilicon; //pointer to the logical Silicon
   G4VPhysicalVolume* physiSilicon; //pointer to the physical Silicon
   
-  G4Box*             solidThermalO; //pointer to the solid ThermalO 
-  G4LogicalVolume*   logicThermalO; //pointer to the logical ThermalO
-  G4VPhysicalVolume* physiThermalO; //pointer to the physical ThermalO	
   
-  G4Box*             solidDopSi; //pointer to the solid DopSi 
-  G4LogicalVolume*   logicDopSi; //pointer to the logical DopSi
-  G4VPhysicalVolume* physiDopSi; //pointer to the physical DopSi
-  
-  G4Box*             solidAl; //pointer to the solid Al 
-  G4LogicalVolume*   logicAl; //pointer to the logical Al
-  G4VPhysicalVolume* physiAl; //pointer to the physical Al
-  
-  G4Tubs* solidChamber;
-  G4LogicalVolume* logicChamber;
-  G4VPhysicalVolume* physiChamber;
-
-  G4Box*solidB1;
-  G4LogicalVolume* logicB1;
-  G4VPhysicalVolume* physiB1up;
-  G4VPhysicalVolume* physiB1down;
-
-  G4Box*solidB2;
-  G4LogicalVolume* logicB2;
-  G4VPhysicalVolume* physiB2up;
-  G4VPhysicalVolume* physiB2down;
-
-
-  G4Box*solidB3;
-  G4LogicalVolume* logicB3;
-  G4VPhysicalVolume* physiB3;
-
-
-  G4Box*solidB4;
-  G4LogicalVolume* logicB4;
-  G4VPhysicalVolume* physiB4;
-
-  G4Box*solidB1extra;
-  G4LogicalVolume* logicB1extra;
-  G4VPhysicalVolume* physiB1side1;
-  G4VPhysicalVolume* physiB1side2;
-
-
-  
-  G4Box*solidBoard;
-  G4LogicalVolume* logicBoard;
-  G4VPhysicalVolume* physiBoard;
-
-
-
-
-  G4Tubs*solidMagnet;
-  G4LogicalVolume* logicMagnet;
-  G4VPhysicalVolume* physiMagnet;
-
-
-
   G4UniformMagField* magField;      //pointer to the magnetic field
   
    
 private:
   void DefineMaterials();
-  void ComputeWorldParameters();
+  //  void ComputeWorldParameters();
   G4VPhysicalVolume* ConstructSilicon();     
 };
 
