@@ -59,71 +59,25 @@
 //------------------------------------------------------------------------------
 
 DetectorConstruction::DetectorConstruction()
-  :SiliconMaterial(0),ThermalOMaterial(0),AlMaterial(0),
+  :TargetMaterial(0),AlMaterial(0),
    solidWorld(0),logicWorld(0),physiWorld(0),
-   solidSilicon(0),logicSilicon(0),physiSilicon(0),
+   solidTarget(0),logicTarget(0),physiTarget(0),
    magField(0)
 {
-  // default parameter values of the Silicon
-  SiliconThickness = 0.023*cm;
 
-  SiliconSizeX       = 1.408*cm;
-  SiliconSizeY	= 1.408*cm;
-  xpixels = 256;
-  ypixels=256;
-  xpixel_pitch=SiliconSizeX/(xpixels*1.0);
-  ypixel_pitch=SiliconSizeY/(ypixels*1.0);
+  TargetSizeX     = 1.408*cm;
+  TargetSizeY	  = 1.408*cm;
+  TargetThickness = 0.023*cm;
+
   // materials
   DefineMaterials();
-  SetSiliconMaterial("Silicon");
+  SetTargetMaterial("G4_Cu");
 }
-
-//------------------------------------------------------------------------------
-
-DetectorConstruction::~DetectorConstruction()
-{}
 
 //------------------------------------------------------------------------------
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
-  return ConstructSilicon();
-}
-
-//------------------------------------------------------------------------------
-
-void DetectorConstruction::DefineMaterials()
-{ 
-  
-  G4NistManager* man = G4NistManager::Instance();
-  man->SetVerbose(1);
-  G4String symbol;             //a=mass of a mole;
-  G4double a, z, density;      //z=mean number of protons;   
-  // define Elements  
-  new G4Material("Silicon", z=14., a= 28.09*g/mole, density=2.3290*g/cm3);
-  G4Material* Al = man->FindOrBuildMaterial("G4_Al");
-  G4Material* C = man->FindOrBuildMaterial("G4_C");
-  G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
-  G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
-  G4Material* Ti =man->FindOrBuildMaterial("G4_Ti");  
-  G4Material* SiO2 = man->FindOrBuildMaterial("G4_SILICON_DIOXIDE");
-  G4Material* Vacuum = new G4Material("Galactic", z=1., a=1.01*g/mole,density= universe_mean_density,
-				      kStateGas, 2.73*kelvin, 3.e-18*pascal);  
-  //default materials 
-  defaultMaterial  = Vacuum;
-  ThermalOMaterial = SiO2;
-  AlMaterial = Al;
-  CMaterial = C;
-  CuMaterial = Cu;
-  PbMaterial = Pb;
-  TiMaterial =Ti;
-}
-
-//------------------------------------------------------------------------------
-
-G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
-{
-  
   // Clean old geometry, if any
   G4GeometryManager::GetInstance()->OpenGeometry();
   G4PhysicalVolumeStore::GetInstance()->Clean();
@@ -151,41 +105,35 @@ G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
 				 false,			//no boolean operation
 				 0);			//copy number
   
-  //constructing the detector itself
-  solidSilicon=0; logicSilicon=0; physiSilicon=0;  
-  if (SiliconThickness > 0.) 
-    { 
-      solidSilicon = new G4Box("Silicon",		//its name
-			       SiliconThickness/2, SiliconSizeY/2,SiliconSizeX/2); 
-      logicSilicon = new G4LogicalVolume(solidSilicon,    //its solid
-					 SiliconMaterial, //its material
-					 SiliconMaterial->GetName()); //name
-      
-      physiSilicon = new G4PVPlacement(0,		   //no rotation
-				       G4ThreeVector(0.0,0.0,0.0*cm),  //its position
-				       logicSilicon,     //its logical volume		    
-				       SiliconMaterial->GetName(), //its name
-				       logicWorld,        //its mother
-				       false,             //no boulean operat
-				       0);                //copy number
-    }
+  //constructing the target
   
- 
-  // //G4VPVParameterisation* cellParam = new AntiPTestCellParameterisation();
+  solidTarget = new G4Box("Target",
+			  TargetThickness/2, TargetSizeY/2,TargetSizeX/2);
+  logicTarget = new G4LogicalVolume(solidTarget,    //its solid
+				    TargetMaterial, //its material
+				    TargetMaterial->GetName()); //name
   
-  G4VSensitiveDetector* detector = new AntiPSD("/mydet/Silicon");
+  physiTarget = new G4PVPlacement(0,		   //no rotation
+				  G4ThreeVector(0.0,0.0,0.0*cm),  //its position
+				  logicTarget,     //its logical volume		    
+				  TargetMaterial->GetName(), //its name
+				  logicWorld,        //its mother
+				  false,             //no boulean operat
+				  0);                //copy number
+  
+  G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
   // Get pointer to detector manager                                                     
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   // Register detector with manager                                                      
   SDman->AddNewDetector(detector);
   // Attach detector to volume defining calorimeter cells                                
-  logicSilicon->SetSensitiveDetector(detector);
+  logicTarget->SetSensitiveDetector(detector);
                                          
   //Visualization attributes
   
-  logicWorld->SetVisAttributes (G4VisAttributes::Invisible);
+  //logicWorld->SetVisAttributes (G4VisAttributes::Invisible);
   //cellLogical->SetVisAttributes (G4VisAttributes::Invisible);
-  // logicSilicon->SetVisAttributes(G4VisAttributes::Invisible);
+  // logicTarget->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicThermalO->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicDopSi->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicAl->SetVisAttributes(G4VisAttributes::Invisible);
@@ -195,11 +143,34 @@ G4VPhysicalVolume* DetectorConstruction::ConstructSilicon()
 
 //------------------------------------------------------------------------------
 
-void DetectorConstruction::SetSiliconMaterial(G4String materialChoice)
+void DetectorConstruction::DefineMaterials() {
+  G4NistManager* man = G4NistManager::Instance();
+  man->SetVerbose(1);
+
+  G4Material* Al = man->FindOrBuildMaterial("G4_Al");
+  G4Material* C = man->FindOrBuildMaterial("G4_C");
+  G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
+  G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
+  G4Material* Ti =man->FindOrBuildMaterial("G4_Ti");  
+  
+  G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
+  
+  //default materials 
+  defaultMaterial  = Vacuum;
+  AlMaterial       = Al;
+  CMaterial        = C;
+  CuMaterial       = Cu;
+  PbMaterial       = Pb;
+  TiMaterial       = Ti;
+}
+
+//------------------------------------------------------------------------------
+
+void DetectorConstruction::SetTargetMaterial(G4String materialChoice)
 {
-	// search the material by its name   
-	G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
-	if (pttoMaterial) SiliconMaterial = pttoMaterial;
+  // search the material by its name   
+  G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
+  if (pttoMaterial) TargetMaterial = pttoMaterial;
 }
 
 //------------------------------------------------------------------------------

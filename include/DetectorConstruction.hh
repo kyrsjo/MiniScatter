@@ -51,56 +51,35 @@
 // class DetectorMessenger;
 //--------------------------------------------------------------------------------
 
-class DetectorConstruction : public G4VUserDetectorConstruction
-{
-  public:
+class DetectorConstruction : public G4VUserDetectorConstruction {
+public:
   
-    DetectorConstruction();
-   ~DetectorConstruction();
-
-  public:
-  void SetSiliconMaterial (G4String); 
+  DetectorConstruction();
+  ~DetectorConstruction(){};
+  
+public:
+  void SetTargetMaterial (G4String); 
   void SetMagField(G4double);
   G4VPhysicalVolume* Construct();
 public:
-  G4double GetWorldSizeX()           {G4cout<<"returning "<<WorldSizeX<<G4endl; return WorldSizeX;}; 
-  G4double GetWorldSizeYZ()          {return WorldSizeYZ;};
   
-  G4double GetSiliconSizeX()          {return SiliconSizeX;};
-  G4double GetSiliconSizeY()          {return SiliconSizeY;};
-  G4int GetNXpixels(){return xpixels;};
-  G4int GetNYpixels(){return ypixels;};
-
-  G4int GetNbOfLayers()              {return NbOfLayers;}; 
-  
-  G4Material* GetSiliconMaterial()  {return SiliconMaterial;};  
+  G4Material* GetTargetMaterial()  {return TargetMaterial;};  
   const G4VPhysicalVolume* GetphysiWorld() {return physiWorld;};           
-  const G4VPhysicalVolume* GetSilicon()   {return physiSilicon;};
+  const G4VPhysicalVolume* GetTargetPV()   {return physiTarget;};
   
 private:
   bool               background;
-  G4Material*        SiliconMaterial;
-  G4Material*        ThermalOMaterial;
+  G4Material*        TargetMaterial;
   G4Material*        AlMaterial;
   G4Material*        CMaterial;
   G4Material*        CuMaterial;
   G4Material*        PbMaterial;
   G4Material*        TiMaterial;
   G4Material*        StainlessSteel; 
-  G4Material*        ceramic;
-
-
-  G4int              NbOfLayers;
-  G4double           LayerThickness;
   
-  G4double           SiliconSizeX;
-  G4double           SiliconSizeY;
-  G4int xpixels;
-  G4int ypixels;
-  G4double xpixel_pitch;
-  G4double ypixel_pitch;
-
-  G4double           SiliconThickness;
+  G4double           TargetSizeX;
+  G4double           TargetSizeY;
+  G4double           TargetThickness;
 
   G4Material*        defaultMaterial;
   G4double           WorldSizeYZ;
@@ -110,21 +89,17 @@ private:
   G4LogicalVolume*   logicWorld;    //pointer to the logical World
   G4VPhysicalVolume* physiWorld;    //pointer to the physical World
   
-  G4Box*             solidSilicon; //pointer to the solid Silicon
-  G4LogicalVolume*   logicSilicon; //pointer to the logical Silicon
-  G4VPhysicalVolume* physiSilicon; //pointer to the physical Silicon
-  
+  G4Box*             solidTarget; //pointer to the solid target
+  G4LogicalVolume*   logicTarget; //pointer to the logical target
+  G4VPhysicalVolume* physiTarget; //pointer to the physical target
   
   G4UniformMagField* magField;      //pointer to the magnetic field
   
-   
+  
 private:
   void DefineMaterials();
-  //  void ComputeWorldParameters();
-  G4VPhysicalVolume* ConstructSilicon();     
+  
 };
-
-//--------------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------------
 
