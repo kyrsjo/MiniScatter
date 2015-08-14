@@ -75,7 +75,7 @@ private:
   G4Material*        CuMaterial;
   G4Material*        PbMaterial;
   G4Material*        TiMaterial;
-  G4Material*        StainlessSteel; 
+  G4Material*        StainlessSteel;
 
   G4double           WorldSizeXY;
   G4double           WorldSizeZ;

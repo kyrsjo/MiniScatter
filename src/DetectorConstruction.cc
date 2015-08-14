@@ -32,6 +32,7 @@
 
 #include "DetectorConstruction.hh"
 #include "AntiPSD.hh"
+#include "MyEdepSD.hh"
 #include "G4Material.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
