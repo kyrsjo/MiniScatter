@@ -45,10 +45,10 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent){
   //set energy and stuff
-  particleGun->SetParticlePosition(G4ThreeVector(-10*cm,0,0));	
+  particleGun->SetParticlePosition(G4ThreeVector(0,0,-30*cm));
   //particleGun->SetParticleEnergy(0.5*MeV);
   particleGun->SetParticleEnergy(7.0*TeV);
-  particleGun->SetParticleMomentumDirection(G4ThreeVector(1,0,0));
+  particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
   particleGun->GeneratePrimaryVertex(anEvent);
 }
 

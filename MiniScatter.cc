@@ -71,7 +71,8 @@ int main(int argc,char** argv)
   physlist->RegisterPhysics(new G4EmUserPhysics());
   //physlist->SetDefaultCutValue( 0.00001*mm) ;
   
-  // Set user action classes
+  // Set user action classes:
+  //
   PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector);
   runManager->SetUserAction(gen_action);
   //

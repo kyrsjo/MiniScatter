@@ -64,8 +64,8 @@ DetectorConstruction::DetectorConstruction() :
   solidTarget(0),logicTarget(0),physiTarget(0),
   magField(0) {
 
-  WorldSizeX  = 200*cm;
-  WorldSizeYZ = 200*cm;
+  WorldSizeXY  = 200*cm;
+  WorldSizeZ = 200*cm;
 
   TargetSizeX     = 1.408*cm;
   TargetSizeY	  = 1.408*cm;
@@ -75,7 +75,7 @@ DetectorConstruction::DetectorConstruction() :
   DetectorSizeY     = 150*cm;
   DetectorThickness = 1*um;
   
-  DetectorDistance = 5*cm;
+  DetectorDistance = 50*cm;
 
   // materials
   DefineMaterials();
@@ -92,51 +92,42 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   G4LogicalVolumeStore::GetInstance()->Clean();
   G4SolidStore::GetInstance()->Clean();
   
-  // World
-  solidWorld = new G4Box("World",				//its name
-			 (WorldSizeX/2)*mm,(WorldSizeYZ/2)*mm,(WorldSizeYZ/2)*mm);	//its size, divide by two to get the right size
-  
-  logicWorld = new G4LogicalVolume(solidWorld,     //its solid
-				   vacuumMaterial, //its material
-				   "World");       //its name
+  // World volume
+  solidWorld = new G4Box("WorldS", WorldSizeXY/2.0, WorldSizeXY/2.0, WorldSizeZ/2.0);
+  logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
   
   physiWorld = new G4PVPlacement(0,			//no rotation
 				 G4ThreeVector(),	//at (0,0,0)
 				 logicWorld,		//its logical volume
 				 "World",		//its name
 				 0,			//its mother  volume
-				 false,			//no boolean operation
-				 0);			//copy number
-  
-  //constructing the target
-  
-  solidTarget = new G4Box("Target",
-			  TargetThickness/2, TargetSizeY/2,TargetSizeX/2);
-  logicTarget = new G4LogicalVolume(solidTarget,    //its solid
-				    TargetMaterial, //its material
-				    TargetMaterial->GetName()); //name
-  
-  physiTarget = new G4PVPlacement(0,		   //no rotation
-				  G4ThreeVector(0.0,0.0,0.0),  //its position
-				  logicTarget,     //its logical volume		    
-				  TargetMaterial->GetName(), //its name
-				  logicWorld,        //its mother
-				  false,             //no boulean operat
-				  0);                //copy number
+				 false,			//pMany not used
+				 0,			//copy number
+				 true);                 //Check for overlaps
 
-  solidDetector = new G4Box("Detector",
-			  DetectorThickness/2, DetectorSizeY/2,DetectorSizeX/2);
-  logicDetector = new G4LogicalVolume(solidDetector,    //its solid
-				      DetectorMaterial, //its material
-				      DetectorMaterial->GetName()); //name
-  
-  physiDetector = new G4PVPlacement(0,		   //no rotation
-				  G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
-				  logicDetector,     //its logical volume		    
-				  DetectorMaterial->GetName(), //its name
+  //constructing the target
+  solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
+  logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
+  physiTarget = new G4PVPlacement(NULL,		   //no rotation
+				  G4ThreeVector(0.0,0.0,0.0),  //its position
+				  logicTarget,       //its logical volume
+				  "TargetPV",        //its name
 				  logicWorld,        //its mother
-				  false,             //no boulean operat
-				  0);                //copy number
+				  false,             //pMany not used
+				  0,                 //copy number
+				  true);             //Check for overlaps
+
+  //The "detector"
+  solidDetector = new G4Box("DetectorS", DetectorSizeX/2,DetectorSizeY/2,DetectorThickness/2);
+  logicDetector = new G4LogicalVolume(solidDetector, DetectorMaterial, "DetectorLV");
+  physiDetector = new G4PVPlacement(0,		   //no rotation
+				    G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
+				    logicDetector,     //its logical volume
+				    "DetectorPV",      //its name
+				    logicWorld,        //its mother
+				    false,             //pMany not used
+				    0,                 //copy number
+				    true);             //Check for overlaps
 
   
   G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");

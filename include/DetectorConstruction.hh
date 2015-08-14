@@ -77,8 +77,8 @@ private:
   G4Material*        TiMaterial;
   G4Material*        StainlessSteel; 
 
-  G4double           WorldSizeYZ;
-  G4double           WorldSizeX;
+  G4double           WorldSizeXY;
+  G4double           WorldSizeZ;
   
   G4double           TargetSizeX;
   G4double           TargetSizeY;
