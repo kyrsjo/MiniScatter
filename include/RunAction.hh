@@ -50,14 +50,12 @@ class TH2D;
 
 class G4Run;
 
-class RunAction : public G4UserRunAction
-{
+class RunAction : public G4UserRunAction {
 public:
   RunAction();
   virtual ~RunAction();
   void BeginOfRunAction(const G4Run*);
   void   EndOfRunAction(const G4Run*);
-  //ofstream simfile;							// Output textfile 'simfile'
 private:	
 
 };

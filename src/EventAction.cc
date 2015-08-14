@@ -55,28 +55,8 @@ using namespace std;
 
 //------------------------------------------------------------------------------
 
-EventAction::EventAction(RunAction* run)
-:runAct(run),printModulo(1)
-{
+EventAction::EventAction(RunAction* run) : runAct(run) {}
 
-  // G4DigiManager * fDM = G4DigiManager::GetDMpointer();
-  // MyExpDetDigitizer * myDM = new MyExpDetDigitizer( "MyMod", "AntiPCollection", "MyDigit" );
-  // fDM->AddNewModule(myDM);
-}
-
-//------------------------------------------------------------------------------
-
-EventAction::~EventAction()
-{
-}
-
-//------------------------------------------------------------------------------
-
-void EventAction::BeginOfEventAction(const G4Event* evt)
-{  
-  
-	
-}
 
 //------------------------------------------------------------------------------
 

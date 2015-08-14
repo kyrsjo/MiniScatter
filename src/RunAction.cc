@@ -47,36 +47,27 @@
 
 //--------------------------------------------------------------------------------
 
-RunAction::RunAction()
-{
-	
-	// initialize root
-	
+RunAction::RunAction(){
+  // initialize root
 }
 
 //--------------------------------------------------------------------------------
 
-RunAction::~RunAction()
-{
-
-	// Delete histogram object
-	
+RunAction::~RunAction() {
+  // Delete histogram object
 }
 
 //--------------------------------------------------------------------------------
 
-void RunAction::BeginOfRunAction(const G4Run* aRun)
-{ 
-  
+void RunAction::BeginOfRunAction(const G4Run*) {
   analysis::GetInstance()->makeHistograms();
 }
 
 
 //--------------------------------------------------------------------------------
 
-void RunAction::EndOfRunAction(const G4Run* aRun)
-{
-  analysis::GetInstance()->writeHistograms(); 
+void RunAction::EndOfRunAction(const G4Run*) {
+  analysis::GetInstance()->writeHistograms();
 }
 
 //--------------------------------------------------------------------------------
