@@ -10,7 +10,6 @@
 #include <iostream>
 #include <sstream>
 #include "TCanvas.h"
-#include "TrackingAction.hh"
 #include "TPaveText.h"
 using namespace std;
 analysis* analysis::singleton = 0;

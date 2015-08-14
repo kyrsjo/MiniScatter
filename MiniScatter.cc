@@ -43,7 +43,6 @@
 #include "QGSP_FTFP_BERT.hh"
 #include "G4RadioactiveDecayPhysics.hh"
 #include "G4EmUserPhysics.hh"
-#include "TrackingAction.hh"
 #include "G4SystemOfUnits.hh"
 
 #ifdef G4VIS_USE
@@ -81,15 +80,8 @@ int main(int argc,char** argv)
   //
   EventAction* event_action = new EventAction(run_action);
   runManager->SetUserAction(event_action);
-  //
-
-  //Her blir en del med annihilation dept osv gjort, legg til senere
   
-  TrackingAction* trackaction=new TrackingAction();
-  runManager->SetUserAction(trackaction);
-
   // Initialize G4 kernel
- //
   runManager->Initialize();
    
 // Begin comment
