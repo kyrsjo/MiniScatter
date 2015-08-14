@@ -58,48 +58,51 @@
 
 //------------------------------------------------------------------------------
 
-DetectorConstruction::DetectorConstruction()
-  :TargetMaterial(0),AlMaterial(0),
-   solidWorld(0),logicWorld(0),physiWorld(0),
-   solidTarget(0),logicTarget(0),physiTarget(0),
-   magField(0)
-{
+DetectorConstruction::DetectorConstruction() :
+  AlMaterial(0), TargetMaterial(0),
+  solidWorld(0),logicWorld(0),physiWorld(0),
+  solidTarget(0),logicTarget(0),physiTarget(0),
+  magField(0) {
+
+  WorldSizeX  = 200*cm;
+  WorldSizeYZ = 200*cm;
 
   TargetSizeX     = 1.408*cm;
   TargetSizeY	  = 1.408*cm;
   TargetThickness = 0.023*cm;
+  
+  DetectorSizeX     = 150*cm;
+  DetectorSizeY     = 150*cm;
+  DetectorThickness = 1*um;
+  
+  DetectorDistance = 5*cm;
 
   // materials
   DefineMaterials();
   SetTargetMaterial("G4_Cu");
+  DetectorMaterial = vacuumMaterial;
 }
 
 //------------------------------------------------------------------------------
 
-G4VPhysicalVolume* DetectorConstruction::Construct()
-{
+G4VPhysicalVolume* DetectorConstruction::Construct() {
   // Clean old geometry, if any
   G4GeometryManager::GetInstance()->OpenGeometry();
   G4PhysicalVolumeStore::GetInstance()->Clean();
   G4LogicalVolumeStore::GetInstance()->Clean();
   G4SolidStore::GetInstance()->Clean();
   
-  //     
   // World
-  //
-
-  WorldSizeX  = 200*cm;
-  WorldSizeYZ = 200*cm;
   solidWorld = new G4Box("World",				//its name
 			 (WorldSizeX/2)*mm,(WorldSizeYZ/2)*mm,(WorldSizeYZ/2)*mm);	//its size, divide by two to get the right size
   
-  logicWorld = new G4LogicalVolume(solidWorld,		//its solid
-				   defaultMaterial,	//its material
-				   "World");		//its name
+  logicWorld = new G4LogicalVolume(solidWorld,     //its solid
+				   vacuumMaterial, //its material
+				   "World");       //its name
   
   physiWorld = new G4PVPlacement(0,			//no rotation
 				 G4ThreeVector(),	//at (0,0,0)
-				 logicWorld,		//its logical volume				 
+				 logicWorld,		//its logical volume
 				 "World",		//its name
 				 0,			//its mother  volume
 				 false,			//no boolean operation
@@ -114,12 +117,27 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				    TargetMaterial->GetName()); //name
   
   physiTarget = new G4PVPlacement(0,		   //no rotation
-				  G4ThreeVector(0.0,0.0,0.0*cm),  //its position
+				  G4ThreeVector(0.0,0.0,0.0),  //its position
 				  logicTarget,     //its logical volume		    
 				  TargetMaterial->GetName(), //its name
 				  logicWorld,        //its mother
 				  false,             //no boulean operat
 				  0);                //copy number
+
+  solidDetector = new G4Box("Detector",
+			  DetectorThickness/2, DetectorSizeY/2,DetectorSizeX/2);
+  logicDetector = new G4LogicalVolume(solidDetector,    //its solid
+				      DetectorMaterial, //its material
+				      DetectorMaterial->GetName()); //name
+  
+  physiDetector = new G4PVPlacement(0,		   //no rotation
+				  G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
+				  logicDetector,     //its logical volume		    
+				  DetectorMaterial->GetName(), //its name
+				  logicWorld,        //its mother
+				  false,             //no boulean operat
+				  0);                //copy number
+
   
   G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
   // Get pointer to detector manager                                                     
@@ -156,7 +174,7 @@ void DetectorConstruction::DefineMaterials() {
   G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
   
   //default materials 
-  defaultMaterial  = Vacuum;
+  vacuumMaterial   = Vacuum;
   AlMaterial       = Al;
   CMaterial        = C;
   CuMaterial       = Cu;
@@ -166,11 +184,16 @@ void DetectorConstruction::DefineMaterials() {
 
 //------------------------------------------------------------------------------
 
-void DetectorConstruction::SetTargetMaterial(G4String materialChoice)
-{
+void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
   // search the material by its name   
   G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
   if (pttoMaterial) TargetMaterial = pttoMaterial;
 }
-
+/*
+void DetectorConstruction::SetDetectorMaterial(G4String materialChoice) {
+  // search the material by its name   
+  G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
+  if (pttoMaterial) DetectorMaterial = pttoMaterial;
+}
+*/
 //------------------------------------------------------------------------------

@@ -59,32 +59,40 @@ public:
   
 public:
   void SetTargetMaterial (G4String); 
+  //  void SetDetectorMaterial (G4String); 
+
   void SetMagField(G4double);
   G4VPhysicalVolume* Construct();
 public:
   
-  G4Material* GetTargetMaterial()  {return TargetMaterial;};  
   const G4VPhysicalVolume* GetphysiWorld() {return physiWorld;};           
   const G4VPhysicalVolume* GetTargetPV()   {return physiTarget;};
   
 private:
-  bool               background;
-  G4Material*        TargetMaterial;
+  G4Material*        vacuumMaterial;
   G4Material*        AlMaterial;
   G4Material*        CMaterial;
   G4Material*        CuMaterial;
   G4Material*        PbMaterial;
   G4Material*        TiMaterial;
   G4Material*        StainlessSteel; 
+
+  G4double           WorldSizeYZ;
+  G4double           WorldSizeX;
   
   G4double           TargetSizeX;
   G4double           TargetSizeY;
   G4double           TargetThickness;
 
-  G4Material*        defaultMaterial;
-  G4double           WorldSizeYZ;
-  G4double           WorldSizeX;
+  G4Material*        TargetMaterial;
+
+  G4double           DetectorSizeX;
+  G4double           DetectorSizeY;
+  G4double           DetectorThickness;
   
+  G4double           DetectorDistance;
+  G4Material*        DetectorMaterial;
+
   G4Box*             solidWorld;    //pointer to the solid World 
   G4LogicalVolume*   logicWorld;    //pointer to the logical World
   G4VPhysicalVolume* physiWorld;    //pointer to the physical World
@@ -92,6 +100,10 @@ private:
   G4Box*             solidTarget; //pointer to the solid target
   G4LogicalVolume*   logicTarget; //pointer to the logical target
   G4VPhysicalVolume* physiTarget; //pointer to the physical target
+
+  G4Box*             solidDetector; //pointer to the solid detector
+  G4LogicalVolume*   logicDetector; //pointer to the logical detector
+  G4VPhysicalVolume* physiDetector; //pointer to the physical detector
   
   G4UniformMagField* magField;      //pointer to the magnetic field
   

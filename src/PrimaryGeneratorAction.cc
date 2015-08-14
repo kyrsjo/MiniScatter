@@ -25,9 +25,9 @@
 // -----------------------------------------------------------------------------------------
 
 PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC)
-  :Detector(DC)
-{
-  G4String particleName = "anti_proton";
+  :Detector(DC) {
+  G4String particleName = "proton";
+  //G4String particleName = "anti_proton";
   //G4String particleName = "geantino";
   
   //G4String particleName = "pi-";
@@ -45,8 +45,9 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent){
   //set energy and stuff
-  particleGun->SetParticlePosition(G4ThreeVector(-2*cm,0,0));	
-  particleGun->SetParticleEnergy(0.5*MeV);
+  particleGun->SetParticlePosition(G4ThreeVector(-10*cm,0,0));	
+  //particleGun->SetParticleEnergy(0.5*MeV);
+  particleGun->SetParticleEnergy(7.0*TeV);
   particleGun->SetParticleMomentumDirection(G4ThreeVector(1,0,0));
   particleGun->GeneratePrimaryVertex(anEvent);
 }
