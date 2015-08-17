@@ -2,13 +2,8 @@
 #define MyEdepHit_HH
 
 #include "G4Allocator.hh"
-#include "G4LogicalVolume.hh"
-#include "G4RotationMatrix.hh"
-#include "G4ThreeVector.hh"
 #include "G4THitsCollection.hh"
-#include "G4Transform3D.hh"
 #include "G4VHit.hh"
-#include "G4Track.hh"
 
 class G4AttDef;
 class G4AttValue;
