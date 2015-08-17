@@ -62,7 +62,7 @@ int main(int argc,char** argv)
   G4RunManager * runManager = new G4RunManager;
 
   // Set mandatory initialization classes
-  DetectorConstruction* detector = new DetectorConstruction();
+  DetectorConstruction* detector = DetectorConstruction::GetInstance();
   runManager->SetUserInitialization(detector);
 
   G4int verbose=0;

@@ -53,10 +53,16 @@
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-  
+  static DetectorConstruction* GetInstance() {
+    if ( DetectorConstruction::singleton == NULL ) 
+      DetectorConstruction::singleton = new DetectorConstruction();
+    return DetectorConstruction::singleton;
+  }
+private:
   DetectorConstruction();
   ~DetectorConstruction(){};
-  
+  static DetectorConstruction* singleton;
+
 public:
   void SetTargetMaterial (G4String); 
   //  void SetDetectorMaterial (G4String); 
@@ -67,6 +73,8 @@ public:
   
   const G4VPhysicalVolume* GetphysiWorld() {return physiWorld;};           
   const G4VPhysicalVolume* GetTargetPV()   {return physiTarget;};
+  
+  inline G4double GetDetectorDistance(){return DetectorDistance;};
   
 private:
   G4Material*        vacuumMaterial;

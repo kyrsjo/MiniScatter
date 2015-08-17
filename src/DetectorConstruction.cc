@@ -33,6 +33,7 @@
 #include "DetectorConstruction.hh"
 #include "AntiPSD.hh"
 #include "MyEdepSD.hh"
+#include "MyTrackerSD.hh"
 #include "G4Material.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -57,6 +58,8 @@
 
 
 //------------------------------------------------------------------------------
+
+DetectorConstruction* DetectorConstruction::singleton = 0;
 
 DetectorConstruction::DetectorConstruction() :
   AlMaterial(0), TargetMaterial(0),
@@ -132,13 +135,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
   // Get pointer to detector manager                                                     
   G4SDManager* SDman = G4SDManager::GetSDMpointer();  
+
   G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
   SDman->AddNewDetector(detector);
   logicTarget->SetSensitiveDetector(detector);
   G4VSensitiveDetector* targetSD = new MyEdepSD("EdepSD_target");
   SDman->AddNewDetector(targetSD);
   logicTarget->SetSensitiveDetector(targetSD);
-                                         
+  G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
+  SDman->AddNewDetector(detectorSD);
+  logicDetector->SetSensitiveDetector(detectorSD);
+  
+                                       
   //Visualization attributes
   
   //logicWorld->SetVisAttributes (G4VisAttributes::Invisible);

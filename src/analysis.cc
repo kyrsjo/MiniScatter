@@ -1,23 +1,18 @@
 #include "analysis.hh"
 #include "AntiPHit.hh"
 #include "MyEdepHit.hh"
-#include "DetectorConstruction.hh"
+#include "MyTrackerHit.hh"
+//#include "DetectorConstruction.hh"
 #include "G4SDManager.hh"
-#include "G4RunManager.hh"
-#include "G4DigiManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Track.hh"
-//#include "TStyle.h"
 #include <iostream>
-#include <sstream>
-//#include "TCanvas.h"
-//#include "TPaveText.h"
+
+//#include "TDatabasePDG.h"
+
 using namespace std;
 analysis* analysis::singleton = 0;
 
-//Constructor: it initializes parameters
-analysis::analysis(){;
-}
 void analysis::makeHistograms(){
   // G4RunManager*run= G4RunManager::GetRunManager();
   // DetectorConstruction*DetC= (DetectorConstruction*)run->GetUserDetectorConstruction();
@@ -30,6 +25,9 @@ void analysis::makeHistograms(){
   targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [MeV]");
   targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,3);
   targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
+
+  tracker_numParticles = new TH1D("numParticles","numParticles",1000,0,1000);
+  tracker_angle        = new TH1D("angle","angle",1000,0,3.14/3.0);
 }
 
 void analysis::writePerEvent(const G4Event* event){
@@ -82,6 +80,41 @@ void analysis::writePerEvent(const G4Event* event){
   else{
     cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<endl;
   }
+
+  //Data from detectorTrackerSD
+  G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
+  if (myTargetEdepSD_CollID>=0){
+    MyTrackerHitsCollection* trackerHitsCollection = NULL;
+    trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
+    if (trackerHitsCollection != NULL) {
+      G4int nEntries = trackerHitsCollection->entries();
+      // G4double edep      = 0.0;
+      // G4double edep_NIEL = 0.0;
+      // G4double edep_IEL  = 0.0;
+      for (G4int i = 0; i < nEntries; i++){
+      	
+	tracker_angle->Fill((*trackerHitsCollection)[i]->GetTrackAngle());
+
+	G4int PDG = (*trackerHitsCollection)[i]->GetPDG();
+	//cout << (*trackerHitsCollection)[i]->GetPDG() << endl;
+	if (tracker_particleTypes.count(PDG) == 0){
+	  tracker_particleTypes[PDG] = 0;
+	}
+	tracker_particleTypes[PDG] += 1;
+      }
+      tracker_numParticles->Fill(nEntries);
+      // targetEdep->Fill(edep/MeV);
+      // targetEdep_NIEL->Fill(edep_NIEL/MeV);
+      // targetEdep_IEL->Fill(edep_IEL/MeV);
+    }
+    else{
+      cout << "trackerHitsCollection was NULL!"<<endl;
+    }
+  }
+  else{
+    cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<endl;
+  }
+
   
 }
 void analysis::writeHistograms(){
@@ -91,7 +124,20 @@ void analysis::writeHistograms(){
   delete targetEdep_NIEL;
   targetEdep_IEL->Write();
   delete targetEdep_IEL;
+
+  tracker_numParticles->Write();
+  delete tracker_numParticles;
   
+  tracker_angle->Write();
+  delete tracker_angle;
+
+  //TDatabasePDG PDG_DB();
+  cout << "Got types at tracker:" << endl;
+  for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
+    cout << it->first << " " << it->second << endl;
+  }
+  tracker_particleTypes.clear();
+
   histFile->Write();
   histFile->Close();
 }
