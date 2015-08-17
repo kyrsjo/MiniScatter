@@ -1,5 +1,5 @@
 #include "analysis.hh"
-#include "AntiPHit.hh"
+//#include "AntiPHit.hh"
 #include "MyEdepHit.hh"
 #include "MyTrackerHit.hh"
 //#include "DetectorConstruction.hh"
@@ -35,25 +35,7 @@ void analysis::writePerEvent(const G4Event* event){
   G4HCofThisEvent* HCE=event->GetHCofThisEvent();
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   
-  //Data from the AntiPCollection
-  
-  G4int AntiPCollectionID = SDman->GetCollectionID("AntiPCollection");
-  AntiPHitsCollection* hc=NULL;
-  hc=(AntiPHitsCollection*)(HCE->GetHC(AntiPCollectionID));
-  if(hc==NULL){
-    G4cout << "hc was NULL!"<<endl;
-  }
-  else{
-    G4int nEntries = hc->entries();
-    energyHisto=new TH2D("EnergyGeant","EnergyGeant",256,-0.703999,0.703999,256,-0.7039999,0.703999);
-    for(G4int itr  = 0 ; itr < nEntries ; itr++) {
-      energyHisto->Fill((*hc)[itr]->GetHitPosition().z()/cm,(*hc)[itr]->GetHitPosition().y()/cm,(*hc)[itr]->GetDepositedEnergy()/cm);
-    }
-    energyHisto->Write();
-    delete energyHisto;
-  }
-
-  //Data from targetEdepSD
+  //**Data from targetEdepSD**
   G4int myTargetEdepSD_CollID = SDman->GetCollectionID("EdepCollection");
   if (myTargetEdepSD_CollID>=0){
     MyEdepHitsCollection* targetEdepHitsCollection = NULL;
@@ -81,7 +63,7 @@ void analysis::writePerEvent(const G4Event* event){
     cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<endl;
   }
 
-  //Data from detectorTrackerSD
+  //**Data from detectorTrackerSD**
   G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
   if (myTargetEdepSD_CollID>=0){
     MyTrackerHitsCollection* trackerHitsCollection = NULL;
@@ -103,9 +85,6 @@ void analysis::writePerEvent(const G4Event* event){
 	tracker_particleTypes[PDG] += 1;
       }
       tracker_numParticles->Fill(nEntries);
-      // targetEdep->Fill(edep/MeV);
-      // targetEdep_NIEL->Fill(edep_NIEL/MeV);
-      // targetEdep_IEL->Fill(edep_IEL/MeV);
     }
     else{
       cout << "trackerHitsCollection was NULL!"<<endl;

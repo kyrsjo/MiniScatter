@@ -33,7 +33,6 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #include "EventAction.hh"
-#include "AntiPHit.hh"
 #include "G4DigiManager.hh"
 #include "analysis.hh"
 #include "RunAction.hh"

@@ -1,37 +1,4 @@
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-// $Id: DetectorConstruction.cc,v 1.1 2010/10/18 15:56:17 maire Exp $
-// GEANT4 tag $Name: geant4-09-04 $
-//
-// 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #include "DetectorConstruction.hh"
-#include "AntiPSD.hh"
 #include "MyEdepSD.hh"
 #include "MyTrackerSD.hh"
 #include "G4Material.hh"
@@ -66,10 +33,10 @@ DetectorConstruction::DetectorConstruction() :
   solidWorld(0),logicWorld(0),physiWorld(0),
   solidTarget(0),logicTarget(0),physiTarget(0),
   magField(0) {
-
+  
   WorldSizeXY  = 200*cm;
   WorldSizeZ = 200*cm;
-
+  
   TargetSizeX     = 1.408*cm;
   TargetSizeY	  = 1.408*cm;
   TargetThickness = 0.023*cm;
@@ -79,7 +46,7 @@ DetectorConstruction::DetectorConstruction() :
   DetectorThickness = 1*um;
   
   DetectorDistance = 50*cm;
-
+  
   // materials
   DefineMaterials();
   SetTargetMaterial("G4_Cu");
@@ -136,25 +103,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   // Get pointer to detector manager                                                     
   G4SDManager* SDman = G4SDManager::GetSDMpointer();  
 
-  G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
-  SDman->AddNewDetector(detector);
-  logicTarget->SetSensitiveDetector(detector);
   G4VSensitiveDetector* targetSD = new MyEdepSD("EdepSD_target");
   SDman->AddNewDetector(targetSD);
   logicTarget->SetSensitiveDetector(targetSD);
   G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
   SDman->AddNewDetector(detectorSD);
   logicDetector->SetSensitiveDetector(detectorSD);
-  
-                                       
-  //Visualization attributes
-  
-  //logicWorld->SetVisAttributes (G4VisAttributes::Invisible);
-  //cellLogical->SetVisAttributes (G4VisAttributes::Invisible);
-  // logicTarget->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicThermalO->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicDopSi->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicAl->SetVisAttributes(G4VisAttributes::Invisible);
   
   return physiWorld;
 }
@@ -189,11 +143,5 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
   G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
   if (pttoMaterial) TargetMaterial = pttoMaterial;
 }
-/*
-void DetectorConstruction::SetDetectorMaterial(G4String materialChoice) {
-  // search the material by its name   
-  G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
-  if (pttoMaterial) DetectorMaterial = pttoMaterial;
-}
-*/
+
 //------------------------------------------------------------------------------
