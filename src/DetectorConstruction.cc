@@ -56,7 +56,6 @@
 #include "G4RunManager.hh"
 
 
-
 //------------------------------------------------------------------------------
 
 DetectorConstruction::DetectorConstruction() :
@@ -130,14 +129,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 				    0,                 //copy number
 				    true);             //Check for overlaps
 
-  
-  G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
+
   // Get pointer to detector manager                                                     
-  G4SDManager* SDman = G4SDManager::GetSDMpointer();
-  // Register detector with manager                                                      
+  G4SDManager* SDman = G4SDManager::GetSDMpointer();  
+  G4VSensitiveDetector* detector = new AntiPSD("/mydet/Target");
   SDman->AddNewDetector(detector);
-  // Attach detector to volume defining calorimeter cells                                
   logicTarget->SetSensitiveDetector(detector);
+  G4VSensitiveDetector* targetSD = new MyEdepSD("EdepSD_target");
+  SDman->AddNewDetector(targetSD);
+  logicTarget->SetSensitiveDetector(targetSD);
                                          
   //Visualization attributes
   

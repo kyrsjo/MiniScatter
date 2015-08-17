@@ -49,7 +49,7 @@ public:
   
   virtual G4bool ProcessHits(G4Step* aStep,G4TouchableHistory* history);
 
-  virtual void EndOfEvent(G4HCofThisEvent* hitsCollectionOfThisEvent);
+  virtual void EndOfEvent(G4HCofThisEvent*);
   
 private:
   

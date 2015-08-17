@@ -51,19 +51,17 @@ AntiPSD::~AntiPSD() {}
 
 
 //G4HCofThisEvent stores all hits in one event
-void AntiPSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent)
-{
+void AntiPSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
   //lager en collection for hvert event. 
   fHitsCollection =new AntiPHitsCollection(SensitiveDetectorName, collectionName[0]);
   //ID er -1 ved starten ogsa blir den null. 
   if(fHitsCollectionID < 0){fHitsCollectionID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection);}
+  
   // Add collection to the event
   hitsCollectionOfThisEvent->AddHitsCollection(fHitsCollectionID, fHitsCollection);
 }
 
 G4bool AntiPSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
-  
-  //cout<< "HIT!" << aStep << endl;
 
   G4Track* theTrack = aStep->GetTrack();
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
@@ -86,7 +84,6 @@ G4bool AntiPSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   //add different varibles to the hit objekt
   aHit->AddDepositedEnergy(depositedEnergy);                  // Set energy deposit to the Hit object.
   aHit->SetHitPosition(hitPos);
-  G4cout<<"hva er hit position her"<<hitPos.z()/cm<<G4endl;
   // Set position of prestep point to the Hit object. 
   aHit->SetParticleID(particleID);
   aHit->SetParticleName(particleName);

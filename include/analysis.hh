@@ -51,6 +51,10 @@ private:
   int xpixels,ypixels;
   double xpitch_pixel;
   double ypitch_pixel;
+
+  TH1D* targetEdep;
+  TH1D* targetEdep_NIEL;
+  TH1D* targetEdep_IEL;
 };
 
   

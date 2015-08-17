@@ -35,13 +35,13 @@
 #ifndef EventAction_h
 #define EventAction_h 1
 
-#include "AntiPSD.hh"
+//#include "AntiPSD.hh"
 
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 
 class RunAction;
-class TH2D;
+//class TH2D;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

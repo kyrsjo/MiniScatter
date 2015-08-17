@@ -60,10 +60,8 @@ EventAction::EventAction(RunAction* run) : runAct(run) {}
 
 //------------------------------------------------------------------------------
 
-void EventAction::EndOfEventAction(const G4Event* event)
-{
+void EventAction::EndOfEventAction(const G4Event* event) {
   analysis::GetInstance()->writePerEvent(event);
-  
 }
 
 //------------------------------------------------------------------------------
