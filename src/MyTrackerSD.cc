@@ -2,15 +2,10 @@
 #include "G4HCofThisEvent.hh"
 #include "G4SDManager.hh"
 #include "G4Step.hh"    
-#include "G4TouchableHistory.hh"
 #include "G4Track.hh"
-#include "globals.hh"
-#include "G4UnitsTable.hh"
-#include "CLHEP/Units/PhysicalConstants.h"
-#include <iostream>
 #include "G4SystemOfUnits.hh"
 
-#include "TMath.h"
+#include <iostream>
 
 //using namespace std;
 
