@@ -62,7 +62,7 @@ EventAction::EventAction(RunAction* run) : runAct(run) {}
 void EventAction::EndOfEventAction(const G4Event* event) {
   analysis::GetInstance()->writePerEvent(event);
   G4int eventID = event->GetEventID();
-  if (eventID % 1000 == 0) {
+  if (eventID % 10000 == 0) {
     G4cout << "Event# "<<event->GetEventID() << G4endl;
   }
 }

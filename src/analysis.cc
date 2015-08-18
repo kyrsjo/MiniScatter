@@ -79,11 +79,11 @@ void analysis::writePerEvent(const G4Event* event){
       targetEdep_IEL->Fill(edep_IEL/MeV);
     }
     else{
-      cout << "targetEdepHitsCollection was NULL!"<<endl;
+      G4cout << "targetEdepHitsCollection was NULL!"<<G4endl;
     }
   }
   else{
-    cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<endl;
+    G4cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<G4endl;
   }
 
   //**Data from detectorTrackerSD**
@@ -120,11 +120,11 @@ void analysis::writePerEvent(const G4Event* event){
 
     }
     else{
-      cout << "trackerHitsCollection was NULL!"<<endl;
+      G4cout << "trackerHitsCollection was NULL!"<<G4endl;
     }
   }
   else{
-    cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<endl;
+    G4cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<G4endl;
   }
 
   
@@ -150,9 +150,9 @@ void analysis::writeHistograms(){
   delete tracker_protonEnergy; tracker_protonEnergy = NULL;
   
 
-  cout << "Got types at tracker:" << endl;
+  G4cout << "Got types at tracker:" << G4endl;
   for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
-    cout << it->first << " " << it->second << endl;
+    G4cout << "\t" << it->first << " " << it->second << G4endl;
   }
   tracker_particleTypes.clear();
 
