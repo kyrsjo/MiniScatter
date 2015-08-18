@@ -13,15 +13,8 @@
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-  static DetectorConstruction* GetInstance() {
-    if ( DetectorConstruction::singleton == NULL ) 
-      DetectorConstruction::singleton = new DetectorConstruction();
-    return DetectorConstruction::singleton;
-  }
-private:
   DetectorConstruction();
   ~DetectorConstruction(){};
-  static DetectorConstruction* singleton;
 
 public:
   void SetTargetMaterial (G4String); 

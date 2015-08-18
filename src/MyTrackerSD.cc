@@ -4,6 +4,7 @@
 #include "G4Step.hh"    
 #include "G4Track.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4RunManager.hh"
 
 #include <iostream>
 
@@ -11,12 +12,13 @@
 
 
 MyTrackerSD::MyTrackerSD(const G4String& name) :
- G4VSensitiveDetector(name) {
+  G4VSensitiveDetector(name) {
   
   collectionName.insert("TrackerCollection");
   fHitsCollectionID = -1;
-  detectorConstruction = DetectorConstruction::GetInstance();
   
+  G4RunManager*     run= G4RunManager::GetRunManager();
+  detectorConstruction = (DetectorConstruction*)run->GetUserDetectorConstruction();
 }
 
 MyTrackerSD::~MyTrackerSD() {}

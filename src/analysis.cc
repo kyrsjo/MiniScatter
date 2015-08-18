@@ -14,9 +14,6 @@ using namespace std;
 analysis* analysis::singleton = 0;
 
 void analysis::makeHistograms(){
-  // G4RunManager*run= G4RunManager::GetRunManager();
-  // DetectorConstruction*DetC= (DetectorConstruction*)run->GetUserDetectorConstruction();
-
   histFile= new TFile("plots/histo.root","RECREATE");
   
   targetEdep = new TH1D("targetEdep","targetEdep",1000,0,3);

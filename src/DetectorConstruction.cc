@@ -26,8 +26,6 @@
 
 //------------------------------------------------------------------------------
 
-DetectorConstruction* DetectorConstruction::singleton = 0;
-
 DetectorConstruction::DetectorConstruction() :
   AlMaterial(0), TargetMaterial(0),
   solidWorld(0),logicWorld(0),physiWorld(0),
