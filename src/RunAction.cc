@@ -33,16 +33,7 @@
 #include "RunAction.hh"
 
 #include "G4Run.hh"
-#include "G4RunManager.hh"
-#include "G4UnitsTable.hh"
 #include "analysis.hh"
-#include "TROOT.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TFile.h"
-#include "globals.hh"
-#include "G4UnitsTable.hh"
-
 
 
 //--------------------------------------------------------------------------------
