@@ -7,6 +7,9 @@
 
 #include "G4Track.hh"
 
+#include "G4RunManager.hh"
+#include "DetectorConstruction.hh"
+
 #include "G4SystemOfUnits.hh"
 #include "CLHEP/Units/SystemOfUnits.h"
 
@@ -19,7 +22,13 @@ using namespace std;
 analysis* analysis::singleton = 0;
 
 void analysis::makeHistograms(){
-  histFile= new TFile("plots/histo.root","RECREATE");
+  G4RunManager*     run= G4RunManager::GetRunManager();
+  DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+  G4String rootFileName = "plots/histo_" + 
+    std::to_string(detCon->GetTargetThickness()/mm) + "mm_" +
+    physListName + ".root";
+  G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
+  histFile= new TFile(rootFileName,"RECREATE");
   
   targetEdep = new TH1D("targetEdep","targetEdep",1000,0,3);
   targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
@@ -149,5 +158,9 @@ void analysis::writeHistograms(){
 
   histFile->Write();
   histFile->Close();
+  delete histFile; histFile = NULL;
 }
 
+void analysis::SetMetadata(const G4String physListName_in){
+  this->physListName = physListName_in;
+}

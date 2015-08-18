@@ -35,12 +35,12 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in) :
   WorldSizeXY  = 200*cm;
   WorldSizeZ   = 200*cm;
   
-  TargetSizeX     = 2.0*cm;
-  TargetSizeY	  = 2.0*cm;
+  TargetSizeX     = WorldSizeXY;
+  TargetSizeY	  = WorldSizeXY;
   TargetThickness = TargetThickness_in*mm;
   
-  DetectorSizeX     = 190*cm;
-  DetectorSizeY     = 190*cm;
+  DetectorSizeX     = WorldSizeXY;
+  DetectorSizeY     = WorldSizeXY;
   DetectorThickness = 1*um;
   
   DetectorDistance = 50*cm;

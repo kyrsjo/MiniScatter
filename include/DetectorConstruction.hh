@@ -26,9 +26,10 @@ public:
   
   const G4VPhysicalVolume* GetphysiWorld() {return physiWorld;};           
   const G4VPhysicalVolume* GetTargetPV()   {return physiTarget;};
-  
-  inline G4double GetDetectorDistance(){return DetectorDistance;};
-  
+
+  inline G4double GetDetectorDistance(){return DetectorDistance;};  
+  inline G4double GetTargetThickness(){return TargetThickness;};
+
 private:
   G4Material*        vacuumMaterial;
   G4Material*        AlMaterial;

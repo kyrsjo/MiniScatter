@@ -22,13 +22,15 @@ public:
   void writeHistograms();
   void writePerEvent(const G4Event* event);
 
-  TFile *histFile;
-
 private: 
   analysis(){};
   //! Singleton static instance
   static analysis* singleton;
 
+  //The histogram file
+  TFile *histFile;
+  
+  //Histograms
   TH1D* targetEdep;
   TH1D* targetEdep_NIEL;
   TH1D* targetEdep_IEL;
@@ -42,6 +44,13 @@ private:
   
   TH1D* tracker_protonAngle;
   TH1D* tracker_protonEnergy;
+
+  //Used to generate filenames
+  G4String physListName;
+  // (Target thickness extracted directly from the DetectorConstruction)
+public:
+  
+  void SetMetadata(const G4String physListName_in);
 };
 
   

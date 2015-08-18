@@ -41,6 +41,8 @@
 
 #include "G4PhysListFactory.hh"
 
+#include "analysis.hh"
+
 #include "G4SystemOfUnits.hh"
 #include "G4String.hh"
 #include <string> //C++11 std::stoi
@@ -147,7 +149,8 @@ int main(int argc,char** argv) {
   G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
   physlist->SetVerboseLevel(verbose);
   runManager->SetUserInitialization(physlist);
-  //physlist->SetDefaultCutValue( 0.00001*mm) ;
+  //physlist->SetDefaultCutValue( 0.00001*mm);
+  physlist->SetDefaultCutValue( 0.1*mm);
   
   // Set user action classes:
   //
@@ -162,7 +165,10 @@ int main(int argc,char** argv) {
   
   // Initialize G4 kernel
   runManager->Initialize();
-   
+  
+  //Set metadata for root file output
+  analysis::GetInstance()->SetMetadata(physListName);
+  
 #ifdef G4VIS_USE
   // Initialize visualization
   G4VisManager* visManager = new G4VisExecutive;
