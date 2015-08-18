@@ -24,10 +24,6 @@ public:
 
   TFile *histFile;
 
-  TH2D* energyHisto;
-  TH1D* pixelHisto;
-  
-
 private: 
   analysis(){};
   //! Singleton static instance
