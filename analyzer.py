@@ -62,7 +62,7 @@ for arg in sys.argv[1:]:
         lowE_bin,upperE1_bin
     )
     int2 = protonEnergy.Integral(lowE_bin,upperE1_bin)
-    print "\t int2=" + str(int1)
+    print "\t int2=" + str(int2)
     
     print "Int3:"
     print "\t Range: {0}:{1} [TeV] -> {2}:{3} [{4}:{5}]".format(
@@ -71,7 +71,7 @@ for arg in sys.argv[1:]:
         lowE_bin,upperE2_bin
     )
     int3 = protonEnergy.Integral(lowE_bin,upperE2_bin)
-    print "\t int2=" + str(int1)
+    print "\t int3=" + str(int3)
     
     print "Ratio int1/int0 =", int1/int0*100, "%"
     print "Ratio int2/int0 =", int2/int0*100, "%"
