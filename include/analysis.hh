@@ -39,8 +39,13 @@ private:
   
   TH1D* tracker_numParticles;
   TH1D* tracker_angle;
+  TH1D* tracker_energy;
   std::map<G4int,G4int> tracker_particleTypes;
   
+  //TH1D* tracker_energyflux_neutrals;
+  
+  TH1D* tracker_protonAngle;
+  TH1D* tracker_protonEnergy;
 };
 
   
