@@ -13,7 +13,7 @@
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-  DetectorConstruction();
+  DetectorConstruction(G4double TargetThickness_in=1.0); //Target thickness [mm]
   ~DetectorConstruction(){};
 
 public:

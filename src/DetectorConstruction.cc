@@ -26,21 +26,21 @@
 
 //------------------------------------------------------------------------------
 
-DetectorConstruction::DetectorConstruction() :
+DetectorConstruction::DetectorConstruction(G4double TargetThickness_in) :
   AlMaterial(0), TargetMaterial(0),
   solidWorld(0),logicWorld(0),physiWorld(0),
   solidTarget(0),logicTarget(0),physiTarget(0),
   magField(0) {
   
   WorldSizeXY  = 200*cm;
-  WorldSizeZ = 200*cm;
+  WorldSizeZ   = 200*cm;
   
-  TargetSizeX     = 1.408*cm;
-  TargetSizeY	  = 1.408*cm;
-  TargetThickness = 0.023*cm;
+  TargetSizeX     = 2.0*cm;
+  TargetSizeY	  = 2.0*cm;
+  TargetThickness = TargetThickness_in*mm;
   
-  DetectorSizeX     = 150*cm;
-  DetectorSizeY     = 150*cm;
+  DetectorSizeX     = 190*cm;
+  DetectorSizeY     = 190*cm;
   DetectorThickness = 1*um;
   
   DetectorDistance = 50*cm;

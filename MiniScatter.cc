@@ -34,16 +34,16 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 
-#include "Randomize.hh"
-
 #include "DetectorConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
-#include "QGSP_FTFP_BERT.hh"
-#include "G4RadioactiveDecayPhysics.hh"
-#include "G4EmUserPhysics.hh"
+
+#include "G4PhysListFactory.hh"
+
 #include "G4SystemOfUnits.hh"
+#include "G4String.hh"
+#include <string> //C++11 std::stoi
 
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
@@ -53,22 +53,100 @@
 #include "G4UIExecutive.hh"
 #endif
 
+#include <unistd.h> //getopt()
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-int main(int argc,char** argv)
-{
-	
-  //
+int main(int argc,char** argv) {
+  
+  //Parse command line arguments
+  int getopt_char;
+  double target_thick   = 1.0;              //Target thickness  [mm]
+  G4String physListName = "QGSP_FTFP_BERT"; //Name of physics list to use
+  G4int numEvents       = 0;                //Number of events to generate
+  G4bool useGUI         = false;            //GUI on/off
+  while ( (getopt_char = getopt(argc,argv, "t:p:n:hg")) != -1) {
+    switch(getopt_char) {
+    case 'h': //Help
+      G4cout << "Welcome to MiniScatter!" << G4endl
+	     << G4endl
+	     << "Usage/options:" << G4endl
+	     << "-t <double> : Target thickness [mm], default/current value = " << target_thick << G4endl
+	     << "-p <string> : Physics list name, default/current = '" << physListName << G4endl
+	     << "-n <int> : Run a number of events" << G4endl
+	     << "-g : Use a GUI"<< G4endl << G4endl;
+      G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
+      G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
+      G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
+      G4cout << "Extra arguments are not compatible with -g" << G4endl;
+      
+      exit(1);
+      break;
+    case 'g': //Use GUI
+      useGUI = true;
+      break;
+    case 't': //Target thickness
+      try {
+	target_thick = std::stod(string(optarg));
+      }
+      catch (const std::invalid_argument& ia) {
+	G4cout << "Invalid argument when reading target thickness" << G4endl
+	       << "Got: '" << optarg << "'" << G4endl
+	       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+	exit(1);
+      }
+      break;
+    case 'p': //Named physics list
+      physListName = G4String(optarg);
+      break;
+    case 'n': //Number of events
+      try {
+	numEvents = std::stoi(string(optarg));
+      }
+      catch (const std::invalid_argument& ia) {
+	G4cout << "Invalid argument when reading number of events" << G4endl
+	       << "Got: '" << optarg << "'" << G4endl
+	       << "Expected an integer!" << G4endl;
+	exit(1);
+      }
+      break;
+    default: // WTF?
+      G4cout << "Got an unknown getopt_char = " << " ='" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
+      exit(1);
+    }
+  }
+  //Copy remaining arguments to array that is passed to Geant4
+  int argc_effective = argc-optind+1;
+  char** argv_effective = new char*[argc_effective];
+  argv_effective[0] = argv[0]; //First arg is always executable name
+  for (int i = optind; i < argc;i++){
+    argv_effective[i+1-optind] = argv[i];
+  }
+  
+  //Print the gotten/default arguments
+  G4cout << "MiniScatter got the following command line arguments:" << G4endl
+	 << "target_thick =  " << target_thick << " [mm]" << G4endl
+	 << "physListName = '" << physListName << "'" << G4endl
+	 << "numEvents    =  " << numEvents << G4endl
+	 << "useGUI       =  " << (useGUI==true ? "yes" : "no") << G4endl;
+  G4cout << "Arguments which are passed on to Geant4:" << G4endl;
+  for (int i = 0; i < argc_effective; i++) {
+    G4cout << i << " '" << argv_effective[i] << "'" << G4endl;
+  }
+  
+  G4cout << "Starting Geant4..." << G4endl << G4endl;
+  
   G4RunManager * runManager = new G4RunManager;
 
   // Set mandatory initialization classes
-  DetectorConstruction* detector = new DetectorConstruction();
+  DetectorConstruction* detector = new DetectorConstruction(target_thick);
   runManager->SetUserInitialization(detector);
 
   G4int verbose=0;
-  QGSP_FTFP_BERT* physlist = new QGSP_FTFP_BERT(verbose);
+  G4PhysListFactory plFactory;
+  G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
+  physlist->SetVerboseLevel(verbose);
   runManager->SetUserInitialization(physlist);
-  physlist->RegisterPhysics(new G4EmUserPhysics());
   //physlist->SetDefaultCutValue( 0.00001*mm) ;
   
   // Set user action classes:
@@ -85,7 +163,6 @@ int main(int argc,char** argv)
   // Initialize G4 kernel
   runManager->Initialize();
    
-// Begin comment
 #ifdef G4VIS_USE
   // Initialize visualization
   G4VisManager* visManager = new G4VisExecutive;
@@ -97,25 +174,37 @@ int main(int argc,char** argv)
   // Get the pointer to the User Interface manager
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
-  if (argc!=1)   // batch mode
-    {
-      G4String command = "/control/execute ";
-      G4String fileName = argv[1];
-      UImanager->ApplyCommand(command+fileName);
+  if (argc_effective != 1) { // batch mode
+    if (useGUI) {
+      G4cout << "UseGUI is not compatible with batch mode!" << G4endl;
+      exit(1);
     }
-  else
-    {  // interactive mode : define UI session
+    G4String command = "/control/execute ";
+    G4String fileName = argv_effective[1];
+    UImanager->ApplyCommand(command+fileName);
+  }
+  else if (useGUI == true) {  // interactive mode : define UI session
 #ifdef G4UI_USE
-      G4UIExecutive* ui = new G4UIExecutive(argc, argv);
+    G4UIExecutive* ui = new G4UIExecutive(argc_effective,argv_effective);
 #ifdef G4VIS_USE
-      UImanager->ApplyCommand("/control/execute vis.mac"); 
+    UImanager->ApplyCommand("/control/execute vis.mac"); 
 #endif
-      if (ui->IsGUI())
-	//UImanager->ApplyCommand("/control/execute gui.mac");
-      ui->SessionStart();
-      delete ui;
-#endif
+    if (numEvents > 0) {
+      G4cout << G4String("'/run/beamOn ") + std::to_string(numEvents) << "'" << G4endl;
+      UImanager->ApplyCommand(G4String("/run/beamOn ") + std::to_string(numEvents));
     }
+    
+    if (ui->IsGUI())
+      ui->SessionStart(); //Returns when GUI is closed.
+    delete ui;
+#endif
+  }
+  
+  //Run given number of events
+  if (useGUI==false and numEvents > 0) {
+    G4cout << G4String("'/run/beamOn ") + std::to_string(numEvents) << "'" << G4endl;
+    UImanager->ApplyCommand(G4String("/run/beamOn ") + std::to_string(numEvents));
+  }
 
   // Job termination
   // Free the store: user actions, physics_list and detector_description are
