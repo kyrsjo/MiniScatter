@@ -21,7 +21,7 @@ for arg in sys.argv[1:]:
     protonAngle = files[-1].Get("protonAngle")
     protonEnergy = files[-1].Get("protonEnergy")
     targetEdep_IEL = files[-1].Get("targetEdep_IEL")
-    sumMomentum = files[-1].Get("sumMomentum")
+    sumMomentum = files[-1].Get("target_sumMomentum_z")
 
     protonAngleHistos.append(protonAngle)
     protonEnergyHistos.append(protonEnergy)
