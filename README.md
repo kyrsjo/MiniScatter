@@ -7,6 +7,7 @@ To build: In a separate directory, run:
 
 If wanted, the flag 
 > -DCMAKE_BUILD_TYPE=Debug
+
 can be added to cmake in order to make debugging possible.
 
 Then compile using:
@@ -18,5 +19,11 @@ The program execution is normally controlled via command line arguments.
 These set the target thickness, the physics list, the number of events to generate, and wether to display a GUI after running the specified number of events.
 To see the available options, run:
 > ./MiniScatter -h
+
 To generate 100000 events, using physics list QGSP_BERT_HP, on a target 1.0 mm thick, run:
 > ./MiniScatter -t 1.0 -p QGSP_BERT_HP -n 100000
+
+The Python script analyzer.py is used to read the produced .ROOT files, display some plots, and make a rough analysis.
+It can for example be symlinked into the "plots" subfolder.
+It is ran as:
+> python analyzer.py rootfile1.root rootfile2.root ...
