@@ -51,6 +51,8 @@ void analysis::makeHistograms(){
   tracker_protonAngle->GetXaxis()->SetTitle("Angle of outgoing protons [rad]");
   tracker_protonEnergy       = new TH1D("protonEnergy","protonEnergy",10000,0,10.0);
   tracker_protonEnergy->GetXaxis()->SetTitle("Energy of outgoing protons [TeV]");
+  
+  tracker_sumMomentum = new TH1D("sumMomentum","sumMomentum",10000,6995,7005);
 }
 
 void analysis::writePerEvent(const G4Event* event){
@@ -93,12 +95,16 @@ void analysis::writePerEvent(const G4Event* event){
     trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
     if (trackerHitsCollection != NULL) {
       G4int nEntries = trackerHitsCollection->entries();
-
+      
+      G4double sumMomentum = 0.0;
+      
       for (G4int i = 0; i < nEntries; i++){
 	G4double energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
 	G4double angle = (*trackerHitsCollection)[i]->GetTrackAngle();
       	G4int PDG = (*trackerHitsCollection)[i]->GetPDG();
-
+	
+	sumMomentum += (*trackerHitsCollection)[i]->GetMomentum().z();
+	
 	//Overall histograms
 	tracker_energy->Fill(energy/TeV);
 	tracker_angle->Fill(angle);
@@ -117,6 +123,8 @@ void analysis::writePerEvent(const G4Event* event){
       }
       
       tracker_numParticles->Fill(nEntries);
+      tracker_sumMomentum->Fill(sumMomentum/GeV);
+      //G4cout << sumMomentum/GeV << G4endl;
 
     }
     else{
@@ -149,6 +157,8 @@ void analysis::writeHistograms(){
   tracker_protonEnergy->Write();
   delete tracker_protonEnergy; tracker_protonEnergy = NULL;
   
+  tracker_sumMomentum->Write();
+  delete tracker_sumMomentum; tracker_sumMomentum = NULL;
 
   G4cout << "Got types at tracker:" << G4endl;
   for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){

@@ -39,15 +39,22 @@ void MyTrackerSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 
 // Called each step in the scoring logical volume
 G4bool MyTrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
+  //Only use incoming tracks
+  if (aStep->GetPreStepPoint()->GetStepStatus()!=fGeomBoundary) {
+    G4cout << "SKIP" << G4endl;
+    return false;
+  }
+
   G4Track* theTrack = aStep->GetTrack();
   G4double energy = theTrack->GetTotalEnergy();
+  const G4ThreeVector momentum = theTrack->GetMomentum();
   const G4ThreeVector& hitPos = aStep->GetPreStepPoint()->GetPosition();
   
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   G4int particleID = particleType->GetPDGEncoding();
   G4double angle = atan2(sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y()),detectorConstruction->GetDetectorDistance());
-
-  MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID);
+  
+  MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID, momentum);
   fHitsCollection->insert(aHit);
   
   return true;

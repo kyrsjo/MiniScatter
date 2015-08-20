@@ -44,7 +44,9 @@ private:
   
   TH1D* tracker_protonAngle;
   TH1D* tracker_protonEnergy;
-
+  
+  TH1D* tracker_sumMomentum;
+  
   //Used to generate filenames
   G4String physListName;
   // (Target thickness extracted directly from the DetectorConstruction)

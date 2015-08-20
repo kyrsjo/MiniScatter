@@ -7,6 +7,7 @@ files = []
 protonAngleHistos = []
 protonEnergyHistos = []
 targetEdep_IELHistos = []
+sumMomentumHistos = []
 
 for arg in sys.argv[1:]:
     print "Reading file '"+arg+"'..."
@@ -20,10 +21,13 @@ for arg in sys.argv[1:]:
     protonAngle = files[-1].Get("protonAngle")
     protonEnergy = files[-1].Get("protonEnergy")
     targetEdep_IEL = files[-1].Get("targetEdep_IEL")
+    sumMomentum = files[-1].Get("sumMomentum")
 
     protonAngleHistos.append(protonAngle)
     protonEnergyHistos.append(protonEnergy)
     targetEdep_IELHistos.append(targetEdep_IEL)
+    if sumMomentum:
+        sumMomentumHistos.append(sumMomentum)
     
     print
     print "Integrals for protonEnergy:"
@@ -91,12 +95,14 @@ for arg in sys.argv[1:]:
 print
 print
 
-def plotHistos(histosList,doLog=True):
+def plotHistos(histosList,doLog=True,rebin=0):
     c = ROOT.TCanvas()
     for n,h,idx in zip(names, histosList,xrange(len(names))):
         if h.GetSumOfWeights()==0.0:
             #Empty histogram
             continue
+        if rebin > 0:
+            h.Rebin(rebin)
         hNew = None
         if idx == 0:
             hNew = h.DrawNormalized()
@@ -110,6 +116,7 @@ def plotHistos(histosList,doLog=True):
 c1=plotHistos(protonAngleHistos)
 c2=plotHistos(protonEnergyHistos)
 c3=plotHistos(targetEdep_IELHistos,False)
+c4=plotHistos(sumMomentumHistos,True,10)
 raw_input()
 
 

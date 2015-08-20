@@ -4,6 +4,7 @@
 #include "G4Allocator.hh"
 #include "G4THitsCollection.hh"
 #include "G4VHit.hh"
+#include "G4ThreeVector.hh"
 
 class G4AttDef;
 class G4AttValue;
@@ -14,7 +15,7 @@ public:
   
   // Constructors
   MyTrackerHit();
-  MyTrackerHit(G4double energy, G4double angle, G4int id);
+  MyTrackerHit(G4double energy, G4double angle, G4int id, G4ThreeVector momentum);
 
   // Destructor
   virtual ~MyTrackerHit();  
@@ -27,13 +28,15 @@ public:
   inline G4double GetTrackEnergy() const {return trackEnergy;}
   inline G4double GetTrackAngle()  const {return trackAngle;}
   inline G4int    GetPDG()         const {return PDG;}
-
+  inline const G4ThreeVector& GetMomentum() const {return trackMomentum;}
+  
 private:
   
   G4double trackEnergy;
   G4double trackAngle;
   G4int    PDG;
-
+  
+  G4ThreeVector trackMomentum;
 };
 
 typedef G4THitsCollection<MyTrackerHit> MyTrackerHitsCollection;
