@@ -65,11 +65,11 @@ void analysis::writePerEvent(const G4Event* event){
   G4HCofThisEvent* HCE=event->GetHCofThisEvent();
   G4SDManager* SDman = G4SDManager::GetSDMpointer();
   
-  //**Data from targetEdepSD**
-  G4int myTargetEdepSD_CollID = SDman->GetCollectionID("EdepCollection");
-  if (myTargetEdepSD_CollID>=0){
+  //**Data from TargetSD**
+  G4int myTargetEdep_CollID = SDman->GetCollectionID("EdepCollection");
+  if (myTargetEdep_CollID>=0){
     MyEdepHitsCollection* targetEdepHitsCollection = NULL;
-    targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdepSD_CollID));
+    targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
     if (targetEdepHitsCollection != NULL) {
       G4int nEntries = targetEdepHitsCollection->entries();
       G4double edep      = 0.0;
@@ -90,7 +90,7 @@ void analysis::writePerEvent(const G4Event* event){
     }
   }
   else{
-    G4cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<G4endl;
+    G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << "<0!"<<G4endl;
   }
   
   //**Data from targetMomentumSD**
@@ -141,7 +141,7 @@ void analysis::writePerEvent(const G4Event* event){
 
   //**Data from detectorTrackerSD**
   G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
-  if (myTargetEdepSD_CollID>=0){
+  if (myTrackerSD_CollID>=0){
     MyTrackerHitsCollection* trackerHitsCollection = NULL;
     trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
     if (trackerHitsCollection != NULL) {
