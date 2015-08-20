@@ -34,7 +34,9 @@ private:
   TH1D* targetEdep;
   TH1D* targetEdep_NIEL;
   TH1D* targetEdep_IEL;
-  
+
+  TH1D* target_sumMomentum_z;
+
   TH1D* tracker_numParticles;
   TH1D* tracker_angle;
   TH1D* tracker_energy;
@@ -45,7 +47,7 @@ private:
   TH1D* tracker_protonAngle;
   TH1D* tracker_protonEnergy;
   
-  TH1D* tracker_sumMomentum;
+  TH1D* tracker_sumMomentum_z;
   
   //Used to generate filenames
   G4String physListName;

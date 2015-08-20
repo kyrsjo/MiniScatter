@@ -37,8 +37,8 @@ void MyEdepSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 G4bool MyEdepSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   
   MyEdepHit* aHit = new MyEdepHit();
-  aHit->AddDepositedEnergy(aStep->GetTotalEnergyDeposit());
-  aHit->AddDepositedEnergy_NIEL(aStep->GetNonIonizingEnergyDeposit());
+  aHit->SetDepositedEnergy(aStep->GetTotalEnergyDeposit());
+  aHit->SetDepositedEnergy_NIEL(aStep->GetNonIonizingEnergyDeposit());
   //std::cout<< "Creating hit! edep="<< aStep->GetTotalEnergyDeposit()/GeV << "[GeV]" << std::endl;
 
   fHitsCollection->insert(aHit);

@@ -1,6 +1,7 @@
 #include "analysis.hh"
 
 #include "MyEdepHit.hh"
+#include "MyMomentumHit.hh"
 #include "MyTrackerHit.hh"
 
 #include "G4SDManager.hh"
@@ -30,13 +31,16 @@ void analysis::makeHistograms(){
   G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
   histFile= new TFile(rootFileName,"RECREATE");
   
-  targetEdep = new TH1D("targetEdep","targetEdep",1000,0,3);
+  targetEdep = new TH1D("targetEdep","targetEdep",1000,0,6);
   targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
   targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
-  targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [MeV]");
-  targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,3);
+  targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
+  targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,6);
   targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
-
+  
+  target_sumMomentum_z = new TH1D("target_sumMomentum_z","target_sumMomentum_z",10000,-1,10);
+  target_sumMomentum_z->GetXaxis()->SetTitle("Total target Pz balance/event [MeV]");
+  
   tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
   tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
   tracker_angle        = new TH1D("angle","angle",1000,0,CLHEP::pi/3.0);
@@ -52,7 +56,8 @@ void analysis::makeHistograms(){
   tracker_protonEnergy       = new TH1D("protonEnergy","protonEnergy",10000,0,10.0);
   tracker_protonEnergy->GetXaxis()->SetTitle("Energy of outgoing protons [TeV]");
   
-  tracker_sumMomentum = new TH1D("sumMomentum","sumMomentum",10000,6995,7005);
+  tracker_sumMomentum_z = new TH1D("tracker_sumMomentum_z","tracker_sumMomentum_z",10000,6995,7005);
+  tracker_sumMomentum_z->GetXaxis()->SetTitle("Total Pz impacting the tracker / event [GeV]");
 }
 
 void analysis::writePerEvent(const G4Event* event){
@@ -77,7 +82,7 @@ void analysis::writePerEvent(const G4Event* event){
 	  (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
       }
       targetEdep->Fill(edep/MeV);
-      targetEdep_NIEL->Fill(edep_NIEL/MeV);
+      targetEdep_NIEL->Fill(edep_NIEL/keV);
       targetEdep_IEL->Fill(edep_IEL/MeV);
     }
     else{
@@ -87,6 +92,52 @@ void analysis::writePerEvent(const G4Event* event){
   else{
     G4cout << "myTargetEdepSD_CollID was " << myTargetEdepSD_CollID << "<0!"<<G4endl;
   }
+  
+  //**Data from targetMomentumSD**
+  G4int myTargetMomentumSD_in_CollID = SDman->GetCollectionID("MomentumCollection_in");
+  G4double target_pz_in = 0.0;
+  if (myTargetMomentumSD_in_CollID >= 0){
+    MyMomentumHitsCollection* momentumHitsCollection_in = NULL;
+    momentumHitsCollection_in = (MyMomentumHitsCollection*) (HCE->GetHC(myTargetMomentumSD_in_CollID));
+    if (momentumHitsCollection_in != NULL) {
+      G4int nEntries = momentumHitsCollection_in->entries();
+      for (G4int i = 0; i<nEntries; i++){
+	target_pz_in += (*momentumHitsCollection_in)[i]->GetMomentum().z();
+	//G4cout << "in-entry " << (*momentumHitsCollection_in)[i]->GetMomentum().z()/GeV << G4endl;
+      }
+    }
+    else {
+      G4cout << "momentumHitsCollection_in was NULL!"<<G4endl;
+    }
+  }
+  else {
+    G4cout << "myTargetMomentumSD_in_CollID was " << myTargetMomentumSD_in_CollID << "<0!"<<G4endl;
+  }
+  //G4cout << target_pz_in/GeV << G4endl;
+
+  G4int myTargetMomentumSD_out_CollID = SDman->GetCollectionID("MomentumCollection_out");
+  G4double target_pz_out = 0.0;
+  if (myTargetMomentumSD_out_CollID >= 0){
+    MyMomentumHitsCollection* momentumHitsCollection_out = NULL;
+    momentumHitsCollection_out = (MyMomentumHitsCollection*) (HCE->GetHC(myTargetMomentumSD_out_CollID));
+    if (momentumHitsCollection_out != NULL) {
+      G4int nEntries = momentumHitsCollection_out->entries();
+      for (G4int i = 0; i<nEntries; i++){
+	target_pz_out += (*momentumHitsCollection_out)[i]->GetMomentum().z();
+	//G4cout << "out-entry " << (*momentumHitsCollection_out)[i]->GetMomentum().z()/GeV << G4endl;
+      }
+    }
+    else {
+      G4cout << "momentumHitsCollection_out was NULL!"<<G4endl;
+    }
+  }
+  else{
+    G4cout << "myTargetMomentumSD_out_CollID was " << myTargetMomentumSD_out_CollID << "<0!"<<G4endl;
+  }
+  //G4cout << target_pz_out/GeV << G4endl;
+  
+  //G4cout << (target_pz_in-target_pz_out)/MeV << G4endl;
+  target_sumMomentum_z->Fill((target_pz_in-target_pz_out)/MeV);
 
   //**Data from detectorTrackerSD**
   G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
@@ -123,7 +174,7 @@ void analysis::writePerEvent(const G4Event* event){
       }
       
       tracker_numParticles->Fill(nEntries);
-      tracker_sumMomentum->Fill(sumMomentum/GeV);
+      tracker_sumMomentum_z->Fill(sumMomentum/GeV);
       //G4cout << sumMomentum/GeV << G4endl;
 
     }
@@ -144,6 +195,9 @@ void analysis::writeHistograms(){
   delete targetEdep_NIEL; targetEdep_NIEL = NULL;
   targetEdep_IEL->Write();
   delete targetEdep_IEL; targetEdep_IEL = NULL;
+  
+  target_sumMomentum_z->Write();
+  delete target_sumMomentum_z; target_sumMomentum_z = NULL;
 
   tracker_numParticles->Write();
   delete tracker_numParticles; tracker_numParticles = NULL;
@@ -157,8 +211,8 @@ void analysis::writeHistograms(){
   tracker_protonEnergy->Write();
   delete tracker_protonEnergy; tracker_protonEnergy = NULL;
   
-  tracker_sumMomentum->Write();
-  delete tracker_sumMomentum; tracker_sumMomentum = NULL;
+  tracker_sumMomentum_z->Write();
+  delete tracker_sumMomentum_z; tracker_sumMomentum_z = NULL;
 
   G4cout << "Got types at tracker:" << G4endl;
   for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){

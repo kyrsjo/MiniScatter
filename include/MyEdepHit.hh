@@ -24,11 +24,11 @@ public:
   virtual void Print();
 
   // Deposited energy
-  inline void AddDepositedEnergy(G4double energy) {fDepositedEnergy = energy;}
+  inline void SetDepositedEnergy(G4double energy) {fDepositedEnergy = energy;}
   inline G4double GetDepositedEnergy() const {return fDepositedEnergy;}
 
   // Deposited energy
-  inline void AddDepositedEnergy_NIEL(G4double energy) {fDepositedEnergy_NIEL = energy;}
+  inline void SetDepositedEnergy_NIEL(G4double energy) {fDepositedEnergy_NIEL = energy;}
   inline G4double GetDepositedEnergy_NIEL() const {return fDepositedEnergy_NIEL;}
 
 private:

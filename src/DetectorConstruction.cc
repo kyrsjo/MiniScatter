@@ -1,6 +1,8 @@
 #include "DetectorConstruction.hh"
-#include "MyEdepSD.hh"
+//#include "MyEdepSD.hh"
+#include "MyTargetSD.hh"
 #include "MyTrackerSD.hh"
+//#include "MyMomentumSD.hh"
 #include "G4Material.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -101,7 +103,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
   // Get pointer to detector manager                                                     
   G4SDManager* SDman = G4SDManager::GetSDMpointer();  
 
-  G4VSensitiveDetector* targetSD = new MyEdepSD("EdepSD_target");
+  //  G4VSensitiveDetector* targetSD = new MyEdepSD("EdepSD_target");
+  //SDman->AddNewDetector(targetSD);
+  //logicTarget->SetSensitiveDetector(targetSD);
+  G4VSensitiveDetector* targetSD = new MyTargetSD("TargetSD_target");
   SDman->AddNewDetector(targetSD);
   logicTarget->SetSensitiveDetector(targetSD);
   G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
