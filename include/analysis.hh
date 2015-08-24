@@ -11,7 +11,7 @@
 
 class analysis {
 public:
-	//! Singleton pattern
+  //! Singleton pattern
   static analysis* GetInstance() {
     if ( analysis::singleton == NULL ) analysis::singleton = new analysis();
     return analysis::singleton;
@@ -41,6 +41,7 @@ private:
   TH1D* tracker_angle;
   TH1D* tracker_energy;
   std::map<G4int,G4int> tracker_particleTypes;
+  std::map<G4int,G4String> tracker_particleNames;
   
   //TH1D* tracker_energyflux_neutrals;
   
@@ -48,6 +49,10 @@ private:
   TH1D* tracker_protonEnergy;
   
   TH1D* tracker_sumMomentum_z;
+  
+  TH1D* tracker_energyAngle;
+  TH1D* tracker_energyAngle_charged;
+  TH1D* tracker_energyAngle_neutral;
   
   //Used to generate filenames
   G4String physListName;

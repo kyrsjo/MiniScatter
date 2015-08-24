@@ -15,9 +15,7 @@
 #include "CLHEP/Units/SystemOfUnits.h"
 
 #include <iostream>
-
-
-//#include "TDatabasePDG.h"
+#include <iomanip>
 
 using namespace std;
 analysis* analysis::singleton = 0;
@@ -58,6 +56,18 @@ void analysis::makeHistograms(){
   
   tracker_sumMomentum_z = new TH1D("tracker_sumMomentum_z","tracker_sumMomentum_z",10000,6995,7005);
   tracker_sumMomentum_z->GetXaxis()->SetTitle("Total Pz impacting the tracker / event [GeV]");
+  
+  tracker_energyAngle = new TH1D("tracker_energyAngle", "tracker_energyAngle", 10000, 0, CLHEP::pi/3.0);
+  tracker_energyAngle->GetXaxis()->SetTitle("Angle of outgoing particles");
+  tracker_energyAngle->GetYaxis()->SetTitle("GeV/bin");
+
+  tracker_energyAngle_charged = new TH1D("tracker_energyAngle_charged", "tracker_energyAngle_charged", 10000, 0, CLHEP::pi/3.0);
+  tracker_energyAngle_charged->GetXaxis()->SetTitle("Angle of outgoing charged particles");
+  tracker_energyAngle_charged->GetYaxis()->SetTitle("GeV/bin");
+
+  tracker_energyAngle_neutral = new TH1D("tracker_energyAngle_neutral", "tracker_energyAngle_neutral", 10000, 0, CLHEP::pi/3.0);
+  tracker_energyAngle_neutral->GetXaxis()->SetTitle("Angle of outgoing neutrals");
+  tracker_energyAngle_neutral->GetYaxis()->SetTitle("GeV/bin");
 }
 
 void analysis::writePerEvent(const G4Event* event){
@@ -150,33 +160,45 @@ void analysis::writePerEvent(const G4Event* event){
       G4double sumMomentum = 0.0;
       
       for (G4int i = 0; i < nEntries; i++){
-	G4double energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
-	G4double angle = (*trackerHitsCollection)[i]->GetTrackAngle();
-      	G4int PDG = (*trackerHitsCollection)[i]->GetPDG();
+	const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
+	const G4double  angle  = (*trackerHitsCollection)[i]->GetTrackAngle();
+      	const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
+      	const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
+	const G4String& type  = (*trackerHitsCollection)[i]->GetType();
 	
 	sumMomentum += (*trackerHitsCollection)[i]->GetMomentum().z();
 	
 	//Overall histograms
 	tracker_energy->Fill(energy/TeV);
 	tracker_angle->Fill(angle);
+	tracker_energyAngle->Fill(angle,energy/GeV);
 	
 	//Particle type counters
 	if (tracker_particleTypes.count(PDG) == 0){
 	  tracker_particleTypes[PDG] = 0;
+	  tracker_particleNames[PDG] = type;
+	  //G4cout << "PDG = "<< PDG << ", type =" << type << G4endl;
 	}
 	tracker_particleTypes[PDG] += 1;
-
+	
 	//Per-particletype histograms
 	if (PDG == 2212) { //Proton (p+)
 	  tracker_protonEnergy->Fill(energy/TeV);
 	  tracker_protonAngle->Fill(angle);
+	}
+	
+	if (charge==0){
+	  tracker_energyAngle_neutral->Fill(angle,energy/GeV);
+	}
+	else {
+	  tracker_energyAngle_charged->Fill(angle,energy/GeV);
 	}
       }
       
       tracker_numParticles->Fill(nEntries);
       tracker_sumMomentum_z->Fill(sumMomentum/GeV);
       //G4cout << sumMomentum/GeV << G4endl;
-
+      
     }
     else{
       G4cout << "trackerHitsCollection was NULL!"<<G4endl;
@@ -214,9 +236,18 @@ void analysis::writeHistograms(){
   tracker_sumMomentum_z->Write();
   delete tracker_sumMomentum_z; tracker_sumMomentum_z = NULL;
 
+  tracker_energyAngle->Write();
+  delete tracker_energyAngle; tracker_energyAngle = NULL;
+  tracker_energyAngle_charged->Write();
+  delete tracker_energyAngle_charged; tracker_energyAngle_charged = NULL;
+  tracker_energyAngle_neutral->Write();
+  delete tracker_energyAngle_neutral; tracker_energyAngle_neutral = NULL;
+
   G4cout << "Got types at tracker:" << G4endl;
   for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
-    G4cout << "\t" << it->first << " " << it->second << G4endl;
+    G4cout << std::setw(15) << it->first << " = "
+	   << std::setw(15) << tracker_particleNames[it->first] << ": "
+	   << it->second << G4endl;
   }
   tracker_particleTypes.clear();
 

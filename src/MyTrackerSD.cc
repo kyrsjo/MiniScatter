@@ -6,8 +6,7 @@
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
 
-#include <iostream>
-
+//#include <iostream>
 //using namespace std;
 
 
@@ -52,10 +51,13 @@ G4bool MyTrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   G4Track* theTrack = aStep->GetTrack();
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   G4int particleID = particleType->GetPDGEncoding();
+  G4int particleCharge = particleType->GetPDGCharge();
+  //  G4String particleName;
   
   G4double angle = atan2(sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y()),detectorConstruction->GetDetectorDistance());
   
-  MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID, momentum);
+  MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID, particleCharge, momentum);
+  aHit->SetType(particleType->GetParticleSubType());
   fHitsCollection->insert(aHit);
   
   return true;

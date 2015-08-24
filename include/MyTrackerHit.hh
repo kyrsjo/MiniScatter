@@ -15,7 +15,7 @@ public:
   
   // Constructors
   MyTrackerHit();
-  MyTrackerHit(G4double energy, G4double angle, G4int id, G4ThreeVector momentum);
+  MyTrackerHit(G4double energy, G4double angle, G4int id, G4int charge, G4ThreeVector momentum);
 
   // Destructor
   virtual ~MyTrackerHit();  
@@ -25,18 +25,24 @@ public:
   // Methods
   virtual void Print();
   
-  inline G4double GetTrackEnergy() const {return trackEnergy;}
-  inline G4double GetTrackAngle()  const {return trackAngle;}
-  inline G4int    GetPDG()         const {return PDG;}
+  inline G4double GetTrackEnergy()    const {return trackEnergy;}
+  inline G4double GetTrackAngle()     const {return trackAngle;}
+  inline G4int    GetPDG()            const {return PDG;}
+  inline G4int    GetCharge()         const {return particleCharge;}
   inline const G4ThreeVector& GetMomentum() const {return trackMomentum;}
   
+  inline void SetType(G4String type) {particleType = type;}
+  inline const G4String& GetType() const {return particleType;}
 private:
   
   G4double trackEnergy;
   G4double trackAngle;
   G4int    PDG;
+  G4int    particleCharge;
   
   G4ThreeVector trackMomentum;
+
+  G4String particleType;
 };
 
 typedef G4THitsCollection<MyTrackerHit> MyTrackerHitsCollection;
