@@ -68,6 +68,8 @@ void analysis::makeHistograms(){
   tracker_energyAngle_neutral = new TH1D("tracker_energyAngle_neutral", "tracker_energyAngle_neutral", 10000, 0, CLHEP::pi/3.0);
   tracker_energyAngle_neutral->GetXaxis()->SetTitle("Angle of outgoing neutrals");
   tracker_energyAngle_neutral->GetYaxis()->SetTitle("GeV/bin");
+
+  numParticles_total = 0;
 }
 
 void analysis::writePerEvent(const G4Event* event){
@@ -180,6 +182,7 @@ void analysis::writePerEvent(const G4Event* event){
 	  //G4cout << "PDG = "<< PDG << ", type =" << type << G4endl;
 	}
 	tracker_particleTypes[PDG] += 1;
+	numParticles_total += 1;
 	
 	//Per-particletype histograms
 	if (PDG == 2212) { //Proton (p+)
@@ -247,7 +250,10 @@ void analysis::writeHistograms(){
   for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
     G4cout << std::setw(15) << it->first << " = "
 	   << std::setw(15) << tracker_particleNames[it->first] << ": "
-	   << it->second << G4endl;
+	   << std::setw(15) << it->second << " = ";// << G4endl;
+    G4int numHashes = (G4int) ((it->second / ((double)numParticles_total)) * 100);
+    for (int i = 0; i < numHashes; i++) G4cout << "#";
+    G4cout << endl;
   }
   tracker_particleTypes.clear();
 
