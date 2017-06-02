@@ -5,7 +5,8 @@ project(MiniScatter)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   #Use C++11 in MiniScatter.cc
-  add_definitions(-std=c++11)
+  # Now default, may use newer standard..
+  #add_definitions(-std=c++11)
 endif()
 
 #----------------------------------------------------------------------------
@@ -39,6 +40,7 @@ if(ROOT_FOUND)
   add_definitions(-DG4ANALYSIS_USE_ROOT)
   include(${Geant4_USE_FILE})
   include_directories(${ROOT_INCLUDE_DIRS} ${Geant4_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/include)
+  add_definitions(${ROOT_DEFINITIONS})
 else()
   message( FATAL_ERROR "Root was not found, aborting!" )
   include(${Geant4_USE_FILE})
