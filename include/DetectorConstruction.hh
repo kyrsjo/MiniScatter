@@ -13,7 +13,9 @@
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-    DetectorConstruction(G4double TargetThickness_in=1.0); //Target thickness [mm]
+    DetectorConstruction(G4double TargetThickness_in=1.0,
+                         G4String TargetMaterial_in="G4_Cu",
+                         G4double DetectorDistance_in=500.0);
     ~DetectorConstruction(){};
 
 public:

@@ -56,23 +56,30 @@
 #endif
 
 #include <unistd.h> //getopt()
+//#include <getopt.h> // Long options to getopt (GNU extension)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv) {
     //Parse command line arguments
     int getopt_char;
-    double target_thick   = 1.0;              //Target thickness  [mm]
+    G4double target_thick    = 1.0;           //Target thickness  [mm]
+    G4String target_material = "G4_Cu";       //Name of target material to use
+
+    double detector_distance   = 500.0;       //Detector distance at x=y=0  [mm]
+
     G4String physListName = "QGSP_FTFP_BERT"; //Name of physics list to use
     G4int numEvents       = 0;                //Number of events to generate
     G4bool useGUI         = false;            //GUI on/off
-    while ( (getopt_char = getopt(argc,argv, "t:p:n:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:p:n:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
                    << "Usage/options:" << G4endl
                    << "-t <double> : Target thickness [mm], default/current value = " << target_thick << G4endl
+                   << "-m <string> : Target material name, default/current = '" << target_material << G4endl
+                   << "-d <double> : Detector distance [mm], default/current value = " << detector_distance << G4endl
                    << "-p <string> : Physics list name, default/current = '" << physListName << G4endl
                    << "-n <int> : Run a number of events" << G4endl
                    << "-g : Use a GUI"<< G4endl << G4endl;
@@ -97,9 +104,27 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             break;
+
+        case 'd': //Detector distance
+            try {
+                detector_distance = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading detector distance" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            break;
+
         case 'p': //Named physics list
             physListName = G4String(optarg);
             break;
+
+        case 'm': //Target material
+            target_material = G4String(optarg);
+            break;
+
         case 'n': //Number of events
             try {
                 numEvents = std::stoi(string(optarg));
@@ -140,7 +165,7 @@ int main(int argc,char** argv) {
     G4RunManager * runManager = new G4RunManager;
 
     // Set mandatory initialization classes
-    DetectorConstruction* detector = new DetectorConstruction(target_thick);
+    DetectorConstruction* detector = new DetectorConstruction(target_thick, target_material, detector_distance);
     runManager->SetUserInitialization(detector);
 
     G4int verbose=0;

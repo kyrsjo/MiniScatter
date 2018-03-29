@@ -26,28 +26,33 @@
 
 //------------------------------------------------------------------------------
 
-DetectorConstruction::DetectorConstruction(G4double TargetThickness_in) :
+DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
+                                           G4String TargetMaterial_in,
+                                           G4double DetectorDistance_in) :
     AlMaterial(0), TargetMaterial(0),
     solidWorld(0),logicWorld(0),physiWorld(0),
     solidTarget(0),logicTarget(0),physiTarget(0),
     magField(0) {
 
+    TargetThickness = TargetThickness_in*mm;
+    DetectorThickness = 1*um;
+    DetectorDistance = DetectorDistance_in*mm;
+
     WorldSizeXY  = 200*cm;
     WorldSizeZ   = 200*cm;
+    if (DetectorDistance > WorldSizeZ / 2.0) {
+        WorldSizeZ   = (DetectorDistance_in + DetectorThickness + 10*cm)*2.0;
+    }
 
     TargetSizeX     = WorldSizeXY;
     TargetSizeY     = WorldSizeXY;
-    TargetThickness = TargetThickness_in*mm;
 
     DetectorSizeX     = WorldSizeXY;
     DetectorSizeY     = WorldSizeXY;
-    DetectorThickness = 1*um;
-
-    DetectorDistance = 50*cm;
 
     // materials
     DefineMaterials();
-    SetTargetMaterial("G4_Cu");
+    SetTargetMaterial(TargetMaterial_in);
     DetectorMaterial = vacuumMaterial;
 }
 
@@ -65,7 +70,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
 
     physiWorld = new G4PVPlacement(0,               //no rotation
-                                   G4ThreeVector(), //at (0,0,0)
+                                   G4ThreeVector(), //World volume must be centered at the origin
                                    logicWorld,      //its logical volume
                                    "World",         //its name
                                    0,               //its mother  volume
@@ -140,6 +145,11 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
     // search the material by its name
     G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
     if (pttoMaterial) TargetMaterial = pttoMaterial;
+    else {
+        G4cerr << "Error when setting material '"
+               << materialChoice << "' -- not found!" << G4endl;
+        exit(1);
+    }
 }
 
 //------------------------------------------------------------------------------
