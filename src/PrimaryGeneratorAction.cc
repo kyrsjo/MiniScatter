@@ -25,30 +25,28 @@
 // -----------------------------------------------------------------------------------------
 
 PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC)
-  :Detector(DC) {
-  G4String particleName = "proton";
-  //G4String particleName = "anti_proton";
-  //G4String particleName = "geantino";
-  
-  //G4String particleName = "pi-";
-  G4int n_particle = 1;
-  particleGun  = new G4ParticleGun(n_particle);
-  G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-  G4ParticleDefinition* particle = particleTable->FindParticle(particleName);		
-  particleGun->SetParticleDefinition(particle);
+    : Detector(DC) {
+    G4String particleName = "proton";
+    //G4String particleName = "anti_proton";
+    //G4String particleName = "geantino";
+
+    //G4String particleName = "pi-";
+    G4int n_particle = 1;
+    particleGun  = new G4ParticleGun(n_particle);
+    G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+    G4ParticleDefinition* particle = particleTable->FindParticle(particleName);
+    particleGun->SetParticleDefinition(particle);
 }
 
-PrimaryGeneratorAction::~PrimaryGeneratorAction()
-{ 
-  delete particleGun;
+PrimaryGeneratorAction::~PrimaryGeneratorAction() {
+    delete particleGun;
 }
 
-void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent){
-  //set energy and stuff
-  particleGun->SetParticlePosition(G4ThreeVector(0,0,-30*cm));
-  //particleGun->SetParticleEnergy(0.5*MeV);
-  particleGun->SetParticleEnergy(7.0*TeV);
-  particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
-  particleGun->GeneratePrimaryVertex(anEvent);
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
+    //set energy and stuff
+    particleGun->SetParticlePosition(G4ThreeVector(0,0,-30*cm));
+    //particleGun->SetParticleEnergy(0.5*MeV);
+    particleGun->SetParticleEnergy(7.0*TeV);
+    particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
+    particleGun->GeneratePrimaryVertex(anEvent);
 }
-

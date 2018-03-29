@@ -27,7 +27,7 @@
 // $Id: RunAction.hh,v 1.1 2010/10/18 15:56:17 maire Exp $
 // GEANT4 tag $Name: geant4-09-04 $
 //
-// 
+//
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -52,15 +52,14 @@ class G4Run;
 
 class RunAction : public G4UserRunAction {
 public:
-  RunAction();
-  virtual ~RunAction();
-  void BeginOfRunAction(const G4Run*);
-  void   EndOfRunAction(const G4Run*);
-private:	
+    RunAction();
+    virtual ~RunAction();
+    void BeginOfRunAction(const G4Run*);
+    void   EndOfRunAction(const G4Run*);
+private:
 
 };
 
 //--------------------------------------------------------------------------------
 
 #endif
-

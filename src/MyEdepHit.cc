@@ -11,5 +11,3 @@ MyEdepHit::~MyEdepHit() {
 
 void MyEdepHit::Print() {
 }
-
-

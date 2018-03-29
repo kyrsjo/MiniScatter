@@ -27,7 +27,7 @@
 // $Id: EventAction.hh,v 1.1 2010/10/18 15:56:17 maire Exp $
 // GEANT4 tag $Name: geant4-09-04 $
 //
-// 
+//
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -48,18 +48,16 @@ class RunAction;
 class EventAction : public G4UserEventAction
 {
 public:
-  EventAction(RunAction*);
-  virtual ~EventAction(){};
+    EventAction(RunAction*);
+    virtual ~EventAction(){};
 
-  void  BeginOfEventAction(const G4Event*){};
-  void    EndOfEventAction(const G4Event*);
-    
+    void  BeginOfEventAction(const G4Event*){};
+    void    EndOfEventAction(const G4Event*);
+
 private:
-   RunAction*  runAct;
+    RunAction*  runAct;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
-
-    

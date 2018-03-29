@@ -12,5 +12,3 @@ MyMomentumHit::~MyMomentumHit() {
 
 void MyMomentumHit::Print() {
 }
-
-

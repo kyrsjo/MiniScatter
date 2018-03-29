@@ -27,7 +27,7 @@
 // $Id: EventAction.cc,v 1.1 2010/10/18 15:56:17 maire Exp $
 // GEANT4 tag $Name: geant4-09-04 $
 //
-// 
+//
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -60,11 +60,11 @@ EventAction::EventAction(RunAction* run) : runAct(run) {}
 //------------------------------------------------------------------------------
 
 void EventAction::EndOfEventAction(const G4Event* event) {
-  analysis::GetInstance()->writePerEvent(event);
-  G4int eventID = event->GetEventID();
-  if (eventID % 10000 == 0) {
-    G4cout << "Event# "<<event->GetEventID() << G4endl;
-  }
+    analysis::GetInstance()->writePerEvent(event);
+    G4int eventID = event->GetEventID();
+    if (eventID % 10000 == 0) {
+        G4cout << "Event# "<<event->GetEventID() << G4endl;
+    }
 }
 
 //------------------------------------------------------------------------------

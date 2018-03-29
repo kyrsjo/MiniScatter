@@ -1,7 +1,7 @@
 #include "MyTrackerSD.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4SDManager.hh"
-#include "G4Step.hh"    
+#include "G4Step.hh"
 #include "G4Track.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
@@ -12,10 +12,10 @@
 
 MyTrackerSD::MyTrackerSD(const G4String& name) :
   G4VSensitiveDetector(name) {
-  
+
   collectionName.insert("TrackerCollection");
   fHitsCollectionID = -1;
-  
+
   G4RunManager*     run= G4RunManager::GetRunManager();
   detectorConstruction = (DetectorConstruction*)run->GetUserDetectorConstruction();
 }
@@ -23,8 +23,8 @@ MyTrackerSD::MyTrackerSD(const G4String& name) :
 MyTrackerSD::~MyTrackerSD() {}
 
 // Called at the beginning of each event
-void MyTrackerSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) { 
-  
+void MyTrackerSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
+
   //For every event, make a new hits collection
   fHitsCollection = new MyTrackerHitsCollection(SensitiveDetectorName, collectionName[0]);
   if (fHitsCollectionID < 0) {
@@ -43,22 +43,22 @@ G4bool MyTrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     G4cout << "MyTrackerSD::ProcessHits(): SKIP!" << G4endl;
     return false;
   }
-  
+
   G4double energy = aStep->GetPreStepPoint()->GetTotalEnergy(); //theTrack->GetTotalEnergy();
   const G4ThreeVector momentum = aStep->GetPreStepPoint()->GetMomentum(); //theTrack->GetMomentum();
   const G4ThreeVector& hitPos = aStep->GetPreStepPoint()->GetPosition();
-  
+
   G4Track* theTrack = aStep->GetTrack();
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   G4int particleID = particleType->GetPDGEncoding();
   G4int particleCharge = particleType->GetPDGCharge();
   //  G4String particleName;
-  
+
   G4double angle = atan2(sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y()),detectorConstruction->GetDetectorDistance());
-  
+
   MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID, particleCharge, momentum);
   aHit->SetType(particleType->GetParticleSubType());
   fHitsCollection->insert(aHit);
-  
+
   return true;
 }

@@ -27,119 +27,119 @@
 //------------------------------------------------------------------------------
 
 DetectorConstruction::DetectorConstruction(G4double TargetThickness_in) :
-  AlMaterial(0), TargetMaterial(0),
-  solidWorld(0),logicWorld(0),physiWorld(0),
-  solidTarget(0),logicTarget(0),physiTarget(0),
-  magField(0) {
-  
-  WorldSizeXY  = 200*cm;
-  WorldSizeZ   = 200*cm;
-  
-  TargetSizeX     = WorldSizeXY;
-  TargetSizeY	  = WorldSizeXY;
-  TargetThickness = TargetThickness_in*mm;
-  
-  DetectorSizeX     = WorldSizeXY;
-  DetectorSizeY     = WorldSizeXY;
-  DetectorThickness = 1*um;
-  
-  DetectorDistance = 50*cm;
-  
-  // materials
-  DefineMaterials();
-  SetTargetMaterial("G4_Cu");
-  DetectorMaterial = vacuumMaterial;
+    AlMaterial(0), TargetMaterial(0),
+    solidWorld(0),logicWorld(0),physiWorld(0),
+    solidTarget(0),logicTarget(0),physiTarget(0),
+    magField(0) {
+
+    WorldSizeXY  = 200*cm;
+    WorldSizeZ   = 200*cm;
+
+    TargetSizeX     = WorldSizeXY;
+    TargetSizeY     = WorldSizeXY;
+    TargetThickness = TargetThickness_in*mm;
+
+    DetectorSizeX     = WorldSizeXY;
+    DetectorSizeY     = WorldSizeXY;
+    DetectorThickness = 1*um;
+
+    DetectorDistance = 50*cm;
+
+    // materials
+    DefineMaterials();
+    SetTargetMaterial("G4_Cu");
+    DetectorMaterial = vacuumMaterial;
 }
 
 //------------------------------------------------------------------------------
 
 G4VPhysicalVolume* DetectorConstruction::Construct() {
-  // Clean old geometry, if any
-  G4GeometryManager::GetInstance()->OpenGeometry();
-  G4PhysicalVolumeStore::GetInstance()->Clean();
-  G4LogicalVolumeStore::GetInstance()->Clean();
-  G4SolidStore::GetInstance()->Clean();
-  
-  // World volume
-  solidWorld = new G4Box("WorldS", WorldSizeXY/2.0, WorldSizeXY/2.0, WorldSizeZ/2.0);
-  logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
-  
-  physiWorld = new G4PVPlacement(0,			//no rotation
-				 G4ThreeVector(),	//at (0,0,0)
-				 logicWorld,		//its logical volume
-				 "World",		//its name
-				 0,			//its mother  volume
-				 false,			//pMany not used
-				 0,			//copy number
-				 true);                 //Check for overlaps
+    // Clean old geometry, if any
+    G4GeometryManager::GetInstance()->OpenGeometry();
+    G4PhysicalVolumeStore::GetInstance()->Clean();
+    G4LogicalVolumeStore::GetInstance()->Clean();
+    G4SolidStore::GetInstance()->Clean();
 
-  //constructing the target
-  solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
-  logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
-  physiTarget = new G4PVPlacement(NULL,		   //no rotation
-				  G4ThreeVector(0.0,0.0,0.0),  //its position
-				  logicTarget,       //its logical volume
-				  "TargetPV",        //its name
-				  logicWorld,        //its mother
-				  false,             //pMany not used
-				  0,                 //copy number
-				  true);             //Check for overlaps
+    // World volume
+    solidWorld = new G4Box("WorldS", WorldSizeXY/2.0, WorldSizeXY/2.0, WorldSizeZ/2.0);
+    logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
 
-  //The "detector"
-  solidDetector = new G4Box("DetectorS", DetectorSizeX/2,DetectorSizeY/2,DetectorThickness/2);
-  logicDetector = new G4LogicalVolume(solidDetector, DetectorMaterial, "DetectorLV");
-  physiDetector = new G4PVPlacement(0,		   //no rotation
-				    G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
-				    logicDetector,     //its logical volume
-				    "DetectorPV",      //its name
-				    logicWorld,        //its mother
-				    false,             //pMany not used
-				    0,                 //copy number
-				    true);             //Check for overlaps
+    physiWorld = new G4PVPlacement(0,               //no rotation
+                                   G4ThreeVector(), //at (0,0,0)
+                                   logicWorld,      //its logical volume
+                                   "World",         //its name
+                                   0,               //its mother  volume
+                                   false,           //pMany not used
+                                   0,               //copy number
+                                   true);           //Check for overlaps
+
+    //constructing the target
+    solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
+    logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
+    physiTarget = new G4PVPlacement(NULL,                        //no rotation
+                                    G4ThreeVector(0.0,0.0,0.0),  //its position
+                                    logicTarget,                 //its logical volume
+                                    "TargetPV",                  //its name
+                                    logicWorld,                  //its mother
+                                    false,                       //pMany not used
+                                    0,                           //copy number
+                                    true);                       //Check for overlaps
+
+    //The "detector"
+    solidDetector = new G4Box("DetectorS", DetectorSizeX/2,DetectorSizeY/2,DetectorThickness/2);
+    logicDetector = new G4LogicalVolume(solidDetector, DetectorMaterial, "DetectorLV");
+    physiDetector = new G4PVPlacement(0,                                        //no rotation
+                                      G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
+                                      logicDetector,                            //its logical volume
+                                      "DetectorPV",                             //its name
+                                      logicWorld,                               //its mother
+                                      false,                                    //pMany not used
+                                      0,                                        //copy number
+                                      true);                                    //Check for overlaps
 
 
-  // Get pointer to detector manager                                                     
-  G4SDManager* SDman = G4SDManager::GetSDMpointer();  
+    // Get pointer to detector manager
+    G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
-  G4VSensitiveDetector* targetSD = new MyTargetSD("TargetSD_target");
-  SDman->AddNewDetector(targetSD);
-  logicTarget->SetSensitiveDetector(targetSD);
-  G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
-  SDman->AddNewDetector(detectorSD);
-  logicDetector->SetSensitiveDetector(detectorSD);
-  
-  return physiWorld;
+    G4VSensitiveDetector* targetSD = new MyTargetSD("TargetSD_target");
+    SDman->AddNewDetector(targetSD);
+    logicTarget->SetSensitiveDetector(targetSD);
+    G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
+    SDman->AddNewDetector(detectorSD);
+    logicDetector->SetSensitiveDetector(detectorSD);
+
+    return physiWorld;
 }
 
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::DefineMaterials() {
-  G4NistManager* man = G4NistManager::Instance();
-  man->SetVerbose(1);
+    G4NistManager* man = G4NistManager::Instance();
+    man->SetVerbose(1);
 
-  G4Material* Al = man->FindOrBuildMaterial("G4_Al");
-  G4Material* C = man->FindOrBuildMaterial("G4_C");
-  G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
-  G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
-  G4Material* Ti =man->FindOrBuildMaterial("G4_Ti");  
-  
-  G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
-  
-  //default materials 
-  vacuumMaterial   = Vacuum;
-  AlMaterial       = Al;
-  CMaterial        = C;
-  CuMaterial       = Cu;
-  PbMaterial       = Pb;
-  TiMaterial       = Ti;
+    G4Material* Al = man->FindOrBuildMaterial("G4_Al");
+    G4Material* C  = man->FindOrBuildMaterial("G4_C");
+    G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
+    G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
+    G4Material* Ti = man->FindOrBuildMaterial("G4_Ti");
+
+    G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
+
+    //default materials
+    vacuumMaterial   = Vacuum;
+    AlMaterial       = Al;
+    CMaterial        = C;
+    CuMaterial       = Cu;
+    PbMaterial       = Pb;
+    TiMaterial       = Ti;
 }
 
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
-  // search the material by its name   
-  G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);     
-  if (pttoMaterial) TargetMaterial = pttoMaterial;
+    // search the material by its name
+    G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
+    if (pttoMaterial) TargetMaterial = pttoMaterial;
 }
 
 //------------------------------------------------------------------------------
