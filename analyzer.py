@@ -16,7 +16,7 @@ for arg in sys.argv[1:]:
     print files[-1].ls()
 
     #Analyze
-    
+
     # Protons with dpp/p < 90%
     protonAngle = files[-1].Get("protonAngle")
     protonEnergy = files[-1].Get("protonEnergy")
@@ -28,7 +28,7 @@ for arg in sys.argv[1:]:
     targetEdep_IELHistos.append(targetEdep_IEL)
     if sumMomentum:
         sumMomentumHistos.append(sumMomentum)
-    
+
     print
     print "Integrals for protonEnergy:"
     xaxis = protonEnergy.GetXaxis()
@@ -44,7 +44,7 @@ for arg in sys.argv[1:]:
     lowE1_bin = xaxis.FindBin(lowE1)
     lowE2 = 1.0
     lowE2_bin = xaxis.FindBin(lowE2)
-    
+
     print "Int0:"
     print "\t Range: all"
     int0 = protonEnergy.Integral()
@@ -117,6 +117,6 @@ c1=plotHistos(protonAngleHistos)
 c2=plotHistos(protonEnergyHistos)
 c3=plotHistos(targetEdep_IELHistos,False)
 c4=plotHistos(sumMomentumHistos,True,10)
+
+print "Hit ENTER to exit and close all plots"
 raw_input()
-
-
