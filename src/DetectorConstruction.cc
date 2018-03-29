@@ -23,12 +23,15 @@
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
 
+#include <cmath>
 
 //------------------------------------------------------------------------------
 
 DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4String TargetMaterial_in,
-                                           G4double DetectorDistance_in) :
+                                           G4double DetectorDistance_in,
+                                           G4double DetectorAngle_in,
+                                           G4bool   DetectorRotated_in) :
     AlMaterial(0), TargetMaterial(0),
     solidWorld(0),logicWorld(0),physiWorld(0),
     solidTarget(0),logicTarget(0),physiTarget(0),
@@ -37,18 +40,61 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     TargetThickness = TargetThickness_in*mm;
     DetectorThickness = 1*um;
     DetectorDistance = DetectorDistance_in*mm;
+    DetectorRotated = DetectorRotated_in;
+    DetectorAngle = DetectorAngle_in*pi/180.0;
 
-    WorldSizeXY  = 200*cm;
-    WorldSizeZ   = 200*cm;
-    if (DetectorDistance > WorldSizeZ / 2.0) {
-        WorldSizeZ   = (DetectorDistance_in + DetectorThickness + 10*cm)*2.0;
+    if (not DetectorRotated) { // No detector angle, make a simple 200x200cm world
+        WorldSizeZ   = 200*cm;
+        if (DetectorDistance > WorldSizeZ / 2.0) {
+            //If neccessary, expand the z-size of the volume to fit the detector
+            WorldSizeZ   = (DetectorDistance + DetectorThickness + 10*cm)*2.0;
+        }
+
+        WorldSizeX = 200*cm;
+        WorldSizeY = 200*cm;
+
+        DetectorSizeX = WorldSizeX;
+        DetectorSizeY = WorldSizeY;
+
+        TargetSizeX = WorldSizeX;
+        TargetSizeY = WorldSizeY;
     }
+    else { //Detector has angle -- make sure that everything fits together
+        double theta = abs(DetectorAngle);
+        // Offset of detector center vs. end of target
+        double dz = DetectorDistance-TargetThickness/2.0;
+        // Transverse size of volume needed to contain the detector
+        double dx = dz/tan(theta);
+        // Total length of detector volume (including part to be "chopped off" to fit the thickness)
+        double rp = dz/sin(theta);
 
-    TargetSizeX     = WorldSizeXY;
-    TargetSizeY     = WorldSizeXY;
+        // How much to cut off the end so that it doesn't crash with the wall when thickness > 0?
+        double dr = 0.0;
+        if (theta < pi/4.0) {
+            dr = DetectorThickness/(2.0*tan(theta));
+        }
+        else if (theta > pi/4.0) {
+            dr = (DetectorThickness*tan(theta))/2.0;
+        }
+        else if (theta == pi/4.0) {
+            dr = DetectorThickness/2.0;
+        }
+        else if (theta > pi/2.0) {
+            G4cerr << "Error: Detector angle  should be within +/- pi/2.0" << G4endl;
+            exit(1);
+        }
 
-    DetectorSizeX     = WorldSizeXY;
-    DetectorSizeY     = WorldSizeXY;
+        DetectorSizeX = (rp-dr)*2.0;
+        DetectorSizeY = DetectorSizeX;
+
+        WorldSizeX = dx*2.0;
+        WorldSizeY = DetectorSizeY;
+
+        WorldSizeZ = 2*(TargetThickness/2+2*dz);
+
+        TargetSizeX = WorldSizeX;
+        TargetSizeY = WorldSizeY;
+    }
 
     // materials
     DefineMaterials();
@@ -66,7 +112,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4SolidStore::GetInstance()->Clean();
 
     // World volume
-    solidWorld = new G4Box("WorldS", WorldSizeXY/2.0, WorldSizeXY/2.0, WorldSizeZ/2.0);
+    solidWorld = new G4Box("WorldS", WorldSizeX/2.0, WorldSizeY/2.0, WorldSizeZ/2.0);
     logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
 
     physiWorld = new G4PVPlacement(0,               //no rotation
@@ -93,15 +139,31 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     //The "detector"
     solidDetector = new G4Box("DetectorS", DetectorSizeX/2,DetectorSizeY/2,DetectorThickness/2);
     logicDetector = new G4LogicalVolume(solidDetector, DetectorMaterial, "DetectorLV");
-    physiDetector = new G4PVPlacement(0,                                        //no rotation
-                                      G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
-                                      logicDetector,                            //its logical volume
-                                      "DetectorPV",                             //its name
-                                      logicWorld,                               //its mother
-                                      false,                                    //pMany not used
-                                      0,                                        //copy number
-                                      true);                                    //Check for overlaps
 
+    if (DetectorRotated) {
+
+        G4RotationMatrix* detectorRot = new G4RotationMatrix();
+        detectorRot->rotateY(DetectorAngle*rad);
+        G4ThreeVector zTrans(0.0,0.0,DetectorDistance);
+        physiDetector = new G4PVPlacement(G4Transform3D(*detectorRot,zTrans),        //Translate then rotate
+                                          logicDetector,                            //its logical volume
+                                          "DetectorPV",                             //its name
+                                          logicWorld,                               //its mother
+                                          false,                                    //pMany not used
+                                          0,                                        //copy number
+                                          true);                                    //Check for overlaps
+
+    }
+    else{
+        physiDetector = new G4PVPlacement(NULL,                                     //No rotation
+                                          G4ThreeVector(0.0,0.0,DetectorDistance),  //its position
+                                          logicDetector,                            //its logical volume
+                                          "DetectorPV",                             //its name
+                                          logicWorld,                               //its mother
+                                          false,                                    //pMany not used
+                                          0,                                        //copy number
+                                          true);                                    //Check for overlaps
+    }
 
     // Get pointer to detector manager
     G4SDManager* SDman = G4SDManager::GetSDMpointer();

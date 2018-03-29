@@ -67,22 +67,34 @@ int main(int argc,char** argv) {
     G4String target_material = "G4_Cu";       //Name of target material to use
 
     double detector_distance   = 500.0;       //Detector distance at x=y=0  [mm]
+    double detector_angle      = 0.0;         //Detectector angle around y-axis
+    double detector_rotate     = false;
 
     G4String physListName = "QGSP_FTFP_BERT"; //Name of physics list to use
     G4int numEvents       = 0;                //Number of events to generate
     G4bool useGUI         = false;            //GUI on/off
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:p:n:hg")) != -1) {
+
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
                    << "Usage/options:" << G4endl
-                   << "-t <double> : Target thickness [mm], default/current value = " << target_thick << G4endl
-                   << "-m <string> : Target material name, default/current = '" << target_material << G4endl
-                   << "-d <double> : Detector distance [mm], default/current value = " << detector_distance << G4endl
-                   << "-p <string> : Physics list name, default/current = '" << physListName << G4endl
-                   << "-n <int> : Run a number of events" << G4endl
-                   << "-g : Use a GUI"<< G4endl << G4endl;
+                   << "-t <double> : Target thickness [mm],  default/current value = "
+                   << target_thick << G4endl
+                   << "-m <string> : Target material name,   default/current       = '"
+                   << target_material << G4endl
+                   << "-d <double> : Detector distance [mm], default/current value = "
+                   << detector_distance << G4endl
+                   << "-a <double> : Detector angle [deg],   default/current value = "
+                   << detector_angle << G4endl
+                   << "-p <string> : Physics list name,      default/current       = '"
+                   << physListName << G4endl
+                   << "-n <int> : Run a number of events automatically"
+                   << G4endl
+                   << "-g : Use a GUI"
+                   << G4endl
+                   << G4endl;
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
             G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
             G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
@@ -115,6 +127,21 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
+            break;
+
+        case 'a': //Detector angle
+            try {
+                detector_angle = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading detector angle" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+
+            detector_rotate = true;
+
             break;
 
         case 'p': //Named physics list
@@ -165,7 +192,12 @@ int main(int argc,char** argv) {
     G4RunManager * runManager = new G4RunManager;
 
     // Set mandatory initialization classes
-    DetectorConstruction* detector = new DetectorConstruction(target_thick, target_material, detector_distance);
+    DetectorConstruction* detector = new DetectorConstruction(target_thick,
+                                                              target_material,
+                                                              detector_distance,
+                                                              detector_angle,
+                                                              detector_rotate
+                                                              );
     runManager->SetUserInitialization(detector);
 
     G4int verbose=0;

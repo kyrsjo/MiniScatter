@@ -13,9 +13,12 @@
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
-    DetectorConstruction(G4double TargetThickness_in=1.0,
-                         G4String TargetMaterial_in="G4_Cu",
-                         G4double DetectorDistance_in=500.0);
+    DetectorConstruction(G4double TargetThickness_in  = 1.0,
+                         G4String TargetMaterial_in   = "G4_Cu",
+                         G4double DetectorDistance_in = 500.0,
+                         G4double DetectorAngle_in    = 0.0,
+                         G4bool   DetectorRotated_in  = false
+                         );
     ~DetectorConstruction(){};
 
 public:
@@ -41,7 +44,8 @@ private:
     G4Material*        TiMaterial;
     G4Material*        StainlessSteel;
 
-    G4double           WorldSizeXY;
+    G4double           WorldSizeX;
+    G4double           WorldSizeY;
     G4double           WorldSizeZ;
 
     G4double           TargetSizeX;
@@ -52,7 +56,10 @@ private:
 
     G4double           DetectorSizeX;
     G4double           DetectorSizeY;
+    // Distance from center of target to center of detector:
     G4double           DetectorThickness;
+    G4double           DetectorAngle; //[rad]
+    G4bool             DetectorRotated;
 
     G4double           DetectorDistance;
     G4Material*        DetectorMaterial;
