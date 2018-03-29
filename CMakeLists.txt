@@ -3,11 +3,7 @@
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(MiniScatter)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-  #Use C++11 in MiniScatter.cc
-  # Now default, may use newer standard..
-  #add_definitions(-std=c++11)
-endif()
+set(CMAKE_CXX_STANDARD 14)
 
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
