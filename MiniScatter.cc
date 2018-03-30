@@ -66,15 +66,19 @@ int main(int argc,char** argv) {
     G4double target_thick    = 1.0;           //Target thickness  [mm]
     G4String target_material = "G4_Cu";       //Name of target material to use
 
-    double detector_distance   = 500.0;       //Detector distance at x=y=0  [mm]
-    double detector_angle      = 0.0;         //Detectector angle around y-axis
-    double detector_rotate     = false;
+    G4double detector_distance   = 500.0;     //Detector distance at x=y=0  [mm]
+    G4double detector_angle      = 0.0;       //Detectector angle around y-axis
+    G4double detector_rotate     = false;
+
+    G4double beam_energy = 200;    // Beam energy [MeV]
+    G4String beam_type = "proton"; // Beam particle type
+    G4double beam_offset = 0.0;    // Beam offset (x) [mm]
 
     G4String physListName = "QGSP_FTFP_BERT"; //Name of physics list to use
     G4int numEvents       = 0;                //Number of events to generate
     G4bool useGUI         = false;            //GUI on/off
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             G4cout << "Welcome to MiniScatter!" << G4endl
@@ -90,8 +94,14 @@ int main(int argc,char** argv) {
                    << detector_angle << G4endl
                    << "-p <string> : Physics list name,      default/current       = '"
                    << physListName << G4endl
-                   << "-n <int> : Run a number of events automatically"
+                   << "-n <int>    : Run a given number of events automatically"
                    << G4endl
+                   << "-e <double> : Beam energy [MeV],      default/current value = "
+                   << beam_energy << G4endl
+                   << "-b <string> : Particle type,          default/current value = "
+                   << beam_type << G4endl
+                   << "-x <double> : Beam offset (x) [mm],   default/current value = "
+                   << beam_offset << G4endl
                    << "-g : Use a GUI"
                    << G4endl
                    << G4endl;
@@ -102,9 +112,11 @@ int main(int argc,char** argv) {
 
             exit(1);
             break;
+
         case 'g': //Use GUI
             useGUI = true;
             break;
+
         case 't': //Target thickness
             try {
                 target_thick = std::stod(string(optarg));
@@ -139,9 +151,7 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
-
             detector_rotate = true;
-
             break;
 
         case 'p': //Named physics list
@@ -163,8 +173,37 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             break;
+
+        case 'e': //beam energy
+            try {
+                beam_energy = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading beam energy" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            break;
+
+        case 'b': //Beam type
+            beam_type = G4String(optarg);
+            break;
+
+        case 'x': //beam offset (x)
+            try {
+                beam_offset = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading beam offset" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            break;
+
         default: // WTF?
-            G4cout << "Got an unknown getopt_char = " << " ='" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
+            G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
         }
     }
@@ -210,7 +249,7 @@ int main(int argc,char** argv) {
 
     // Set user action classes:
     //
-    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector);
+    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector, beam_energy, beam_type, beam_offset);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;

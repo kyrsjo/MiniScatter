@@ -37,6 +37,8 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     solidTarget(0),logicTarget(0),physiTarget(0),
     magField(0) {
 
+    // Compute geometry
+
     TargetThickness = TargetThickness_in*mm;
     DetectorThickness = 1*um;
     DetectorDistance = DetectorDistance_in*mm;
