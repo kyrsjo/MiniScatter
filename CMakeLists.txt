@@ -55,6 +55,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 # Add the executable, and link it to the Geant4 libraries
 #
 add_executable(MiniScatter MiniScatter.cc ${sources} ${headers})
+target_link_libraries(MiniScatter "-lstdc++fs") #Will become standard in C++17
 
 #message(${ROOT_FOUND})
 if(ROOT_FOUND)

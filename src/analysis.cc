@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <experimental/filesystem> //Mainstreamed from C++17
 
 using namespace std;
 analysis* analysis::singleton = 0;
@@ -26,6 +27,11 @@ void analysis::makeHistograms(){
     G4String rootFileName = "plots/histo_" +
         std::to_string(detCon->GetTargetThickness()/mm) + "mm_" +
         physListName + ".root";
+    //Create folder if it does not exist
+    if (not experimental::filesystem::exists("plots")) {
+        G4cout << "Creating folder 'plots'" << G4endl;
+        experimental::filesystem::create_directory("plots");
+    }
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile= new TFile(rootFileName,"RECREATE");
 
