@@ -29,11 +29,16 @@ public:
     G4VPhysicalVolume* Construct();
 public:
 
-    const G4VPhysicalVolume* GetphysiWorld() {return physiWorld;};
-    const G4VPhysicalVolume* GetTargetPV()   {return physiTarget;};
+    const G4VPhysicalVolume* getphysiWorld() {return physiWorld;};
+    const G4VPhysicalVolume* getTargetPV()   {return physiTarget;};
 
-    inline G4double GetDetectorDistance(){return DetectorDistance;};
-    inline G4double GetTargetThickness(){return TargetThickness;};
+    inline G4double getTargetThickness()   {return TargetThickness;};
+    inline G4double getTargetSizeX() const {return TargetSizeX;};
+    inline G4double getTargetSizeY() const {return TargetSizeY;};
+
+    inline G4double getDetectorDistance()  {return DetectorDistance;};
+    inline G4double getDetectorSizeX() const {return TargetSizeX;};
+    inline G4double getDetectorSizeY() const {return TargetSizeY;};
 
 private:
     G4Material*        vacuumMaterial;

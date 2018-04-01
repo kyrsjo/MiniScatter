@@ -66,7 +66,7 @@ int main(int argc,char** argv) {
     G4double target_thick    = 1.0;           //Target thickness  [mm]
     G4String target_material = "G4_Cu";       //Name of target material to use
 
-    G4double detector_distance   = 500.0;     //Detector distance at x=y=0  [mm]
+    G4double detector_distance   = 50.0;     //Detector distance at x=y=0  [mm]
     G4double detector_angle      = 0.0;       //Detectector angle around y-axis
     G4double detector_rotate     = false;
 

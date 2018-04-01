@@ -47,7 +47,7 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     particleGun->SetParticlePosition(G4ThreeVector(beam_offset*mm,0,-30*cm));
-    particleGun->SetParticleEnergy(beam_energy*TeV);
+    particleGun->SetParticleEnergy(beam_energy*MeV);
     particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
     particleGun->GeneratePrimaryVertex(anEvent);
 }

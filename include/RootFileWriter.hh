@@ -46,6 +46,7 @@ private:
     //Tracker histograms
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;
+    TH2D* tracker_hitPos;
 
     // Count the number of each particle type that hits the tracker
     std::map<G4int,G4int> tracker_particleTypes;

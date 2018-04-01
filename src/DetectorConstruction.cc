@@ -46,14 +46,18 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     DetectorAngle = DetectorAngle_in*pi/180.0;
 
     if (not DetectorRotated) { // No detector angle, make a simple 200x200cm world
-        WorldSizeZ   = 200*cm;
+        WorldSizeZ   = 15*cm;
         if (DetectorDistance > WorldSizeZ / 2.0) {
             //If neccessary, expand the z-size of the volume to fit the detector
             WorldSizeZ   = (DetectorDistance + DetectorThickness + 10*cm)*2.0;
         }
+        if (DetectorDistance < TargetThickness/2.0) {
+            G4cerr << "DetectorDistance < TargetThickness/2.0 => Detector is inside target :(" << G4endl;
+            exit(1);
+        }
 
-        WorldSizeX = 200*cm;
-        WorldSizeY = 200*cm;
+        WorldSizeX = 5*cm;
+        WorldSizeY = 5*cm;
 
         DetectorSizeX = WorldSizeX;
         DetectorSizeY = WorldSizeY;

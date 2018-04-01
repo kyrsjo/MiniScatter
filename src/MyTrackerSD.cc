@@ -52,11 +52,8 @@ G4bool MyTrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   G4ParticleDefinition* particleType = theTrack->GetDefinition();
   G4int particleID = particleType->GetPDGEncoding();
   G4int particleCharge = particleType->GetPDGCharge();
-  //  G4String particleName;
 
-  G4double angle = atan2(sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y()),detectorConstruction->GetDetectorDistance());
-
-  MyTrackerHit* aHit = new MyTrackerHit(energy,angle,particleID, particleCharge, momentum);
+  MyTrackerHit* aHit = new MyTrackerHit(hitPos, momentum, energy, particleID, particleCharge);
   aHit->SetType(particleType->GetParticleSubType());
   fHitsCollection->insert(aHit);
 

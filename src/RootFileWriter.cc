@@ -22,8 +22,8 @@ RootFileWriter* RootFileWriter::singleton = 0;
 const G4String  RootFileWriter::foldername_out = "plots";
 
 void RootFileWriter::initializeRootFile(){
-    //G4RunManager*         run    = G4RunManager::GetRunManager();
-    //DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    G4RunManager*         run    = G4RunManager::GetRunManager();
+    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
 
     if (not has_filename_out) {
         G4cerr << "Error: filename_out not set." << G4endl;
@@ -52,6 +52,10 @@ void RootFileWriter::initializeRootFile(){
 
     tracker_energy       = new TH1D("energy","energy",10000,0,10.0);
     tracker_energy->GetXaxis()->SetTitle("Energy of particles on the tracker [MeV]");
+
+    tracker_hitPos = new TH2D("trackerHitpos", "Tracker Hit position",
+                              1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
+                              1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
 
     //For counting the types of particles hitting the tracker
     tracker_particleTypes.clear();
@@ -101,14 +105,19 @@ void RootFileWriter::doEvent(const G4Event* event){
             G4int nEntries = trackerHitsCollection->entries();
 
             for (G4int i = 0; i < nEntries; i++){
+                //Get the data from the event
                 const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
-                //const G4double  angle  = (*trackerHitsCollection)[i]->GetTrackAngle(); //UNUSED
                 const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
-                //const G4int     charge = (*trackerHitsCollection)[i]->GetCharge(); // UNUSED
-                const G4String& type  = (*trackerHitsCollection)[i]->GetType();
-
+                // UNUSED:
+                //const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
+                const G4String& type   = (*trackerHitsCollection)[i]->GetType();
+                const G4ThreeVector& hitPos = (*trackerHitsCollection)[i]->GetPosition();
+                
                 //Overall histograms
                 tracker_energy->Fill(energy/TeV);
+
+                //Hit position
+                tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
 
                 //Particle type counting
                 if (tracker_particleTypes.count(PDG) == 0){
@@ -143,6 +152,8 @@ void RootFileWriter::finalizeRootFile(){
     delete tracker_numParticles; tracker_numParticles = NULL;
     tracker_energy->Write();
     delete tracker_energy; tracker_energy = NULL;
+    tracker_hitPos->Write();
+    delete tracker_hitPos; tracker_hitPos = NULL;
 
     //Print out the particle types hitting the tracker
     G4cout << "Got types at tracker:" << G4endl;
