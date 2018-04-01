@@ -88,7 +88,7 @@ int main(int argc,char** argv) {
                    << "-t <double> : Target thickness [mm],  default/current value = "
                    << target_thick << G4endl
                    << "-m <string> : Target material name,   default/current       = '"
-                   << target_material << G4endl
+                   << target_material << "'" << G4endl
                    << "-d <double> : Detector distance [mm], default/current value = "
                    << detector_distance << G4endl
                    << "-a <double> : Detector angle [deg],   default/current value = "
