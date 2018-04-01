@@ -18,12 +18,18 @@ public:
     }
 
     void makeHistograms();
-    void fillHistograms(const G4Event *anEvent);
     void writeHistograms();
     void writePerEvent(const G4Event* event);
 
+    void setFilename(G4String filename_out_arg) {
+        this->filename_out = filename_out_arg;
+        has_filename_out = true;
+    };
 private:
-    analysis(){};
+    analysis(){
+        has_filename_out = false;
+    };
+
     //! Singleton static instance
     static analysis* singleton;
 
@@ -54,12 +60,11 @@ private:
     TH1D* tracker_energyAngle_charged;
     TH1D* tracker_energyAngle_neutral;
 
-    //Used to generate filenames
-    G4String physListName;
-    // (Target thickness extracted directly from the DetectorConstruction)
-public:
+    //Output file naming
+    G4String filename_out;
+    G4bool has_filename_out;
+    static const G4String foldername_out;
 
-    void SetMetadata(const G4String physListName_in);
 };
 
 #endif

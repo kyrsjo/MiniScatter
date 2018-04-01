@@ -19,18 +19,23 @@
 #include <experimental/filesystem> //Mainstreamed from C++17
 
 using namespace std;
-analysis* analysis::singleton = 0;
+analysis*      analysis::singleton = 0;
+const G4String analysis::foldername_out = "plots";
 
 void analysis::makeHistograms(){
-    G4RunManager*     run= G4RunManager::GetRunManager();
-    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
-    G4String rootFileName = "plots/histo_" +
-        std::to_string(detCon->GetTargetThickness()/mm) + "mm_" +
-        physListName + ".root";
+    //G4RunManager*         run    = G4RunManager::GetRunManager();
+    //DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+
+    if (not has_filename_out) {
+        G4cerr << "Error: filename_out not set." << G4endl;
+        exit(1);
+    }
+    G4String rootFileName = foldername_out + "/" + filename_out + ".root";
+
     //Create folder if it does not exist
-    if (not experimental::filesystem::exists("plots")) {
-        G4cout << "Creating folder 'plots'" << G4endl;
-        experimental::filesystem::create_directory("plots");
+    if (not experimental::filesystem::exists(foldername_out.data())) {
+        G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
+        experimental::filesystem::create_directory(foldername_out.data());
     }
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile= new TFile(rootFileName,"RECREATE");
@@ -266,8 +271,4 @@ void analysis::writeHistograms(){
     histFile->Write();
     histFile->Close();
     delete histFile; histFile = NULL;
-}
-
-void analysis::SetMetadata(const G4String physListName_in){
-    this->physListName = physListName_in;
 }

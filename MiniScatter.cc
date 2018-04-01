@@ -70,15 +70,16 @@ int main(int argc,char** argv) {
     G4double detector_angle      = 0.0;       //Detectector angle around y-axis
     G4double detector_rotate     = false;
 
-    G4double beam_energy = 200;    // Beam energy [MeV]
-    G4String beam_type = "proton"; // Beam particle type
-    G4double beam_offset = 0.0;    // Beam offset (x) [mm]
+    G4double beam_energy = 200;      // Beam energy [MeV]
+    G4String beam_type   = "proton"; // Beam particle type
+    G4double beam_offset = 0.0;      // Beam offset (x) [mm]
 
-    G4String physListName = "QGSP_FTFP_BERT"; //Name of physics list to use
-    G4int numEvents       = 0;                //Number of events to generate
-    G4bool useGUI         = false;            //GUI on/off
+    G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
+    G4int    numEvents    = 0;                // Number of events to generate
+    G4bool   useGUI       = false;            // GUI on/off
+    G4String filename_out = "output";         // Outout filename
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:f:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             G4cout << "Welcome to MiniScatter!" << G4endl
@@ -103,6 +104,8 @@ int main(int argc,char** argv) {
                    << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl
                    << "-g : Use a GUI"
+                   << "-f <string> : Output filename,        default/current value = "
+                   << filename_out << G4endl
                    << G4endl
                    << G4endl;
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
@@ -202,6 +205,10 @@ int main(int argc,char** argv) {
             }
             break;
 
+        case 'f': //Output filename
+            filename_out = G4String(optarg);
+            break;
+
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
@@ -242,6 +249,26 @@ int main(int argc,char** argv) {
     G4int verbose=0;
     G4PhysListFactory plFactory;
     G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
+    if (physlist==NULL) {
+        G4cerr << "Bad physics list!" << G4endl;
+        G4cerr << G4endl;
+
+        G4cerr << "Possiblities:" << G4endl;
+        const std::vector<G4String>& listnames_hadr =  plFactory.AvailablePhysLists();
+        for (auto l : listnames_hadr) {
+            G4cerr << "'" << l << "'" << G4endl;
+        }
+        G4cerr << G4endl;
+
+        G4cerr << "EM options:" << G4endl;
+        const std::vector<G4String>& listnames_em =  plFactory.AvailablePhysListsEM();
+        for (auto l : listnames_em) {
+            G4cerr << "'" << l << "'" << G4endl;
+        }
+        G4cerr << G4endl;
+
+        exit(1);
+    }
     physlist->SetVerboseLevel(verbose);
     runManager->SetUserInitialization(physlist);
     //physlist->SetDefaultCutValue( 0.00001*mm);
@@ -261,8 +288,8 @@ int main(int argc,char** argv) {
     // Initialize G4 kernel
     runManager->Initialize();
 
-    //Set metadata for root file output
-    analysis::GetInstance()->SetMetadata(physListName);
+    //Set root file output filename
+    analysis::GetInstance()->setFilename(filename_out);
 
 #ifdef G4VIS_USE
     // Initialize visualization
