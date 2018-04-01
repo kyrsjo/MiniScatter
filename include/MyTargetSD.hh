@@ -2,7 +2,6 @@
 #define TargetSD
 
 #include "G4VSensitiveDetector.hh"
-#include "MyMomentumHit.hh"
 #include "MyEdepHit.hh"
 
 class G4HCofThisEvent;
@@ -25,12 +24,6 @@ public:
 private:
 
     // Data members
-    MyMomentumHitsCollection* fHitsCollection_in;
-    G4int fHitsCollectionID_in;
-
-    MyMomentumHitsCollection* fHitsCollection_out;
-    G4int fHitsCollectionID_out;
-
     MyEdepHitsCollection* fHitsCollection_edep;
     G4int fHitsCollectionID_edep;
 };

@@ -33,32 +33,24 @@ private:
     //! Singleton static instance
     static RootFileWriter* singleton;
 
-    //The histogram file
+    //The ROOT file
     TFile *histFile;
 
     //Histograms
+
+    // Target histograms
     TH1D* targetEdep;
     TH1D* targetEdep_NIEL;
     TH1D* targetEdep_IEL;
 
-    TH1D* target_sumMomentum_z;
-
+    //Tracker histograms
     TH1D* tracker_numParticles;
-    TH1D* tracker_angle;
     TH1D* tracker_energy;
 
+    // Count the number of each particle type that hits the tracker
     std::map<G4int,G4int> tracker_particleTypes;
     std::map<G4int,G4String> tracker_particleNames;
     G4int numParticles_total;
-
-    TH1D* tracker_protonAngle;
-    TH1D* tracker_protonEnergy;
-
-    TH1D* tracker_sumMomentum_z;
-
-    TH1D* tracker_energyAngle;
-    TH1D* tracker_energyAngle_charged;
-    TH1D* tracker_energyAngle_neutral;
 
     //Output file naming
     G4String filename_out;
