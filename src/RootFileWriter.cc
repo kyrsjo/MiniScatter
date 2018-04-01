@@ -1,4 +1,4 @@
-#include "analysis.hh"
+#include "RootFileWriter.hh"
 
 #include "MyEdepHit.hh"
 #include "MyMomentumHit.hh"
@@ -19,10 +19,10 @@
 #include <experimental/filesystem> //Mainstreamed from C++17
 
 using namespace std;
-analysis*      analysis::singleton = 0;
-const G4String analysis::foldername_out = "plots";
+RootFileWriter* RootFileWriter::singleton = 0;
+const G4String  RootFileWriter::foldername_out = "plots";
 
-void analysis::makeHistograms(){
+void RootFileWriter::initializeRootFile(){
     //G4RunManager*         run    = G4RunManager::GetRunManager();
     //DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
 
@@ -83,7 +83,7 @@ void analysis::makeHistograms(){
     numParticles_total = 0;
 }
 
-void analysis::writePerEvent(const G4Event* event){
+void RootFileWriter::doEvent(const G4Event* event){
 
     G4HCofThisEvent* HCE=event->GetHCofThisEvent();
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
@@ -224,7 +224,7 @@ void analysis::writePerEvent(const G4Event* event){
 
 
 }
-void analysis::writeHistograms(){
+void RootFileWriter::finalizeRootFile(){
     targetEdep->Write();
     delete targetEdep; targetEdep = NULL;
     targetEdep_NIEL->Write();

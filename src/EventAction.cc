@@ -34,7 +34,7 @@
 
 #include "EventAction.hh"
 #include "G4DigiManager.hh"
-#include "analysis.hh"
+#include "RootFileWriter.hh"
 #include "RunAction.hh"
 #include "G4Event.hh"
 #include "G4EventManager.hh"
@@ -60,7 +60,8 @@ EventAction::EventAction(RunAction* run) : runAct(run) {}
 //------------------------------------------------------------------------------
 
 void EventAction::EndOfEventAction(const G4Event* event) {
-    analysis::GetInstance()->writePerEvent(event);
+    RootFileWriter::GetInstance()->doEvent(event);
+
     G4int eventID = event->GetEventID();
     if (eventID % 10000 == 0) {
         G4cout << "Event# "<<event->GetEventID() << G4endl;

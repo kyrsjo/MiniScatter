@@ -1,5 +1,5 @@
-#ifndef ANALYSIS_HH_
-#define ANALYSIS_HH_
+#ifndef ROOTFILEWRITER_HH_
+#define ROOTFILEWRITERANALYSIS_HH_
 #include "G4Event.hh"
 #include "G4Run.hh"
 #include "DetectorConstruction.hh"
@@ -9,29 +9,29 @@
 #include "TH2.h"
 #include <map>
 
-class analysis {
+class RootFileWriter {
 public:
     //! Singleton pattern
-    static analysis* GetInstance() {
-        if ( analysis::singleton == NULL ) analysis::singleton = new analysis();
-        return analysis::singleton;
+    static RootFileWriter* GetInstance() {
+        if ( RootFileWriter::singleton == NULL ) RootFileWriter::singleton = new RootFileWriter();
+        return RootFileWriter::singleton;
     }
 
-    void makeHistograms();
-    void writeHistograms();
-    void writePerEvent(const G4Event* event);
+    void initializeRootFile();
+    void finalizeRootFile();
+    void doEvent(const G4Event* event);
 
     void setFilename(G4String filename_out_arg) {
         this->filename_out = filename_out_arg;
         has_filename_out = true;
     };
 private:
-    analysis(){
+    RootFileWriter(){
         has_filename_out = false;
     };
 
     //! Singleton static instance
-    static analysis* singleton;
+    static RootFileWriter* singleton;
 
     //The histogram file
     TFile *histFile;

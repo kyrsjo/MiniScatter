@@ -41,7 +41,7 @@
 
 #include "G4PhysListFactory.hh"
 
-#include "analysis.hh"
+#include "RootFileWriter.hh"
 
 #include "G4SystemOfUnits.hh"
 #include "G4String.hh"
@@ -289,7 +289,7 @@ int main(int argc,char** argv) {
     runManager->Initialize();
 
     //Set root file output filename
-    analysis::GetInstance()->setFilename(filename_out);
+    RootFileWriter::GetInstance()->setFilename(filename_out);
 
 #ifdef G4VIS_USE
     // Initialize visualization

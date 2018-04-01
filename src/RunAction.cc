@@ -33,7 +33,7 @@
 #include "RunAction.hh"
 
 #include "G4Run.hh"
-#include "analysis.hh"
+#include "RootFileWriter.hh"
 
 
 //--------------------------------------------------------------------------------
@@ -51,14 +51,14 @@ RunAction::~RunAction() {
 //--------------------------------------------------------------------------------
 
 void RunAction::BeginOfRunAction(const G4Run*) {
-    analysis::GetInstance()->makeHistograms();
+    RootFileWriter::GetInstance()->initializeRootFile();
 }
 
 
 //--------------------------------------------------------------------------------
 
 void RunAction::EndOfRunAction(const G4Run*) {
-    analysis::GetInstance()->writeHistograms();
+    RootFileWriter::GetInstance()->finalizeRootFile();
 }
 
 //--------------------------------------------------------------------------------
