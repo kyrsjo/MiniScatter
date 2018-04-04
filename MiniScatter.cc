@@ -64,14 +64,14 @@ int main(int argc,char** argv) {
     //Parse command line arguments
     int getopt_char;
     G4double target_thick    = 1.0;           //Target thickness  [mm]
-    G4String target_material = "G4_Cu";       //Name of target material to use
+    G4String target_material = "G4_Al";       //Name of target material to use
 
     G4double detector_distance   = 50.0;     //Detector distance at x=y=0  [mm]
     G4double detector_angle      = 0.0;       //Detectector angle around y-axis
     G4double detector_rotate     = false;
 
     G4double beam_energy = 200;      // Beam energy [MeV]
-    G4String beam_type   = "proton"; // Beam particle type
+    G4String beam_type   = "e-";     // Beam particle type
     G4double beam_offset = 0.0;      // Beam offset (x) [mm]
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
