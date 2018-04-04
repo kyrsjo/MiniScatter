@@ -61,6 +61,11 @@ void RootFileWriter::initializeRootFile(){
     tracker_particleTypes.clear();
     tracker_particleNames.clear();
     numParticles_total = 0;
+    //Compute means and standard deviations of where they hit
+    tracker_particleHit_x  = 0.0;
+    tracker_particleHit_xx = 0.0;
+    tracker_particleHit_y  = 0.0;
+    tracker_particleHit_yy = 0.0;
 }
 
 void RootFileWriter::doEvent(const G4Event* event){
@@ -112,7 +117,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 //const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
                 const G4String& type   = (*trackerHitsCollection)[i]->GetType();
                 const G4ThreeVector& hitPos = (*trackerHitsCollection)[i]->GetPosition();
-                
+
                 //Overall histograms
                 tracker_energy->Fill(energy/TeV);
 
@@ -126,6 +131,11 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
                 tracker_particleTypes[PDG] += 1;
                 numParticles_total += 1;
+
+                tracker_particleHit_x  +=  hitPos.x()/mm;
+                tracker_particleHit_xx += (hitPos.x()/mm)*(hitPos.x()/mm);
+                tracker_particleHit_y  +=  hitPos.y()/mm;
+                tracker_particleHit_yy += (hitPos.y()/mm)*(hitPos.y()/mm);
             }
 
             tracker_numParticles->Fill(nEntries);
@@ -155,7 +165,12 @@ void RootFileWriter::finalizeRootFile(){
     tracker_hitPos->Write();
     delete tracker_hitPos; tracker_hitPos = NULL;
 
+    histFile->Write();
+    histFile->Close();
+    delete histFile; histFile = NULL;
+
     //Print out the particle types hitting the tracker
+    G4cout << endl;
     G4cout << "Got types at tracker:" << G4endl;
     for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
         G4cout << std::setw(15) << it->first << " = "
@@ -167,7 +182,15 @@ void RootFileWriter::finalizeRootFile(){
     }
     tracker_particleTypes.clear();
 
-    histFile->Write();
-    histFile->Close();
-    delete histFile; histFile = NULL;
+    //Average position and RMS
+    double xave  = tracker_particleHit_x / ((double)numParticles_total);
+    double yave  = tracker_particleHit_y / ((double)numParticles_total);
+    double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)numParticles_total)) ) /
+        (((double)numParticles_total)-1.0);
+    double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)numParticles_total)) ) /
+        (((double)numParticles_total)-1.0);
+
+    G4cout << G4endl;
+    G4cout << "Average x = " << xave << "[mm], RMS = " << xrms << "[mm]" << G4endl
+           << "Average y = " << yave << "[mm], RMS = " << yrms << "[mm]" << G4endl;
 }

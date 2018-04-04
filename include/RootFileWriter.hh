@@ -53,6 +53,12 @@ private:
     std::map<G4int,G4String> tracker_particleNames;
     G4int numParticles_total;
 
+    // Compute means and standard deviations of where the particles hit the tracker
+    G4double tracker_particleHit_x;
+    G4double tracker_particleHit_xx;
+    G4double tracker_particleHit_y;
+    G4double tracker_particleHit_yy;
+
     //Output file naming
     G4String filename_out;
     G4bool has_filename_out;
