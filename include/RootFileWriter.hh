@@ -47,6 +47,9 @@ private:
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;
     TH2D* tracker_hitPos;
+    TH2D* tracker_hitPos_cutoff;
+
+    // End-of-run statistics
 
     // Count the number of each particle type that hits the tracker
     std::map<G4int,G4int> tracker_particleTypes;
@@ -59,11 +62,22 @@ private:
     G4double tracker_particleHit_y;
     G4double tracker_particleHit_yy;
 
+    G4double tracker_particleHit_x_cutoff;
+    G4double tracker_particleHit_xx_cutoff;
+    G4double tracker_particleHit_y_cutoff;
+    G4double tracker_particleHit_yy_cutoff;
+
+    G4int numParticles_cutoff;
+
+    // Internal stuff
     //Output file naming
     G4String filename_out;
     G4bool has_filename_out;
     static const G4String foldername_out;
 
+    G4double beamEnergy; // [MeV]
+    // Compute statistics for charged particles with energy > this cutoff
+    static constexpr G4double beamEnergy_cutoff = 0.95;
 };
 
 #endif

@@ -9,6 +9,7 @@
 
 #include "G4RunManager.hh"
 #include "DetectorConstruction.hh"
+#include "PrimaryGeneratorAction.hh"
 
 #include "G4SystemOfUnits.hh"
 #include "CLHEP/Units/SystemOfUnits.h"
@@ -24,6 +25,8 @@ const G4String  RootFileWriter::foldername_out = "plots";
 void RootFileWriter::initializeRootFile(){
     G4RunManager*         run    = G4RunManager::GetRunManager();
     DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
+    this->beamEnergy = genAct->get_beam_energy();
 
     if (not has_filename_out) {
         G4cerr << "Error: filename_out not set." << G4endl;
@@ -50,22 +53,34 @@ void RootFileWriter::initializeRootFile(){
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
     tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
 
-    tracker_energy       = new TH1D("energy","energy",10000,0,10.0);
+    tracker_energy       = new TH1D("energy","energy",10000,0,beamEnergy);
     tracker_energy->GetXaxis()->SetTitle("Energy of particles on the tracker [MeV]");
 
-    tracker_hitPos = new TH2D("trackerHitpos", "Tracker Hit position",
-                              1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
-                              1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
+    tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
+               1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
+               1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
+    tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > cutoff)",
+               1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
+               1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
 
     //For counting the types of particles hitting the tracker
     tracker_particleTypes.clear();
     tracker_particleNames.clear();
     numParticles_total = 0;
-    //Compute means and standard deviations of where they hit
+
+    //Compute means and RMS of where they hit
     tracker_particleHit_x  = 0.0;
     tracker_particleHit_xx = 0.0;
     tracker_particleHit_y  = 0.0;
     tracker_particleHit_yy = 0.0;
+
+    //Compute means and RMS of where they hit (above cutoff particles only)
+    tracker_particleHit_x_cutoff  = 0.0;
+    tracker_particleHit_xx_cutoff = 0.0;
+    tracker_particleHit_y_cutoff  = 0.0;
+    tracker_particleHit_yy_cutoff = 0.0;
+    numParticles_cutoff = 0;
+
 }
 
 void RootFileWriter::doEvent(const G4Event* event){
@@ -113,8 +128,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 //Get the data from the event
                 const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
                 const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
-                // UNUSED:
-                //const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
+                const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
                 const G4String& type   = (*trackerHitsCollection)[i]->GetType();
                 const G4ThreeVector& hitPos = (*trackerHitsCollection)[i]->GetPosition();
 
@@ -123,6 +137,9 @@ void RootFileWriter::doEvent(const G4Event* event){
 
                 //Hit position
                 tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    tracker_hitPos_cutoff->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                }
 
                 //Particle type counting
                 if (tracker_particleTypes.count(PDG) == 0){
@@ -136,6 +153,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                 tracker_particleHit_xx += (hitPos.x()/mm)*(hitPos.x()/mm);
                 tracker_particleHit_y  +=  hitPos.y()/mm;
                 tracker_particleHit_yy += (hitPos.y()/mm)*(hitPos.y()/mm);
+
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    tracker_particleHit_x_cutoff  +=  hitPos.x()/mm;
+                    tracker_particleHit_xx_cutoff += (hitPos.x()/mm)*(hitPos.x()/mm);
+                    tracker_particleHit_y_cutoff  +=  hitPos.y()/mm;
+                    tracker_particleHit_yy_cutoff += (hitPos.y()/mm)*(hitPos.y()/mm);
+                    numParticles_cutoff += 1;
+                }
             }
 
             tracker_numParticles->Fill(nEntries);
@@ -164,6 +189,8 @@ void RootFileWriter::finalizeRootFile(){
     delete tracker_energy; tracker_energy = NULL;
     tracker_hitPos->Write();
     delete tracker_hitPos; tracker_hitPos = NULL;
+    tracker_hitPos_cutoff->Write();
+    delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
 
     histFile->Write();
     histFile->Close();
@@ -187,10 +214,34 @@ void RootFileWriter::finalizeRootFile(){
     double yave  = tracker_particleHit_y / ((double)numParticles_total);
     double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)numParticles_total)) ) /
         (((double)numParticles_total)-1.0);
+    xrms = sqrt(xrms);
     double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)numParticles_total)) ) /
         (((double)numParticles_total)-1.0);
+    yrms = sqrt(yrms);
 
-    G4cout << G4endl;
+    G4cout << G4endl
+           << "All particles (n=" << numParticles_total << "):" << G4endl;
     G4cout << "Average x = " << xave << "[mm], RMS = " << xrms << "[mm]" << G4endl
            << "Average y = " << yave << "[mm], RMS = " << yrms << "[mm]" << G4endl;
+
+    double xave_cutoff  = tracker_particleHit_x_cutoff / ((double)numParticles_cutoff);
+    double yave_cutoff  = tracker_particleHit_y_cutoff / ((double)numParticles_cutoff);
+    double xrms_cutoff  = ( tracker_particleHit_xx_cutoff -
+                            (tracker_particleHit_x_cutoff*tracker_particleHit_x_cutoff /
+                             ((double)numParticles_cutoff)) ) /
+        (((double)numParticles_cutoff)-1.0);
+    xrms_cutoff = sqrt(xrms_cutoff);
+    double yrms_cutoff  = ( tracker_particleHit_yy_cutoff -
+                            (tracker_particleHit_y_cutoff*tracker_particleHit_y_cutoff /
+                             ((double)numParticles_cutoff)) ) /
+        (((double)numParticles_cutoff)-1.0);
+    yrms_cutoff = sqrt(yrms_cutoff);
+
+    G4cout << G4endl
+           << "Above cutoff (charged, energy >= "
+           << beamEnergy*beamEnergy_cutoff <<" [MeV], n=" << numParticles_cutoff
+           << ") only:" << G4endl;
+    G4cout << "Average x = " << xave_cutoff << "[mm], RMS = " << xrms_cutoff << "[mm]" << G4endl
+           << "Average y = " << yave_cutoff << "[mm], RMS = " << yrms_cutoff << "[mm]" << G4endl;
+
 }

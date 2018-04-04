@@ -25,6 +25,8 @@ public:
                            G4double beam_offset_in);
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
+
+    G4double get_beam_energy() const { return beam_energy; };
 private:
     G4ParticleGun*           particleGun;  //pointer a to G4  class
     DetectorConstruction*    Detector;     //pointer to the geometry
