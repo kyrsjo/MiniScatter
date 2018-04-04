@@ -40,6 +40,7 @@ public:
     inline G4double getDetectorSizeX() const {return TargetSizeX;};
     inline G4double getDetectorSizeY() const {return TargetSizeY;};
 
+    static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
     G4Material*        vacuumMaterial;
     G4Material*        AlMaterial;
@@ -48,6 +49,9 @@ private:
     G4Material*        PbMaterial;
     G4Material*        TiMaterial;
     G4Material*        StainlessSteel;
+
+    G4Material*        gasHe;
+    G4Material*        gasAr;
 
     G4double           WorldSizeX;
     G4double           WorldSizeY;
@@ -85,6 +89,7 @@ private:
 
 private:
     void DefineMaterials();
+    void DefineGas(G4String TargetMaterial_in);
 };
 
 //--------------------------------------------------------------------------------

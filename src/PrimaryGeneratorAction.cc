@@ -46,7 +46,21 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
 }
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
-    particleGun->SetParticlePosition(G4ThreeVector(beam_offset*mm,0,-30*cm));
+    G4double beam_zpos = - (Detector->getTargetThickness() / 2.0+
+                            Detector->WorldSizeZ_buffer    / 2.0);
+
+    if (anEvent->GetEventID() == 0) {
+        G4cout << G4endl;
+        G4cout << "Injecting beam at z0 = " << beam_zpos/mm << " [mm]" << G4endl;
+        G4cout << "Distance to target   = " << (-beam_zpos - Detector->getTargetThickness()/2.0)/mm << "[mm]" << G4endl;
+        G4cout << G4endl;
+    }
+
+    particleGun->SetParticlePosition(G4ThreeVector(beam_offset*mm,
+                                                   0.0,
+                                                   beam_zpos
+                                                   )
+                                     );
     particleGun->SetParticleEnergy(beam_energy*MeV);
     particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
     particleGun->GeneratePrimaryVertex(anEvent);

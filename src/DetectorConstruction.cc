@@ -1,6 +1,9 @@
 #include "DetectorConstruction.hh"
 #include "MyTargetSD.hh"
 #include "MyTrackerSD.hh"
+
+#include "G4Isotope.hh"
+#include "G4Element.hh"
 #include "G4Material.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -9,7 +12,7 @@
 #include "G4PVPlacement.hh"
 #include "G4PVParameterised.hh"
 #include "G4UniformMagField.hh"
-#include "G4Element.hh"
+
 #include "G4GeometryManager.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4PhysicalVolumeStore.hh"
@@ -24,6 +27,7 @@
 #include "G4RunManager.hh"
 
 #include <cmath>
+#include <string>
 
 //------------------------------------------------------------------------------
 
@@ -37,6 +41,8 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     solidTarget(0),logicTarget(0),physiTarget(0),
     magField(0) {
 
+    G4cout << G4endl;
+
     // Compute geometry
 
     TargetThickness = TargetThickness_in*mm;
@@ -45,16 +51,22 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     DetectorRotated = DetectorRotated_in;
     DetectorAngle = DetectorAngle_in*pi/180.0;
 
+    //Set the z-size of the world volume to fit the detector + buffer,
+    // in case of no rotation
+    G4double WorldSizeZ_minimum = (DetectorDistance + DetectorThickness + WorldSizeZ_buffer)*2.0;
+
     if (not DetectorRotated) { // No detector angle, make a simple 200x200cm world
-        WorldSizeZ   = 15*cm;
-        if (DetectorDistance > WorldSizeZ / 2.0) {
-            //If neccessary, expand the z-size of the volume to fit the detector
-            WorldSizeZ   = (DetectorDistance + DetectorThickness + 10*cm)*2.0;
-        }
-        if (DetectorDistance < TargetThickness/2.0) {
-            G4cerr << "DetectorDistance < TargetThickness/2.0 => Detector is inside target :(" << G4endl;
+
+        WorldSizeZ = WorldSizeZ_minimum;
+
+        G4double DetectorTargetDistance = (DetectorDistance - TargetThickness/2.0 - DetectorThickness/2.0);
+        if (DetectorTargetDistance < 0.0) {
+            G4cerr << "DetectorTargetDistance < 0.0 => Detector is inside target :(" << G4endl;
             exit(1);
         }
+        G4cout << "Creating an unrotated detector; "
+               << "distance target end to detector start = "
+               << DetectorTargetDistance/mm << " [mm]" << G4endl;
 
         WorldSizeX = 5*cm;
         WorldSizeY = 5*cm;
@@ -64,6 +76,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
         TargetSizeX = WorldSizeX;
         TargetSizeY = WorldSizeY;
+
     }
     else { //Detector has angle -- make sure that everything fits together
         double theta = abs(DetectorAngle);
@@ -97,15 +110,26 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         WorldSizeY = DetectorSizeY;
 
         WorldSizeZ = 2*(TargetThickness/2+2*dz);
+        if (WorldSizeZ < WorldSizeZ_minimum) {
+            WorldSizeZ = WorldSizeZ_minimum;
+        }
 
         TargetSizeX = WorldSizeX;
         TargetSizeY = WorldSizeY;
     }
 
     // materials
-    DefineMaterials();
-    SetTargetMaterial(TargetMaterial_in);
+    DefineMaterials(); // The standard ones
+    // Gas?
+    if (TargetMaterial_in.contains("::")) {
+        DefineGas(TargetMaterial_in);
+    }
+    else {
+        SetTargetMaterial(TargetMaterial_in);
+    }
     DetectorMaterial = vacuumMaterial;
+
+    G4cout << G4endl;
 }
 
 //------------------------------------------------------------------------------
@@ -205,6 +229,106 @@ void DetectorConstruction::DefineMaterials() {
     CuMaterial       = Cu;
     PbMaterial       = Pb;
     TiMaterial       = Ti;
+}
+
+//------------------------------------------------------------------------------
+
+void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
+    G4cout << G4endl;
+
+    if (not TargetMaterial_in.contains("::")) {
+        G4cerr << "Error in DetectorConstruction::DefineGas() -- no '::' was found"
+               << "in material name = '" << TargetMaterial_in << "'"
+               << G4endl;
+        exit(1);
+    }
+
+    str_size colonPos = TargetMaterial_in.index("::");
+    str_size pressurePos = colonPos+2;
+
+    if (pressurePos >= TargetMaterial_in.length()) {
+        G4cerr << "Error in DetectorConstruction::DefineGas() -- no pressure was found"
+               << " after '::' in material name = '" << TargetMaterial_in << "'"
+               << G4endl;
+        exit(1);
+    }
+    G4String material_in = TargetMaterial_in(0, colonPos);
+    G4String pressure_in = TargetMaterial_in(pressurePos, TargetMaterial_in.length());
+
+    G4double pressure = 0.0;
+    try {
+        pressure = std::stod(std::string(pressure_in));
+    }
+    catch (const std::invalid_argument& ia) {
+        G4cerr << "Invalid argument when reading pressure" << G4endl
+               << "Got: '" << pressure_in << "'" << G4endl
+               << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+        exit(1);
+    }
+
+    // ** Define the gas **
+    // Compute properties
+    constexpr G4double temperature = 300*kelvin;
+
+    //Define materials
+    G4double aHe       = 4.002602*g/mole;
+    G4double densityHe = aHe*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isHe4 = new G4Isotope("He4", //Name
+                                     2,     //iz
+                                     4,     //n
+                                     aHe);  //a
+    G4Element* elHe  = new G4Element("Helium", //name
+                                     "He",     //symbol
+                                     1);       //ncomponents
+    elHe->AddIsotope(isHe4, 1.0);
+    this->gasHe = new G4Material("HeliumGas",        //name
+                                 densityHe,          //density
+                                 1,                  //ncomponents
+                                 kStateGas,          //state
+                                 temperature*kelvin, //temp
+                                 pressure*bar*1e-3 );//pressure
+    gasHe->AddElement(elHe, 1.0);
+    G4cout << "Built He gas, pressure = "<< pressure
+           << " [mbar], temperature = " << temperature
+           << " [K], density = " << densityHe / g * meter3 << " [g/m3]"
+           << G4endl;
+
+    //Define materials
+    G4double aAr       = 39.948*g/mole;
+    G4double densityAr = aAr*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isAr40 = new G4Isotope("Ar40", //Name
+                                     18,      //iz
+                                     40,      //n
+                                     aAr);    //a
+    G4Element* elAr  = new G4Element("Argon", //name
+                                     "Ar",    //symbol
+                                     1);      //ncomponents
+    elAr->AddIsotope(isAr40, 1.0);
+    this->gasAr = new G4Material("ArgonGas",         //name
+                                 densityAr,          //density
+                                 1,                  //ncomponents
+                                 kStateGas,          //state
+                                 temperature*kelvin, //temp
+                                 pressure*bar*1e-3 );//pressure
+    gasAr->AddElement(elAr, 1.0);
+    G4cout << "Built Ar gas, pressure = "<< pressure
+           << " [mbar], temperature = " << temperature
+           << " [K], density = " << densityAr / g * meter3 << " [g/m3]"
+           << G4endl;
+
+    if (material_in == "He") {
+        TargetMaterial = this->gasHe;
+    }
+    else if (material_in == "Ar") {
+        TargetMaterial = this->gasAr;
+    }
+    else {
+        G4cerr << "Error in DetectorConstricton::DefineGas()" << G4endl;
+        G4cerr << "Gas type '" << material_in << "' unknown." << G4endl;
+        exit(1);
+    }
+
+    G4cout << G4endl;
 }
 
 //------------------------------------------------------------------------------
