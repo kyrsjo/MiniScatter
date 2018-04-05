@@ -48,7 +48,8 @@ private:
     G4Material*        CuMaterial;
     G4Material*        PbMaterial;
     G4Material*        TiMaterial;
-    G4Material*        StainlessSteel;
+    G4Material*        SiMaterial;
+    //G4Material*        StainlessSteel;
 
     G4Material*        gasHe;
     G4Material*        gasAr;

@@ -221,6 +221,7 @@ void DetectorConstruction::DefineMaterials() {
     G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
     G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
     G4Material* Ti = man->FindOrBuildMaterial("G4_Ti");
+    G4Material* Si = man->FindOrBuildMaterial("G4_Si");
 
     G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
 
@@ -231,6 +232,7 @@ void DetectorConstruction::DefineMaterials() {
     CuMaterial       = Cu;
     PbMaterial       = Pb;
     TiMaterial       = Ti;
+    SiMaterial       = Si;
 }
 
 //------------------------------------------------------------------------------
