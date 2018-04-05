@@ -108,23 +108,23 @@ void RootFileWriter::doEvent(const G4Event* event){
             targetEdep_NIEL->Fill(edep_NIEL/keV);
             targetEdep_IEL->Fill(edep_IEL/MeV);
         }
-        else{
+        else {
             G4cout << "targetEdepHitsCollection was NULL!"<<G4endl;
         }
     }
-    else{
+    else {
         G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
     }
 
     //**Data from detectorTrackerSD**
     G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
-    if (myTrackerSD_CollID>=0){
+    if (myTrackerSD_CollID>=0) {
         MyTrackerHitsCollection* trackerHitsCollection = NULL;
         trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
         if (trackerHitsCollection != NULL) {
             G4int nEntries = trackerHitsCollection->entries();
 
-            for (G4int i = 0; i < nEntries; i++){
+            for (G4int i = 0; i < nEntries; i++) {
                 //Get the data from the event
                 const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
                 const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
@@ -142,7 +142,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
 
                 //Particle type counting
-                if (tracker_particleTypes.count(PDG) == 0){
+                if (tracker_particleTypes.count(PDG) == 0) {
                     tracker_particleTypes[PDG] = 0;
                     tracker_particleNames[PDG] = type;
                 }
@@ -175,7 +175,7 @@ void RootFileWriter::doEvent(const G4Event* event){
 
 
 }
-void RootFileWriter::finalizeRootFile(){
+void RootFileWriter::finalizeRootFile() {
     targetEdep->Write();
     delete targetEdep; targetEdep = NULL;
     targetEdep_NIEL->Write();
@@ -221,8 +221,8 @@ void RootFileWriter::finalizeRootFile(){
 
     G4cout << G4endl
            << "All particles (n=" << numParticles_total << "):" << G4endl;
-    G4cout << "Average x = " << xave << "[mm], RMS = " << xrms << "[mm]" << G4endl
-           << "Average y = " << yave << "[mm], RMS = " << yrms << "[mm]" << G4endl;
+    G4cout << "Average x = " << xave << " [mm], RMS = " << xrms << " [mm]" << G4endl
+           << "Average y = " << yave << " [mm], RMS = " << yrms << " [mm]" << G4endl;
 
     double xave_cutoff  = tracker_particleHit_x_cutoff / ((double)numParticles_cutoff);
     double yave_cutoff  = tracker_particleHit_y_cutoff / ((double)numParticles_cutoff);
@@ -241,7 +241,7 @@ void RootFileWriter::finalizeRootFile(){
            << "Above cutoff (charged, energy >= "
            << beamEnergy*beamEnergy_cutoff <<" [MeV], n=" << numParticles_cutoff
            << ") only:" << G4endl;
-    G4cout << "Average x = " << xave_cutoff << "[mm], RMS = " << xrms_cutoff << "[mm]" << G4endl
-           << "Average y = " << yave_cutoff << "[mm], RMS = " << yrms_cutoff << "[mm]" << G4endl;
+    G4cout << "Average x = " << xave_cutoff << " [mm], RMS = " << xrms_cutoff << " [mm]" << G4endl
+           << "Average y = " << yave_cutoff << " [mm], RMS = " << yrms_cutoff << " [mm]" << G4endl;
 
 }

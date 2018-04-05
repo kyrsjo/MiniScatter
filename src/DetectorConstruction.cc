@@ -120,11 +120,13 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
     // materials
     DefineMaterials(); // The standard ones
-    // Gas?
+
     if (TargetMaterial_in.contains("::")) {
+        // Gas target
         DefineGas(TargetMaterial_in);
     }
     else {
+        // Solid target
         SetTargetMaterial(TargetMaterial_in);
     }
     DetectorMaterial = vacuumMaterial;

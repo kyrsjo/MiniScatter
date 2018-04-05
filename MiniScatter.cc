@@ -77,9 +77,10 @@ int main(int argc,char** argv) {
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
     G4int    numEvents    = 0;                // Number of events to generate
     G4bool   useGUI       = false;            // GUI on/off
-    G4String filename_out = "output";         // Outout filename
+    G4String filename_out = "output";         // Output filename
+    G4int    rngSeed      = 123;              // RNG seed
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:f:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:f:s:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             G4cout << "Welcome to MiniScatter!" << G4endl
@@ -106,6 +107,8 @@ int main(int argc,char** argv) {
                    << beam_type << G4endl
                    << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl
+                   << "-s <int>    : Set the initial seed,   default/current value = "
+                   << rngSeed << G4endl
                    << "-g : Use a GUI"
                    << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl
@@ -212,6 +215,18 @@ int main(int argc,char** argv) {
             filename_out = G4String(optarg);
             break;
 
+        case 's': //RNG seed
+            try {
+                rngSeed = std::stoi(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading rngSeed" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected an integer!" << G4endl;
+                exit(1);
+            }
+            break;
+
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
@@ -239,6 +254,9 @@ int main(int argc,char** argv) {
     G4cout << "Starting Geant4..." << G4endl << G4endl;
 
     G4RunManager * runManager = new G4RunManager;
+
+    //Set the initial seed
+    G4Random::setTheSeed(rngSeed);
 
     // Set mandatory initialization classes
     DetectorConstruction* detector = new DetectorConstruction(target_thick,
