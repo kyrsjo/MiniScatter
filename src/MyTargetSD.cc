@@ -16,6 +16,10 @@ MyTargetSD::MyTargetSD(const G4String& name) :
 
     collectionName.insert("EdepCollection");
     fHitsCollectionID_edep = -1;
+
+    collectionName.insert("ExitposCollection");
+    fHitsCollectionID_exitpos = -1;
+
 }
 
 MyTargetSD::~MyTargetSD() {}
@@ -30,6 +34,12 @@ void MyTargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
     }
     hitsCollectionOfThisEvent->AddHitsCollection(fHitsCollectionID_edep, fHitsCollection_edep);
 
+    //Exit positions
+    fHitsCollection_exitpos = new MyTrackerHitsCollection(SensitiveDetectorName, collectionName[1]);
+    if (fHitsCollectionID_exitpos < 0) {
+        fHitsCollectionID_exitpos = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection_exitpos);
+    }
+    hitsCollectionOfThisEvent->AddHitsCollection(fHitsCollectionID_exitpos, fHitsCollection_exitpos);
 }
 
 // Called each step in the scoring logical volume
@@ -40,6 +50,22 @@ G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     aHit_edep->SetDepositedEnergy(aStep->GetTotalEnergyDeposit());
     aHit_edep->SetDepositedEnergy_NIEL(aStep->GetNonIonizingEnergyDeposit());
     fHitsCollection_edep->insert(aHit_edep);
+
+    //Only use outgoing tracks
+    if (aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary) {
+        G4double energy = aStep->GetPostStepPoint()->GetTotalEnergy();
+        const G4ThreeVector momentum = aStep->GetPostStepPoint()->GetMomentum();
+        const G4ThreeVector& hitPos = aStep->GetPostStepPoint()->GetPosition();
+
+        G4Track* theTrack = aStep->GetTrack();
+        G4ParticleDefinition* particleType = theTrack->GetDefinition();
+        G4int particleID = particleType->GetPDGEncoding();
+        G4int particleCharge = particleType->GetPDGCharge();
+
+        MyTrackerHit* aHit = new MyTrackerHit(hitPos, momentum, energy, particleID, particleCharge);
+        aHit->SetType(particleType->GetParticleSubType());
+        fHitsCollection_exitpos->insert(aHit);
+    }
 
     return true;
 

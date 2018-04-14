@@ -28,7 +28,6 @@ private:
 
     // Data members
     MyTrackerHitsCollection* fHitsCollection;
-
     G4int fHitsCollectionID;
 };
 

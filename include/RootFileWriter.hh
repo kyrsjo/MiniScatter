@@ -43,6 +43,9 @@ private:
     TH1D* targetEdep_NIEL;
     TH1D* targetEdep_IEL;
 
+    TH1D* target_exitangle_hist;
+    TH1D* target_exitangle_hist_cutoff;
+
     //Tracker histograms
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;
@@ -68,6 +71,14 @@ private:
     G4double tracker_particleHit_yy_cutoff;
 
     G4int numParticles_cutoff;
+
+    //Target exit angle RMS
+    G4double target_exitangle;
+    G4double target_exitangle2;
+    G4int target_exitangle_numparticles;
+    G4double target_exitangle_cutoff;
+    G4double target_exitangle2_cutoff;
+    G4int target_exitangle_cutoff_numparticles;
 
     // Internal stuff
     //Output file naming

@@ -49,6 +49,10 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,6);
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
+    // Target exit angle histogram
+    target_exitangle_hist        = new TH1D("exitangle", "Exit angle from tracker", 1001, 0, 90);
+    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff", "Exit angle from tracker (charged, energy > cutoff)", 1001, 0, 90);
+
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
     tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
@@ -80,6 +84,14 @@ void RootFileWriter::initializeRootFile(){
     tracker_particleHit_y_cutoff  = 0.0;
     tracker_particleHit_yy_cutoff = 0.0;
     numParticles_cutoff = 0;
+
+    //Compute RMS of target exit angle
+    target_exitangle              = 0.0;
+    target_exitangle2             = 0.0;
+    target_exitangle_numparticles = 0;
+    target_exitangle_cutoff              = 0.0;
+    target_exitangle2_cutoff             = 0.0;
+    target_exitangle_cutoff_numparticles = 0;
 
 }
 
@@ -116,6 +128,47 @@ void RootFileWriter::doEvent(const G4Event* event){
         G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
     }
 
+    G4int myTargetExitpos_CollID = SDman->GetCollectionID("ExitposCollection");
+    if (myTargetExitpos_CollID>=0) {
+        MyTrackerHitsCollection* targetExitposHitsCollection = NULL;
+        targetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTargetExitpos_CollID));
+        if (targetExitposHitsCollection != NULL) {
+            G4int nEntries = targetExitposHitsCollection->entries();
+
+            for (G4int i = 0; i < nEntries; i++) {
+                //Get the data from the event
+                const G4double       energy      = (*targetExitposHitsCollection)[i]->GetTrackEnergy();
+                const G4int          charge      = (*targetExitposHitsCollection)[i]->GetCharge();
+                const G4ThreeVector& momentum      = (*targetExitposHitsCollection)[i]->GetMomentum();
+                //G4double exitangle = momentum.theta()/deg;
+                G4double exitangle = atan(momentum.x()/momentum.z())/deg;
+
+                //Exit angle
+                target_exitangle_hist->Fill(fabs(exitangle));
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    target_exitangle_hist_cutoff->Fill(fabs(exitangle));
+                }
+
+                target_exitangle              += exitangle;
+                target_exitangle2             += exitangle*exitangle;
+                target_exitangle_numparticles += 1;
+
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    target_exitangle_cutoff              += exitangle;
+                    target_exitangle2_cutoff             += exitangle*exitangle;
+                    target_exitangle_cutoff_numparticles += 1;
+                }
+            }
+
+        }
+        else {
+            G4cout << "targetExitposHitsCollection was NULL!"<<G4endl;
+        }
+    }
+    else {
+        G4cout << "myTargetExitpos_CollID was " << myTargetExitpos_CollID << " < 0!"<<G4endl;
+    }
+
     //**Data from detectorTrackerSD**
     G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
     if (myTrackerSD_CollID>=0) {
@@ -133,7 +186,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 const G4ThreeVector& hitPos = (*trackerHitsCollection)[i]->GetPosition();
 
                 //Overall histograms
-                tracker_energy->Fill(energy/TeV);
+                tracker_energy->Fill(energy/MeV);
 
                 //Hit position
                 tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
@@ -183,6 +236,11 @@ void RootFileWriter::finalizeRootFile() {
     targetEdep_IEL->Write();
     delete targetEdep_IEL; targetEdep_IEL = NULL;
 
+    target_exitangle_hist->Write();
+    delete target_exitangle_hist; target_exitangle_hist = NULL;
+    target_exitangle_hist_cutoff->Write();
+    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+
     tracker_numParticles->Write();
     delete tracker_numParticles; tracker_numParticles = NULL;
     tracker_energy->Write();
@@ -218,12 +276,29 @@ void RootFileWriter::finalizeRootFile() {
     double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)numParticles_total)) ) /
         (((double)numParticles_total)-1.0);
     yrms = sqrt(yrms);
+    //Exitangle
+    G4double exitangle_avg = target_exitangle /
+        ((double)target_exitangle_numparticles);
+    G4double exitangle_rms = ( target_exitangle2 -
+                               (target_exitangle*target_exitangle /
+                                ((double)target_exitangle_numparticles)) ) /
+        ((double)target_exitangle_numparticles - 1.0 ) ;
 
     G4cout << G4endl
            << "All particles (n=" << numParticles_total << "):" << G4endl;
+
     G4cout << "Average x = " << xave << " [mm], RMS = " << xrms << " [mm]" << G4endl
            << "Average y = " << yave << " [mm], RMS = " << yrms << " [mm]" << G4endl;
 
+    G4cout << G4endl
+           << "Exit angle average (x) = " << exitangle_avg << " [deg]" << G4endl
+           << "Exit angle RMS (x)     = " << exitangle_rms << " [deg]" << G4endl;
+
+    G4cout << target_exitangle << " " << target_exitangle2 << " " << target_exitangle_numparticles << G4endl;
+    G4cout << target_exitangle_cutoff << " " << target_exitangle2_cutoff << " " << target_exitangle_cutoff_numparticles << G4endl;
+    // ** Above cutoff **
+
+    // Average position and RMS
     double xave_cutoff  = tracker_particleHit_x_cutoff / ((double)numParticles_cutoff);
     double yave_cutoff  = tracker_particleHit_y_cutoff / ((double)numParticles_cutoff);
     double xrms_cutoff  = ( tracker_particleHit_xx_cutoff -
@@ -237,11 +312,23 @@ void RootFileWriter::finalizeRootFile() {
         (((double)numParticles_cutoff)-1.0);
     yrms_cutoff = sqrt(yrms_cutoff);
 
+    //Exitangle
+    G4double exitangle_avg_cutoff = target_exitangle_cutoff /
+        ((double)target_exitangle_cutoff_numparticles);
+    G4double exitangle_rms_cutoff = ( target_exitangle2_cutoff -
+                                      (target_exitangle_cutoff*target_exitangle_cutoff /
+                                       ((double)target_exitangle_cutoff_numparticles)) ) /
+        ((double)target_exitangle_cutoff_numparticles - 1.0 ) ;
+
     G4cout << G4endl
            << "Above cutoff (charged, energy >= "
            << beamEnergy*beamEnergy_cutoff <<" [MeV], n=" << numParticles_cutoff
-           << ") only:" << G4endl;
+           << ") only:" << G4endl << G4endl;
+
     G4cout << "Average x = " << xave_cutoff << " [mm], RMS = " << xrms_cutoff << " [mm]" << G4endl
            << "Average y = " << yave_cutoff << " [mm], RMS = " << yrms_cutoff << " [mm]" << G4endl;
 
+    G4cout << G4endl
+           << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
+           << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
 }
