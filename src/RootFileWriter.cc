@@ -229,30 +229,6 @@ void RootFileWriter::doEvent(const G4Event* event){
 
 }
 void RootFileWriter::finalizeRootFile() {
-    targetEdep->Write();
-    delete targetEdep; targetEdep = NULL;
-    targetEdep_NIEL->Write();
-    delete targetEdep_NIEL; targetEdep_NIEL = NULL;
-    targetEdep_IEL->Write();
-    delete targetEdep_IEL; targetEdep_IEL = NULL;
-
-    target_exitangle_hist->Write();
-    delete target_exitangle_hist; target_exitangle_hist = NULL;
-    target_exitangle_hist_cutoff->Write();
-    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
-
-    tracker_numParticles->Write();
-    delete tracker_numParticles; tracker_numParticles = NULL;
-    tracker_energy->Write();
-    delete tracker_energy; tracker_energy = NULL;
-    tracker_hitPos->Write();
-    delete tracker_hitPos; tracker_hitPos = NULL;
-    tracker_hitPos_cutoff->Write();
-    delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
-
-    histFile->Write();
-    histFile->Close();
-    delete histFile; histFile = NULL;
 
     //Print out the particle types hitting the tracker
     G4cout << endl;
@@ -266,6 +242,8 @@ void RootFileWriter::finalizeRootFile() {
         G4cout << endl;
     }
     tracker_particleTypes.clear();
+
+    // ** Below cutoff **
 
     //Average position and RMS
     double xave  = tracker_particleHit_x / ((double)numParticles_total);
@@ -294,8 +272,6 @@ void RootFileWriter::finalizeRootFile() {
            << "Exit angle average (x) = " << exitangle_avg << " [deg]" << G4endl
            << "Exit angle RMS (x)     = " << exitangle_rms << " [deg]" << G4endl;
 
-    G4cout << target_exitangle << " " << target_exitangle2 << " " << target_exitangle_numparticles << G4endl;
-    G4cout << target_exitangle_cutoff << " " << target_exitangle2_cutoff << " " << target_exitangle_cutoff_numparticles << G4endl;
     // ** Above cutoff **
 
     // Average position and RMS
@@ -331,4 +307,30 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << G4endl
            << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
+
+    // Write the ROOT file.
+    targetEdep->Write();
+    delete targetEdep; targetEdep = NULL;
+    targetEdep_NIEL->Write();
+    delete targetEdep_NIEL; targetEdep_NIEL = NULL;
+    targetEdep_IEL->Write();
+    delete targetEdep_IEL; targetEdep_IEL = NULL;
+
+    target_exitangle_hist->Write();
+    delete target_exitangle_hist; target_exitangle_hist = NULL;
+    target_exitangle_hist_cutoff->Write();
+    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+
+    tracker_numParticles->Write();
+    delete tracker_numParticles; tracker_numParticles = NULL;
+    tracker_energy->Write();
+    delete tracker_energy; tracker_energy = NULL;
+    tracker_hitPos->Write();
+    delete tracker_hitPos; tracker_hitPos = NULL;
+    tracker_hitPos_cutoff->Write();
+    delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
+
+    histFile->Write();
+    histFile->Close();
+    delete histFile; histFile = NULL;
 }
