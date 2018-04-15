@@ -349,3 +349,56 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
 }
 
 //------------------------------------------------------------------------------
+
+G4int DetectorConstruction::GetTargetMaterialZ() {
+    //Return the nuclear charge of the most common species in the target
+
+    const size_t numElements             = TargetMaterial->GetNumberOfElements();
+    const G4ElementVector* elementVector = TargetMaterial->GetElementVector();
+    const G4int* atomsVector             = TargetMaterial->GetAtomsVector();
+
+    G4int maxAtoms = 0;
+    size_t maxAtomsIndex = -1;
+
+    for (size_t i = 0; i<numElements; i++) {
+        if (atomsVector[i] > maxAtoms) {
+            maxAtoms = atomsVector[i];
+            maxAtomsIndex = i;
+        }
+    }
+
+    return elementVector[maxAtomsIndex][0]->GetZ();
+}
+
+G4double DetectorConstruction::GetTargetMaterialA() {
+    //Return the average mass number of the most common species in the target
+
+    const size_t numElements             = TargetMaterial->GetNumberOfElements();
+    const G4ElementVector* elementVector = TargetMaterial->GetElementVector();
+    const G4int* atomsVector             = TargetMaterial->GetAtomsVector();
+
+    G4int maxAtoms = 0;
+    size_t maxAtomsIndex = -1;
+
+    for (size_t i = 0; i<numElements; i++) {
+        if (atomsVector[i] > maxAtoms) {
+            maxAtoms = atomsVector[i];
+            maxAtomsIndex = i;
+        }
+    }
+
+    G4double A_avg = 0.0;
+    for (auto el : elementVector[maxAtomsIndex]) {
+        A_avg += el->GetAtomicMassAmu();
+    }
+
+    return A_avg / ((G4double)elementVector[maxAtomsIndex].size());
+}
+
+//------------------------------------------------------------------------------
+
+G4double DetectorConstruction::GetTargetMaterialDensity() {
+    return TargetMaterial->GetDensity();
+}
+
+//------------------------------------------------------------------------------

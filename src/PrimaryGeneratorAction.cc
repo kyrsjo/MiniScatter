@@ -3,18 +3,7 @@
 #include "G4Event.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
 #include "Randomize.hh"
-#include "TROOT.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TFile.h"
-#include "TCanvas.h"
-#include "TStyle.h"
-#include "TLegend.h"
-#include "TColor.h"
-#include "TLatex.h"
-#include "globals.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 #include <iostream>
@@ -32,7 +21,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
     G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-    G4ParticleDefinition* particle = particleTable->FindParticle(beam_type);
+                     particle = particleTable->FindParticle(beam_type);
     if (particle == NULL) {
         G4cerr << "Error - particle named '" << beam_type << "'not found" << G4endl;
         //particleTable->DumpTable();

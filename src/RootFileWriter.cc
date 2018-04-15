@@ -1,5 +1,8 @@
 #include "RootFileWriter.hh"
 
+#include "TGraph.h"
+#include "TCanvas.h"
+
 #include "MyEdepHit.hh"
 #include "MyTrackerHit.hh"
 
@@ -40,7 +43,7 @@ void RootFileWriter::initializeRootFile(){
         experimental::filesystem::create_directory(foldername_out.data());
     }
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
-    histFile= new TFile(rootFileName,"RECREATE");
+    histFile = new TFile(rootFileName,"RECREATE");
 
     targetEdep = new TH1D("targetEdep","targetEdep",1000,0,6);
     targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
@@ -50,8 +53,8 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
     // Target exit angle histogram
-    target_exitangle_hist        = new TH1D("exitangle", "Exit angle from tracker", 1001, 0, 90);
-    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff", "Exit angle from tracker (charged, energy > cutoff)", 1001, 0, 90);
+    target_exitangle_hist        = new TH1D("exitangle", "Exit angle from tracker", 5001, -90, 90);
+    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff", "Exit angle from tracker (charged, energy > cutoff)", 5001, -10, 10);
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
@@ -144,9 +147,9 @@ void RootFileWriter::doEvent(const G4Event* event){
                 G4double exitangle = atan(momentum.x()/momentum.z())/deg;
 
                 //Exit angle
-                target_exitangle_hist->Fill(fabs(exitangle));
+                target_exitangle_hist->Fill(exitangle);
                 if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
-                    target_exitangle_hist_cutoff->Fill(fabs(exitangle));
+                    target_exitangle_hist_cutoff->Fill(exitangle);
                 }
 
                 target_exitangle              += exitangle;
@@ -261,6 +264,7 @@ void RootFileWriter::finalizeRootFile() {
                                (target_exitangle*target_exitangle /
                                 ((double)target_exitangle_numparticles)) ) /
         ((double)target_exitangle_numparticles - 1.0 ) ;
+    exitangle_rms = sqrt(exitangle_rms);
 
     G4cout << G4endl
            << "All particles (n=" << numParticles_total << "):" << G4endl;
@@ -295,6 +299,7 @@ void RootFileWriter::finalizeRootFile() {
                                       (target_exitangle_cutoff*target_exitangle_cutoff /
                                        ((double)target_exitangle_cutoff_numparticles)) ) /
         ((double)target_exitangle_cutoff_numparticles - 1.0 ) ;
+    exitangle_rms_cutoff = sqrt(exitangle_rms_cutoff);
 
     G4cout << G4endl
            << "Above cutoff (charged, energy >= "
@@ -308,6 +313,67 @@ void RootFileWriter::finalizeRootFile() {
            << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
 
+    // Compute the analytical multiple scattering angle distribution
+    // Formulas from various sources:
+    //
+    // http://www-glast.slac.stanford.edu/software/AnaGroup/rev.pdf
+    // Document describing the validation of Geant4 multiple scattering
+    //
+    // http://cdsweb.cern.ch/record/1279627/files/PH-EP-Tech-Note-2010-013.pdf
+    // (note: Missing factor A in radiation length formula)
+    //
+    // https://en.wikipedia.org/wiki/Radiation_length
+    // Checked: April 15th 2018
+    //
+    // http://pdg.lbl.gov/2004/reviews/passagerpp.pdf
+    // This seems to be the base reference for the "compact fit to the data"
+    // used for the radiation length, which is the formula found
+    // in Wikipedia and in PH-EP-Tech-Note-2010-013.
+    //
+    // http://pdg.lbl.gov/2017/reviews/rpp2017-rev-passage-particles-matter.pdf
+    // Multiple scattering formulas
+    //
+    // http://pdg.lbl.gov/2017/AtomicNuclearProperties/index.html
+    // Tables used to crosscheck computed radiation lenghts
+
+    G4cout << G4endl
+           << "Computing analytical scattering..." << G4endl;
+    G4RunManager*           run    = G4RunManager::GetRunManager();
+
+    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    G4double targetThickness = detCon->getTargetThickness(); //Geant units
+    G4cout << "targetThickness = " << targetThickness/mm << " [mm]" << G4endl;
+    G4int targetZ = detCon->GetTargetMaterialZ();
+    G4cout << "targetZ         = " << targetZ << " [e]" << G4endl;
+    G4double targetA = detCon->GetTargetMaterialA();
+    G4cout << "targetA         = " << targetA << " [amu]" << G4endl;
+
+    G4double targetDensity = detCon->GetTargetMaterialDensity();
+    G4cout << "targetDensity   = " << targetDensity*cm3/g << " [g/cm]" << G4endl;
+
+    G4double radiationLength = 716.4 * targetA /
+        (targetZ*(targetZ+1)*log(287.0/sqrt(targetZ))); //[g/cm^2]
+    G4cout << "RadiationLength = " << radiationLength << " [g/cm^2]" << G4endl;
+    radiationLength /= targetDensity*cm3/g; //[cm]
+    radiationLength *= cm; //Geant4 units
+    G4cout << "                = " << radiationLength/cm << " [cm]" << G4endl;
+
+    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
+    G4double beamMass   = genAct->get_beam_particlemass(); // Geant4 units
+    G4cout << "beamMass        = " << beamMass / MeV << " [MeV/c^2]" <<G4endl;
+    G4double beamCharge = genAct->get_beam_particlecharge(); // [e]
+    G4cout << "beamCharge      = " << beamCharge << " [e]" << G4endl;
+    G4double beamBeta2   = 1 - pow(beamMass/beamEnergy*MeV, 2);
+    G4cout << "beamBeta2       = " << beamBeta2 << G4endl;
+
+    G4double theta0 = 13.6*MeV / (beamEnergy*MeV - pow(beamMass,2)/beamEnergy*MeV) *
+        fabs(beamCharge) * sqrt(targetThickness/radiationLength) *
+        (1 + 0.038 * log(targetThickness*pow(beamCharge,2)/(radiationLength*beamBeta2)) );
+    //TF1* highland = new TF1("highland", "Highland scattering distribution",0,90);
+    G4cout << "theta0          = " << theta0 << " [rad]" << G4endl
+           << "                = " << theta0/deg << " [deg]" << G4endl;
+    G4cout << G4endl;
+
     // Write the ROOT file.
     targetEdep->Write();
     delete targetEdep; targetEdep = NULL;
@@ -318,8 +384,50 @@ void RootFileWriter::finalizeRootFile() {
 
     target_exitangle_hist->Write();
     delete target_exitangle_hist; target_exitangle_hist = NULL;
-    target_exitangle_hist_cutoff->Write();
+
+    target_exitangle_hist_cutoff->Write(); // Write the unaltered histogram
+
+    //Plot the analytical scattering distribution and the histogram together
+    TCanvas* c1 = new TCanvas("scatterPlot");
+    target_exitangle_hist_cutoff->GetXaxis()->SetRangeUser(-3*theta0/deg,3*theta0/deg);
+    target_exitangle_hist_cutoff->Scale(1.0/target_exitangle_hist_cutoff->Integral(), "width");
+    target_exitangle_hist_cutoff->Draw();
+
+    G4double exitangle_analytic_xmin = target_exitangle_hist_cutoff->GetXaxis()->GetXmin();
+    G4double exitangle_analytic_xmax = target_exitangle_hist_cutoff->GetXaxis()->GetXmax();
+    G4double exitangle_analytic_xrange = exitangle_analytic_xmax - exitangle_analytic_xmin;
+    int exitangle_analytic_npoints = target_exitangle_hist_cutoff->GetNbinsX();
+    G4double* exitangle_analytic_x = new G4double[exitangle_analytic_npoints];
+    G4double* exitangle_analytic_y = new G4double[exitangle_analytic_npoints];
+
+    for (int i = 0; i < exitangle_analytic_npoints; i++) {
+        exitangle_analytic_x[i] =
+            exitangle_analytic_xrange/((G4double)exitangle_analytic_npoints-1) * i
+            + exitangle_analytic_xmin;
+
+        exitangle_analytic_y[i] = 1.0/sqrt(2.0*M_PI*pow(theta0/deg,2)) *
+            exp( - pow(exitangle_analytic_x[i]/(theta0/deg),2) / 2.0);
+
+    }
+    TGraph* exitangle_analytic     = new TGraph(exitangle_analytic_npoints,
+                                                exitangle_analytic_x,
+                                                exitangle_analytic_y       );
+    exitangle_analytic->Draw("same");
+    /*
+    // Debug
+    G4cout << "integral = " << exitangle_analytic->Integral() << G4endl;
+    G4cout << "integral = " << target_exitangle_hist_cutoff->Integral("width") << G4endl;
+    */
+
+    G4String plot_filename = foldername_out + "/" + filename_out + "_angles.png";
+    c1->SaveAs(plot_filename);
+    c1->Write();
+
+    //Now we have plotted, delete stuff
+    //target_exitangle_hist_cutoff->Write();
     delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+    exitangle_analytic->Write();
+    delete exitangle_analytic; exitangle_analytic = NULL;
 
     tracker_numParticles->Write();
     delete tracker_numParticles; tracker_numParticles = NULL;

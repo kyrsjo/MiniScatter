@@ -25,6 +25,10 @@ public:
     void SetTargetMaterial (G4String);
     //  void SetDetectorMaterial (G4String);
 
+    G4int    GetTargetMaterialZ();
+    G4double GetTargetMaterialA();
+    G4double GetTargetMaterialDensity();
+    
     void SetMagField(G4double);
     G4VPhysicalVolume* Construct();
 public:
@@ -32,13 +36,13 @@ public:
     const G4VPhysicalVolume* getphysiWorld() {return physiWorld;};
     const G4VPhysicalVolume* getTargetPV()   {return physiTarget;};
 
-    inline G4double getTargetThickness()   {return TargetThickness;};
-    inline G4double getTargetSizeX() const {return TargetSizeX;};
-    inline G4double getTargetSizeY() const {return TargetSizeY;};
+    inline G4double getTargetThickness() const {return TargetThickness;};
+    inline G4double getTargetSizeX()     const {return TargetSizeX;};
+    inline G4double getTargetSizeY()     const {return TargetSizeY;};
 
-    inline G4double getDetectorDistance()  {return DetectorDistance;};
-    inline G4double getDetectorSizeX() const {return TargetSizeX;};
-    inline G4double getDetectorSizeY() const {return TargetSizeY;};
+    inline G4double getDetectorDistance() const {return DetectorDistance;};
+    inline G4double getDetectorSizeX()    const {return TargetSizeX;};
+    inline G4double getDetectorSizeY()    const {return TargetSizeY;};
 
     static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
