@@ -58,6 +58,17 @@
 #include <unistd.h> //getopt()
 //#include <getopt.h> // Long options to getopt (GNU extension)
 
+void printHelp(G4double target_thick,
+               G4String target_material,
+               G4double detector_distance,
+               G4double detector_angle,
+               G4String physListName,
+               G4double beam_energy,
+               G4String beam_type,
+               G4double beam_offset,
+               G4int    rngSeed,
+               G4String filename_out);
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv) {
@@ -83,42 +94,16 @@ int main(int argc,char** argv) {
     while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:f:s:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
-            G4cout << "Welcome to MiniScatter!" << G4endl
-                   << G4endl
-                   << "Usage/options:" << G4endl
-                   << "-t <double> : Target thickness [mm],  default/current value = "
-                   << target_thick << G4endl
-                   << "-m <string> : Target material name,   default/current       = '"
-                   << target_material << "'" << G4endl
-                   << "Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_Galactic'" << G4endl
-                   << "Also possible: 'gas::pressure' "
-                   << "where 'gas' is He or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
-                   << "-d <double> : Detector distance [mm], default/current value = "
-                   << detector_distance << G4endl
-                   << "-a <double> : Detector angle [deg],   default/current value = "
-                   << detector_angle << G4endl
-                   << "-p <string> : Physics list name,      default/current       = '"
-                   << physListName << G4endl
-                   << "-n <int>    : Run a given number of events automatically"
-                   << G4endl
-                   << "-e <double> : Beam energy [MeV],      default/current value = "
-                   << beam_energy << G4endl
-                   << "-b <string> : Particle type,          default/current value = "
-                   << beam_type << G4endl
-                   << "-x <double> : Beam offset (x) [mm],   default/current value = "
-                   << beam_offset << G4endl
-                   << "-s <int>    : Set the initial seed,   default/current value = "
-                   << rngSeed << G4endl
-                   << "-g : Use a GUI"
-                   << "-f <string> : Output filename,        default/current value = "
-                   << filename_out << G4endl
-                   << G4endl
-                   << G4endl;
-            G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
-            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
-            G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
-            G4cout << "Extra arguments are not compatible with -g" << G4endl;
-
+            printHelp(target_thick,
+                      target_material,
+                      detector_distance,
+                      detector_angle,
+                      physListName,
+                      beam_energy,
+                      beam_type,
+                      beam_offset,
+                      rngSeed,
+                      filename_out);
             exit(1);
             break;
 
@@ -232,6 +217,7 @@ int main(int argc,char** argv) {
             exit(1);
         }
     }
+
     //Copy remaining arguments to array that is passed to Geant4
     int argc_effective = argc-optind+1;
     char** argv_effective = new char*[argc_effective];
@@ -241,16 +227,25 @@ int main(int argc,char** argv) {
     }
 
     //Print the gotten/default arguments
-    G4cout << "MiniScatter got the following command line arguments:" << G4endl
-           << "target_thick =  " << target_thick << " [mm]" << G4endl
-           << "physListName = '" << physListName << "'" << G4endl
+    printHelp(target_thick,
+              target_material,
+              detector_distance,
+              detector_angle,
+              physListName,
+              beam_energy,
+              beam_type,
+              beam_offset,
+              rngSeed,
+              filename_out);
+    G4cout << "Status of other arguments:" << G4endl
            << "numEvents    =  " << numEvents << G4endl
            << "useGUI       =  " << (useGUI==true ? "yes" : "no") << G4endl;
     G4cout << "Arguments which are passed on to Geant4:" << G4endl;
     for (int i = 0; i < argc_effective; i++) {
         G4cout << i << " '" << argv_effective[i] << "'" << G4endl;
     }
-
+    G4cout << G4endl;
+    
     G4cout << "Starting Geant4..." << G4endl << G4endl;
 
     G4RunManager * runManager = new G4RunManager;
@@ -368,6 +363,56 @@ int main(int argc,char** argv) {
     G4cout << "runManager deleted" << G4endl;
 
     return 0;
+}
+
+//--------------------------------------------------------------------------------
+
+void printHelp(G4double target_thick,
+               G4String target_material,
+               G4double detector_distance,
+               G4double detector_angle,
+               G4String physListName,
+               G4double beam_energy,
+               G4String beam_type,
+               G4double beam_offset,
+               G4int    rngSeed,
+               G4String filename_out) {
+            G4cout << "Welcome to MiniScatter!" << G4endl
+                   << G4endl
+                   << "Usage/options:" << G4endl
+                   << "-t <double> : Target thickness [mm],  default/current value = "
+                   << target_thick << G4endl
+                   << "-m <string> : Target material name,   default/current       = '"
+                   << target_material << "'" << G4endl
+                   << "Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_Galactic'" << G4endl
+                   << "Also possible: 'gas::pressure' "
+                   << "where 'gas' is He or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
+                   << "-d <double> : Detector distance [mm], default/current value = "
+                   << detector_distance << G4endl
+                   << "-a <double> : Detector angle [deg],   default/current value = "
+                   << detector_angle << G4endl
+                   << "-p <string> : Physics list name,      default/current       = '"
+                   << physListName << G4endl
+                   << "-n <int>    : Run a given number of events automatically"
+                   << G4endl
+                   << "-e <double> : Beam energy [MeV],      default/current value = "
+                   << beam_energy << G4endl
+                   << "-b <string> : Particle type,          default/current value = "
+                   << beam_type << G4endl
+                   << "-x <double> : Beam offset (x) [mm],   default/current value = "
+                   << beam_offset << G4endl
+                   << "-s <int>    : Set the initial seed,   default/current value = "
+                   << rngSeed << G4endl
+                   << "-g : Use a GUI"
+                   << "-f <string> : Output filename,        default/current value = "
+                   << filename_out << G4endl
+                   << G4endl
+                   << G4endl;
+            G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
+            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
+            G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
+            G4cout << "Extra arguments are not compatible with -g" << G4endl;
+            G4cout << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....

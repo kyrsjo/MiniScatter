@@ -53,8 +53,12 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
     // Target exit angle histogram
-    target_exitangle_hist        = new TH1D("exitangle", "Exit angle from tracker", 5001, -90, 90);
-    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff", "Exit angle from tracker (charged, energy > cutoff)", 5001, -10, 10);
+    target_exitangle_hist        = new TH1D("exitangle",
+                                            "Exit angle from tracker",
+                                            5001, -90, 90);
+    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff",
+                                            "Exit angle from tracker (charged, energy > cutoff)",
+                                            5001, -10, 10);
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
