@@ -257,7 +257,7 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
         exit(1);
     }
     G4String material_in = TargetMaterial_in(0, colonPos);
-    G4String pressure_in = TargetMaterial_in(pressurePos, TargetMaterial_in.length());
+    G4String pressure_in = TargetMaterial_in(pressurePos, TargetMaterial_in.length()); // Bug, 2nd argument is length not position
 
     G4double pressure = 0.0;
     try {

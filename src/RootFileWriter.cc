@@ -58,7 +58,7 @@ void RootFileWriter::initializeRootFile(){
                                             5001, -90, 90);
     target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff",
                                             "Exit angle from tracker (charged, energy > cutoff)",
-                                            5001, -10, 10);
+                                            50001, -10, 10);
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
@@ -394,6 +394,7 @@ void RootFileWriter::finalizeRootFile() {
     //Plot the analytical scattering distribution and the histogram together
     TCanvas* c1 = new TCanvas("scatterPlot");
     target_exitangle_hist_cutoff->GetXaxis()->SetRangeUser(-3*theta0/deg,3*theta0/deg);
+    target_exitangle_hist_cutoff->GetXaxis()->SetTitle("Angle [deg]");
     target_exitangle_hist_cutoff->Scale(1.0/target_exitangle_hist_cutoff->Integral(), "width");
     target_exitangle_hist_cutoff->Draw();
 

@@ -44,6 +44,8 @@ public:
     inline G4double getDetectorSizeX()    const {return TargetSizeX;};
     inline G4double getDetectorSizeY()    const {return TargetSizeY;};
 
+    inline G4double getWorldSizeZ()       const {return WorldSizeZ;};
+
     static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
     G4Material*        vacuumMaterial;

@@ -66,6 +66,7 @@ void printHelp(G4double target_thick,
                G4double beam_energy,
                G4String beam_type,
                G4double beam_offset,
+               G4double beam_zpos,
                G4int    rngSeed,
                G4String filename_out);
 
@@ -84,6 +85,8 @@ int main(int argc,char** argv) {
     G4double beam_energy = 200;      // Beam energy [MeV]
     G4String beam_type   = "e-";     // Beam particle type
     G4double beam_offset = 0.0;      // Beam offset (x) [mm]
+    G4double beam_zpos   = 0.0;      // Beam offset (z) [mm]
+    G4String covarianceString = "";  // Beam covariance matrix parameters
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
     G4int    numEvents    = 0;                // Number of events to generate
@@ -91,7 +94,7 @@ int main(int argc,char** argv) {
     G4String filename_out = "output";         // Output filename
     G4int    rngSeed      = 123;              // RNG seed
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:f:s:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hg")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
@@ -102,6 +105,7 @@ int main(int argc,char** argv) {
                       beam_energy,
                       beam_type,
                       beam_offset,
+                      beam_zpos,
                       rngSeed,
                       filename_out);
             exit(1);
@@ -189,11 +193,28 @@ int main(int argc,char** argv) {
                 beam_offset = std::stod(string(optarg));
             }
             catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading beam offset" << G4endl
+                G4cout << "Invalid argument when reading beam offset (x)" << G4endl
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
+            break;
+
+        case 'z': //beam offset (z)
+            try {
+                beam_zpos = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading beam offset (z)" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            break;
+
+        case 'c': //Beam covariance matrix from Twiss parameters
+            //"-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
+            covarianceString = G4String(optarg);
             break;
 
         case 'f': //Output filename
@@ -235,11 +256,15 @@ int main(int argc,char** argv) {
               beam_energy,
               beam_type,
               beam_offset,
+              beam_zpos,
               rngSeed,
               filename_out);
     G4cout << "Status of other arguments:" << G4endl
-           << "numEvents    =  " << numEvents << G4endl
-           << "useGUI       =  " << (useGUI==true ? "yes" : "no") << G4endl;
+           << "numEvents         =  " << numEvents << G4endl
+           << "useGUI            =  " << (useGUI==true ? "yes" : "no") << G4endl;
+    if (covarianceString != "") {
+        G4cout << "Covariance string = '" << covarianceString << "'" << G4endl;
+    }
     G4cout << "Arguments which are passed on to Geant4:" << G4endl;
     for (int i = 0; i < argc_effective; i++) {
         G4cout << i << " '" << argv_effective[i] << "'" << G4endl;
@@ -292,7 +317,12 @@ int main(int argc,char** argv) {
 
     // Set user action classes:
     //
-    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector, beam_energy, beam_type, beam_offset);
+    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector,
+                                                                    beam_energy,
+                                                                    beam_type,
+                                                                    beam_offset,
+                                                                    beam_zpos,
+                                                                    covarianceString);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -375,6 +405,7 @@ void printHelp(G4double target_thick,
                G4double beam_energy,
                G4String beam_type,
                G4double beam_offset,
+               G4double beam_zpos,
                G4int    rngSeed,
                G4String filename_out) {
             G4cout << "Welcome to MiniScatter!" << G4endl
@@ -384,9 +415,9 @@ void printHelp(G4double target_thick,
                    << target_thick << G4endl
                    << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
-                   << "Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_Galactic'" << G4endl
-                   << "Also possible: 'gas::pressure' "
-                   << "where 'gas' is He or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
+                   << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_Galactic'" << G4endl
+                   << " Also possible: 'gas::pressure' "
+                   << " where 'gas' is He or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
                    << "-d <double> : Detector distance [mm], default/current value = "
                    << detector_distance << G4endl
                    << "-a <double> : Detector angle [deg],   default/current value = "
@@ -401,6 +432,12 @@ void printHelp(G4double target_thick,
                    << beam_type << G4endl
                    << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl
+                   << "-z <double> : Beam offset (z) [mm],   default/current value = "
+                   << beam_zpos << G4endl
+                   << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
+                   << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
+                   << " Set realistic beam distribution (on target surface); " << G4endl
+                   << " if optional part given then x,y are treated separately" << G4endl
                    << "-s <int>    : Set the initial seed,   default/current value = "
                    << rngSeed << G4endl
                    << "-g : Use a GUI"

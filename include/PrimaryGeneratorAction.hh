@@ -5,6 +5,11 @@
 #include "G4ParticleDefinition.hh"
 #include "globals.hh"
 
+#include "TMatrixDfwd.h"
+#include "TDecompChol.h"
+
+#include "TRandom.h"
+
 class G4ParticleGun;
 class G4Event;
 class DetectorConstruction;
@@ -17,7 +22,9 @@ public:
     PrimaryGeneratorAction(DetectorConstruction* DC,
                            G4double beam_energy_in,
                            G4String beam_type_in,
-                           G4double beam_offset_in);
+                           G4double beam_offset_in,
+                           G4double beam_zpos_in,
+                           G4String covarianceString_in);
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
@@ -31,6 +38,30 @@ private:
     G4double beam_energy;    // Beam energy [MeV]
     G4String beam_type;      // Beam particle type
     G4double beam_offset;    // Beam offset (x) [mm]
+    G4double beam_zpos;      // Beam initial z position [G4 units]
+
+    G4bool hasCovariance;
+    void setupCovariance();
+    G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
+    
+    G4String covarianceString; // String defining the covariance matrix via Twiss parameters
+    G4double epsN_x;  // Normalized emittance  (x) [um]
+    G4double epsG_x;  // Geometrical emittance (x) [um]
+    G4double beta_x;  // Beta function         (x) [m]
+    G4double alpha_x; // Alpha function        (x) [-]
+
+    G4double epsN_y;  // Normalized emittance  (y) [um]
+    G4double epsG_y;  // Geometrical emittance (y) [um]
+    G4double beta_y;  // Beta function         (y) [m]
+    G4double alpha_y; // Alpha function        (y) [-]
+
+    TMatrixD covarX;
+    TMatrixD covarY;
+
+    TMatrixD covarX_U;
+    TMatrixD covarY_U;
+
+    TRandom* RNG;
 
     G4ParticleDefinition* particle; // Particle type
 
