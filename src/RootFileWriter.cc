@@ -26,8 +26,8 @@ RootFileWriter* RootFileWriter::singleton = 0;
 const G4String  RootFileWriter::foldername_out = "plots";
 
 void RootFileWriter::initializeRootFile(){
-    G4RunManager*         run    = G4RunManager::GetRunManager();
-    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    G4RunManager*           run    = G4RunManager::GetRunManager();
+    DetectorConstruction*   detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
     PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
     this->beamEnergy = genAct->get_beam_energy();
 
@@ -68,11 +68,37 @@ void RootFileWriter::initializeRootFile(){
     tracker_energy->GetXaxis()->SetTitle("Energy of particles on the tracker [MeV]");
 
     tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
-               1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
-               1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
+               1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
+               1000,detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
     tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > cutoff)",
-               1000,detCon->getDetectorSizeX()/2.0,detCon->getDetectorSizeX()/2.0,
-               1000,detCon->getDetectorSizeY()/2.0,detCon->getDetectorSizeY()/2.0);
+               1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
+               1000,detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
+
+    tracker_phasespaceX_cutoff   =
+        new TH2D("trackerPhasespaceX_cutoff",
+                 "Tracker phase space (x) (charged, energy > cutoff)",
+                 1000,detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //tracker_phasespaceX_cutoff->Sumw2();
+    tracker_phasespaceY_cutoff   =
+        new TH2D("trackerPhasespaceY_cutoff",
+                 "Tracker phase space (y) (charged, energy > cutoff)",
+                 1000, detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //tracker_phasespaceY_cutoff->Sumw2();
+
+    init_phasespaceX   =
+        new TH2D("initPhasespaceX",
+                 "Initial phase space (x)",
+                 1000,detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //init_phasespaceX->Sumw2();
+    init_phasespaceY   =
+        new TH2D("initPhasespaceY",
+                 "Initial phase space (y)",
+                 1000, detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //init_phasespaceY->Sumw2();
 
     //For counting the types of particles hitting the tracker
     tracker_particleTypes.clear();
@@ -190,7 +216,8 @@ void RootFileWriter::doEvent(const G4Event* event){
                 const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
                 const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
                 const G4String& type   = (*trackerHitsCollection)[i]->GetType();
-                const G4ThreeVector& hitPos = (*trackerHitsCollection)[i]->GetPosition();
+                const G4ThreeVector& hitPos   = (*trackerHitsCollection)[i]->GetPosition();
+                const G4ThreeVector& momentum = (*trackerHitsCollection)[i]->GetMomentum();
 
                 //Overall histograms
                 tracker_energy->Fill(energy/MeV);
@@ -201,6 +228,9 @@ void RootFileWriter::doEvent(const G4Event* event){
                     tracker_hitPos_cutoff->Fill(hitPos.x()/mm, hitPos.y()/mm);
                 }
 
+                //Phase space
+                tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                 //Particle type counting
                 if (tracker_particleTypes.count(PDG) == 0) {
                     tracker_particleTypes[PDG] = 0;
@@ -233,7 +263,12 @@ void RootFileWriter::doEvent(const G4Event* event){
         G4cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<G4endl;
     }
 
+    // Initial particle distribution
+    G4RunManager*           run    = G4RunManager::GetRunManager();
+    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
 
+    init_phasespaceX->Fill(genAct->x/mm,genAct->xp/rad);
+    init_phasespaceY->Fill(genAct->y/mm,genAct->yp/rad);
 }
 void RootFileWriter::finalizeRootFile() {
 
@@ -378,7 +413,18 @@ void RootFileWriter::finalizeRootFile() {
            << "                = " << theta0/deg << " [deg]" << G4endl;
     G4cout << G4endl;
 
+    //Compute Twiss parameters
+    PrintTwissParameters(init_phasespaceX);
+    PrintTwissParameters(init_phasespaceY);
+    PrintTwissParameters(tracker_phasespaceX_cutoff);
+    PrintTwissParameters(tracker_phasespaceY_cutoff);
+
     // Write the ROOT file.
+    init_phasespaceX->Write();
+    delete init_phasespaceX; init_phasespaceX = NULL;
+    init_phasespaceY->Write();
+    delete init_phasespaceY; init_phasespaceY = NULL;
+
     targetEdep->Write();
     delete targetEdep; targetEdep = NULL;
     targetEdep_NIEL->Write();
@@ -388,6 +434,11 @@ void RootFileWriter::finalizeRootFile() {
 
     target_exitangle_hist->Write();
     delete target_exitangle_hist; target_exitangle_hist = NULL;
+
+    tracker_phasespaceX_cutoff->Write();
+    delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
+    tracker_phasespaceY_cutoff->Write();
+    delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
 
     target_exitangle_hist_cutoff->Write(); // Write the unaltered histogram
 
@@ -446,4 +497,46 @@ void RootFileWriter::finalizeRootFile() {
     histFile->Write();
     histFile->Close();
     delete histFile; histFile = NULL;
+}
+
+void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
+    G4cout << "Stats for '" << phaseSpaceHist->GetTitle() << "':"  << G4endl;
+    double stats[7];
+    phaseSpaceHist->GetStats(stats);
+
+    // Fill used [mm] and [rad]
+    double posAve   = stats[2]/stats[0];
+    double angAve   = stats[4]/stats[0];
+    double posVar   = (stats[3] - stats[2]*stats[2]/stats[0]) / (stats[0]-1.0) ;
+    double angVar   = (stats[5] - stats[4]*stats[4]/stats[0]) / (stats[0]-1.0) ;
+    double coVar    = (stats[6] - stats[2]*stats[4]/stats[0]) / (stats[0]-1.0);
+
+    G4cout << "numHits = "  << stats[0]
+           << ", posAve = " << posAve     << " [mm]"
+           << ", angAve = " << angAve     << " [rad]"
+           << ", posVar = " << posVar     << " [mm^2]"
+           << ", angVar = " << angVar     << " [rad^2]"
+           << ", coVar  = " << coVar      << " [rad*mm]"
+           << G4endl;
+
+    G4RunManager*           run    = G4RunManager::GetRunManager();
+    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
+    double gamma_rel = (genAct->get_beam_energy() * MeV) / genAct->get_beam_particlemass();
+    double beta_rel = sqrt(gamma_rel*gamma_rel - 1.0) / gamma_rel;
+
+    double det = posVar*angVar - coVar*coVar;
+    double epsG = sqrt(det);
+    double epsN = epsG*beta_rel*gamma_rel;  //[mm*rad]
+    double beta = posVar/epsG; // [mm]
+    double alpha = -coVar/epsG;
+    
+    G4cout << "Geometrical emittance  = " << epsG*1e3 << " [um]" << G4endl;
+    G4cout << "Normalized emittance   = " << epsN*1e3 << " [um]"
+           << ", assuming beam energy = " << genAct->get_beam_energy() << " [MeV]"
+           << ", and mass = " << genAct->get_beam_particlemass()/MeV << " [MeV/c]"
+           << G4endl;
+    G4cout << "Twiss beta  = " << beta*1e-3  << " [m]" << G4endl
+           << "Twiss alpha = " << alpha << " [-]"  << G4endl;
+    
+    G4cout << G4endl;
 }

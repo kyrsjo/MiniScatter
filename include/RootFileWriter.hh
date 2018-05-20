@@ -51,6 +51,12 @@ private:
     TH1D* tracker_energy;
     TH2D* tracker_hitPos;
     TH2D* tracker_hitPos_cutoff;
+    TH2D* tracker_phasespaceX_cutoff;
+    TH2D* tracker_phasespaceY_cutoff;
+
+    //Initial distribution
+    TH2D* init_phasespaceX;
+    TH2D* init_phasespaceY;
 
     // End-of-run statistics
 
@@ -89,6 +95,8 @@ private:
     G4double beamEnergy; // [MeV]
     // Compute statistics for charged particles with energy > this cutoff
     static constexpr G4double beamEnergy_cutoff = 0.95;
+
+    void PrintTwissParameters(TH2D* phaseSpaceHist);
 };
 
 #endif

@@ -45,6 +45,8 @@ public:
     inline G4double getDetectorSizeY()    const {return TargetSizeY;};
 
     inline G4double getWorldSizeZ()       const {return WorldSizeZ;};
+    inline G4double getWorldSizeX()       const {return WorldSizeX;};
+    inline G4double getWorldSizeY()       const {return WorldSizeY;};
 
     static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:

@@ -40,10 +40,13 @@ private:
     G4double beam_offset;    // Beam offset (x) [mm]
     G4double beam_zpos;      // Beam initial z position [G4 units]
 
+    G4ParticleDefinition* particle; // Particle type
+
+    // Setup for covariance
     G4bool hasCovariance;
     void setupCovariance();
     G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
-    
+
     G4String covarianceString; // String defining the covariance matrix via Twiss parameters
     G4double epsN_x;  // Normalized emittance  (x) [um]
     G4double epsG_x;  // Geometrical emittance (x) [um]
@@ -55,16 +58,21 @@ private:
     G4double beta_y;  // Beta function         (y) [m]
     G4double alpha_y; // Alpha function        (y) [-]
 
+    // Beam covariance matrices [m,rad]
     TMatrixD covarX;
     TMatrixD covarY;
 
-    TMatrixD covarX_U;
-    TMatrixD covarY_U;
+    // covar = covar_L*covar_L^T, which is used for generation.
+    // Note that ROOT's cholesky routine return the upper-triangular covar_LU^T,
+    // so a transpose is neccessary.
+    TMatrixD covarX_L;
+    TMatrixD covarY_L;
 
     TRandom* RNG;
 
-    G4ParticleDefinition* particle; // Particle type
-
+public:
+    //Leave the generated positions where RootFileWriter can pick it up
+    G4double x,xp,y,yp;
 };
 
 // -----------------------------------------------------------------------------------------

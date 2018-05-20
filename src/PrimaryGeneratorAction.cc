@@ -177,17 +177,21 @@ void PrimaryGeneratorAction::setupCovariance() {
     // Get the cholesky decomposition
     TDecompChol covarX_Utmp(covarX,1e-9);
     covarX_Utmp.Decompose();
-    G4cout << "Decomposed matrix (X):" << G4endl;
+    G4cout << "Decomposed upper-tridiagonal matrix for Y (to be transposed):" << G4endl;
     covarX_Utmp.Print();
-    covarX_U.ResizeTo(covarX);
-    covarX_U = covarX_Utmp.GetU();
+    covarX_L.ResizeTo(covarX);
+    covarX_L = covarX_Utmp.GetU();
+    // Get the lower-tridiagonal that is needed for the generation
+    covarX_L.Transpose(covarX_L);
+    //covarX_L.Print();
 
     TDecompChol covarY_Utmp(covarY,1e-9);
     covarY_Utmp.Decompose();
-    G4cout << "Decomposed matrix (Y):" << G4endl;
+    G4cout << "Decomposed upper-tridiagonal matrix for Y (to be transposed):" << G4endl;
     covarY_Utmp.Print();
-    covarY_U.ResizeTo(covarY);
-    covarY_U = covarY_Utmp.GetU();
+    covarY_L.ResizeTo(covarY);
+    covarY_L = covarY_Utmp.GetU();
+    covarY_L.Transpose(covarY_L);
 
     G4cout << G4endl;
 }
@@ -228,28 +232,27 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     }
 
     if (hasCovariance) {
-        G4double x  = RNG->Gaus(0,1)*covarX_U[0][0] + RNG->Gaus(0,1)*covarX_U[0][1];
-        G4double xp = RNG->Gaus(0,1)*covarX_U[1][0] + RNG->Gaus(0,1)*covarX_U[1][1] + beam_offset*mm;
-        G4double y  = RNG->Gaus(0,1)*covarY_U[0][0] + RNG->Gaus(0,1)*covarY_U[0][1];
-        G4double yp = RNG->Gaus(0,1)*covarY_U[1][0] + RNG->Gaus(0,1)*covarY_U[1][1];
+        G4double xn  = RNG->Gaus(0,1);
+        G4double xpn = RNG->Gaus(0,1);;
+        x  = (xn*covarX_L[0][0] + xpn*covarX_L[0][1])*m + beam_offset*mm;
+        xp = (xn*covarX_L[1][0] + xpn*covarX_L[1][1])*rad;
 
-        particleGun->SetParticlePosition(G4ThreeVector(x,
-                                                       y,
-                                                       beam_zpos
-                                                       )
-                                         );
-
-        //Technically not completely accurate but close enough for now
-        particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
+        G4double yn  = RNG->Gaus(0,1);
+        G4double ypn = RNG->Gaus(0,1);
+        y  = (yn*covarY_L[0][0] + ypn*covarY_L[0][1])*m;
+        yp = (yn*covarY_L[1][0] + ypn*covarY_L[1][1])*rad;
     }
     else {
-        particleGun->SetParticlePosition(G4ThreeVector(beam_offset*mm,
-                                                       0.0,
-                                                       beam_zpos
-                                                       )
-                                         );
-        particleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,1));
+        x  = beam_offset*mm;
+        xp = 0.0;
+        y  = 0.0;
+        yp = 0.0;
     }
+
+    particleGun->SetParticlePosition(G4ThreeVector(x,y,beam_zpos));
+
+    //Technically not completely accurate but close enough for now
+    particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
 
     particleGun->SetParticleEnergy(beam_energy*MeV);
     particleGun->GeneratePrimaryVertex(anEvent);
