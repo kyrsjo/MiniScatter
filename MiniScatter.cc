@@ -67,6 +67,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out);
 
@@ -86,6 +87,7 @@ int main(int argc,char** argv) {
     G4String beam_type   = "e-";     // Beam particle type
     G4double beam_offset = 0.0;      // Beam offset (x) [mm]
     G4double beam_zpos   = 0.0;      // Beam offset (z) [mm]
+    G4bool   doBacktrack = false;    // Backtrack to the z-position?
     G4String covarianceString = "";  // Beam covariance matrix parameters
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
@@ -106,6 +108,7 @@ int main(int argc,char** argv) {
                       beam_type,
                       beam_offset,
                       beam_zpos,
+                      doBacktrack,
                       rngSeed,
                       filename_out);
             exit(1);
@@ -201,8 +204,16 @@ int main(int argc,char** argv) {
             break;
 
         case 'z': //beam offset (z)
+            if (strlen(optarg) > 0 && optarg[0] == '*') {
+                doBacktrack = true;
+            }
             try {
-                beam_zpos = std::stod(string(optarg));
+                if (doBacktrack) {
+                    beam_zpos = std::stod(string(optarg).substr(1));
+                }
+                else {
+                    beam_zpos = std::stod(string(optarg));
+                }
             }
             catch (const std::invalid_argument& ia) {
                 G4cout << "Invalid argument when reading beam offset (z)" << G4endl
@@ -257,6 +268,7 @@ int main(int argc,char** argv) {
               beam_type,
               beam_offset,
               beam_zpos,
+              doBacktrack,
               rngSeed,
               filename_out);
     G4cout << "Status of other arguments:" << G4endl
@@ -322,6 +334,7 @@ int main(int argc,char** argv) {
                                                                     beam_type,
                                                                     beam_offset,
                                                                     beam_zpos,
+                                                                    doBacktrack,
                                                                     covarianceString);
     runManager->SetUserAction(gen_action);
     //
@@ -406,6 +419,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out) {
             G4cout << "Welcome to MiniScatter!" << G4endl
@@ -432,9 +446,12 @@ void printHelp(G4double target_thick,
                    << beam_type << G4endl
                    << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl
-                   << "-z <double> : Beam offset (z) [mm],   default/current value = "
-                   << beam_zpos << G4endl
+                   << "-z (*)<double> : Beam offset (z) [mm],   default/current value = "
+                   << beam_zpos
+                   << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl
                    << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
+                   << " If a '*' is prepended, the distribution is to be generated at z=0," << G4endl
+                   << " then backtracked to the given z value (which may be 0.0)" << G4endl
                    << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
                    << " Set realistic beam distribution (on target surface); " << G4endl
                    << " if optional part given then x,y are treated separately" << G4endl

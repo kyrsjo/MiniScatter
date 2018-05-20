@@ -31,14 +31,16 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4String beam_type_in,
                                                G4double beam_offset_in,
                                                G4double beam_zpos_in,
+                                               G4bool   doBacktrack_in,
                                                G4String covarianceString_in) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
     beam_offset(beam_offset_in),
     beam_zpos(beam_zpos_in),
+    doBacktrack(doBacktrack_in),
     covarianceString(covarianceString_in) {
-    
+
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
     G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
@@ -247,6 +249,12 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         xp = 0.0;
         y  = 0.0;
         yp = 0.0;
+    }
+
+    if (doBacktrack) {
+        //Bactrack from 0.0 to beam_zpos (<0.0)
+        x -= (xp/rad)*(0.0 - beam_zpos);
+        y -= (yp/rad)*(0.0 - beam_zpos);
     }
 
     particleGun->SetParticlePosition(G4ThreeVector(x,y,beam_zpos));

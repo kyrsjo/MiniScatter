@@ -24,6 +24,7 @@ public:
                            G4String beam_type_in,
                            G4double beam_offset_in,
                            G4double beam_zpos_in,
+                           G4bool   doBacktrack_in,
                            G4String covarianceString_in);
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
@@ -38,7 +39,8 @@ private:
     G4double beam_energy;    // Beam energy [MeV]
     G4String beam_type;      // Beam particle type
     G4double beam_offset;    // Beam offset (x) [mm]
-    G4double beam_zpos;      // Beam initial z position [G4 units]
+    G4double beam_zpos;      // Beam initial z position [converted to G4 units in constructor]
+    G4bool   doBacktrack;    // Generate at z=0 then backtrack to injection position?
 
     G4ParticleDefinition* particle; // Particle type
 
@@ -71,7 +73,7 @@ private:
     TRandom* RNG;
 
 public:
-    //Leave the generated positions where RootFileWriter can pick it up
+    //Leave the generated positions where RootFileWriter can pick it up [G4 units]
     G4double x,xp,y,yp;
 };
 
