@@ -429,9 +429,10 @@ void printHelp(G4double target_thick,
                    << target_thick << G4endl
                    << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
-                   << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_Galactic'" << G4endl
+                   << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si'," <<
+                "'G4_MYLAR', 'G4_KAPTON', 'G4_Galactic'" << G4endl
                    << " Also possible: 'gas::pressure' "
-                   << " where 'gas' is He or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
+                   << " where 'gas' is 'He', 'N', 'Ne', or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
                    << "-d <double> : Detector distance [mm], default/current value = "
                    << detector_distance << G4endl
                    << "-a <double> : Detector angle [deg],   default/current value = "
@@ -457,7 +458,7 @@ void printHelp(G4double target_thick,
                    << " if optional part given then x,y are treated separately" << G4endl
                    << "-s <int>    : Set the initial seed,   default/current value = "
                    << rngSeed << G4endl
-                   << "-g : Use a GUI"
+                   << "-g : Use a GUI" << G4endl
                    << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl
                    << G4endl

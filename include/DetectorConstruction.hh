@@ -50,19 +50,22 @@ public:
 
     static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
-    G4Material*        vacuumMaterial;
-    G4Material*        AlMaterial;
-    G4Material*        CMaterial;
-    G4Material*        CuMaterial;
-    G4Material*        PbMaterial;
-    G4Material*        TiMaterial;
-    G4Material*        SiMaterial;
+    G4Material*        vacuumMaterial = NULL;
+    G4Material*        AlMaterial     = NULL;
+    G4Material*        CMaterial      = NULL;
+    G4Material*        CuMaterial     = NULL;
+    G4Material*        PbMaterial     = NULL;
+    G4Material*        TiMaterial     = NULL;
+    G4Material*        SiMaterial     = NULL;
+
+    G4Material*        MylarMaterial  = NULL;
+    G4Material*        KaptonMaterial = NULL;
     //G4Material*        StainlessSteel;
 
-    G4Material*        gasHe;
-    G4Material*        gasN;
-    G4Material*        gasNe;
-    G4Material*        gasAr;
+    G4Material*        gasHe          = NULL;
+    G4Material*        gasN           = NULL;
+    G4Material*        gasNe          = NULL;
+    G4Material*        gasAr          = NULL;
 
     G4double           WorldSizeX;
     G4double           WorldSizeY;
@@ -72,7 +75,7 @@ private:
     G4double           TargetSizeY;
     G4double           TargetThickness;
 
-    G4Material*        TargetMaterial;
+    G4Material*        TargetMaterial = NULL;
 
     G4double           DetectorSizeX;
     G4double           DetectorSizeY;

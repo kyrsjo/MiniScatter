@@ -36,7 +36,6 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4double DetectorDistance_in,
                                            G4double DetectorAngle_in,
                                            G4bool   DetectorRotated_in) :
-    AlMaterial(0), TargetMaterial(0),
     solidWorld(0),logicWorld(0),physiWorld(0),
     solidTarget(0),logicTarget(0),physiTarget(0),
     magField(0) {
@@ -213,26 +212,22 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::DefineMaterials() {
+    // List of available materials:
+    // http://geant4-userdoc.web.cern.ch/geant4-userdoc/UsersGuides/ForApplicationDeveloper/html/Appendix/materialNames.html
     G4NistManager* man = G4NistManager::Instance();
     man->SetVerbose(1);
 
-    G4Material* Al = man->FindOrBuildMaterial("G4_Al");
-    G4Material* C  = man->FindOrBuildMaterial("G4_C");
-    G4Material* Cu = man->FindOrBuildMaterial("G4_Cu");
-    G4Material* Pb = man->FindOrBuildMaterial("G4_Pb");
-    G4Material* Ti = man->FindOrBuildMaterial("G4_Ti");
-    G4Material* Si = man->FindOrBuildMaterial("G4_Si");
+    AlMaterial = man->FindOrBuildMaterial("G4_Al");
+    CuMaterial = man->FindOrBuildMaterial("G4_C");
+    CuMaterial = man->FindOrBuildMaterial("G4_Cu");
+    PbMaterial = man->FindOrBuildMaterial("G4_Pb");
+    TiMaterial = man->FindOrBuildMaterial("G4_Ti");
+    SiMaterial = man->FindOrBuildMaterial("G4_Si");
 
-    G4Material* Vacuum = man->FindOrBuildMaterial("G4_Galactic");
+    MylarMaterial  = man->FindOrBuildMaterial("G4_MYLAR");
+    KaptonMaterial = man->FindOrBuildMaterial("G4_KAPTON");
 
-    //default materials
-    vacuumMaterial   = Vacuum;
-    AlMaterial       = Al;
-    CMaterial        = C;
-    CuMaterial       = Cu;
-    PbMaterial       = Pb;
-    TiMaterial       = Ti;
-    SiMaterial       = Si;
+    vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
 }
 
 //------------------------------------------------------------------------------
@@ -297,7 +292,7 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
            << " [K], density = " << densityHe / g * meter3 << " [g/m3]"
            << G4endl;
 
-    //Define materials (Nitrogen-20)
+    //Define materials (Nitrogen-14)
     G4double aN       = 14.007*g/mole;
     G4double densityN = aN*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
     G4Isotope* isN14    = new G4Isotope("N14",    //Name
@@ -396,6 +391,11 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
     else {
         G4cerr << "Error when setting material '"
                << materialChoice << "' -- not found!" << G4endl;
+        G4MaterialTable* materialTable = G4Material::GetMaterialTable();
+        G4cerr << "Valid choices:" << G4endl;
+        for (auto mat : *materialTable) {
+            G4cerr << mat->GetName() << G4endl;
+        }
         exit(1);
     }
 }
