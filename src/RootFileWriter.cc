@@ -539,4 +539,11 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
            << "Twiss alpha = " << alpha << " [-]"  << G4endl;
     
     G4cout << G4endl;
+
+    // Write to root file
+    TVectorD twissVector (3);
+    twissVector[0] = epsN*1e3;
+    twissVector[1] = beta*1e-3;
+    twissVector[2] = alpha;
+    twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
 }
