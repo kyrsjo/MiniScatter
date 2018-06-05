@@ -274,7 +274,7 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
     // Compute properties
     constexpr G4double temperature = 300*kelvin;
 
-    //Define materials
+    //Define materials (Helium-4)
     G4double aHe       = 4.002602*g/mole;
     G4double densityHe = aHe*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
     G4Isotope* isHe4 = new G4Isotope("He4", //Name
@@ -289,15 +289,61 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
                                  densityHe,          //density
                                  1,                  //ncomponents
                                  kStateGas,          //state
-                                 temperature*kelvin, //temp
+                                 temperature,        //temp
                                  pressure*bar*1e-3 );//pressure
-    gasHe->AddElement(elHe, 1.0);
+    gasHe->AddElement(elHe, 1);
     G4cout << "Built He gas, pressure = "<< pressure
-           << " [mbar], temperature = " << temperature
+           << " [mbar], temperature = " << temperature/kelvin
            << " [K], density = " << densityHe / g * meter3 << " [g/m3]"
            << G4endl;
 
-    //Define materials
+    //Define materials (Nitrogen-20)
+    G4double aN       = 14.007*g/mole;
+    G4double densityN = aN*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isN14    = new G4Isotope("N14",    //Name
+                                         7,       //iz
+                                         14,      //n
+                                         aN);     //a
+    G4Element* elN  = new G4Element("Nitrogen",   //name
+                                    "N",          //symbol
+                                    1);           //ncomponents
+    elN->AddIsotope(isN14, 1.0);
+    this->gasN = new G4Material("NitrogenGas",      //name
+                                densityN,           //density
+                                1,                  //ncomponents
+                                kStateGas,          //state
+                                temperature,        //temp
+                                pressure*bar*1e-3 );//pressure
+    gasN->AddElement(elN, 2);
+    G4cout << "Built N gas, pressure = "<< pressure
+           << " [mbar], temperature = " << temperature/kelvin
+           << " [K], density = " << densityN / g * meter3 << " [g/m3]"
+           << G4endl;
+
+    //Define materials (Neon-20)
+    G4double aNe       = 19.9924401754*g/mole;
+    G4double densityNe = aNe*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isNe20 = new G4Isotope("Ne20", //Name
+                                     10,      //iz
+                                     20,      //n
+                                     aNe);    //a
+    G4Element* elNe  = new G4Element("Neon", //name
+                                     "Ne",    //symbol
+                                     1);      //ncomponents
+    elNe->AddIsotope(isNe20, 1.0);
+    this->gasNe = new G4Material("NeonGas",          //name
+                                 densityNe,          //density
+                                 1,                  //ncomponents
+                                 kStateGas,          //state
+                                 temperature,        //temp
+                                 pressure*bar*1e-3 );//pressure
+    gasNe->AddElement(elNe, 1);
+    G4cout << "Built Ne gas, pressure = "<< pressure
+           << " [mbar], temperature = " << temperature/kelvin
+           << " [K], density = " << densityNe / g * meter3 << " [g/m3]"
+           << G4endl;
+
+    //Define materials (Argon-40)
     G4double aAr       = 39.948*g/mole;
     G4double densityAr = aAr*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
     G4Isotope* isAr40 = new G4Isotope("Ar40", //Name
@@ -312,16 +358,22 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
                                  densityAr,          //density
                                  1,                  //ncomponents
                                  kStateGas,          //state
-                                 temperature*kelvin, //temp
+                                 temperature,        //temp
                                  pressure*bar*1e-3 );//pressure
-    gasAr->AddElement(elAr, 1.0);
+    gasAr->AddElement(elAr, 1);
     G4cout << "Built Ar gas, pressure = "<< pressure
-           << " [mbar], temperature = " << temperature
+           << " [mbar], temperature = " << temperature/kelvin
            << " [K], density = " << densityAr / g * meter3 << " [g/m3]"
            << G4endl;
 
     if (material_in == "He") {
         TargetMaterial = this->gasHe;
+    }
+    else if (material_in == "N") {
+        TargetMaterial = this->gasN;
+    }
+    else if (material_in == "Ne") {
+        TargetMaterial = this->gasNe;
     }
     else if (material_in == "Ar") {
         TargetMaterial = this->gasAr;

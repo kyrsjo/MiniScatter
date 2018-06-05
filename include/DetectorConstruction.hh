@@ -60,6 +60,8 @@ private:
     //G4Material*        StainlessSteel;
 
     G4Material*        gasHe;
+    G4Material*        gasN;
+    G4Material*        gasNe;
     G4Material*        gasAr;
 
     G4double           WorldSizeX;
