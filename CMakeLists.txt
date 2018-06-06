@@ -71,11 +71,15 @@ endif()
 #
 set(MiniScatter_SCRIPTS
   vis.mac
+  verbose.mac
+  distScan.py
+  beamParamScan.py
+  miniScatterDriver.py
 )
 
 foreach(_script ${MiniScatter_SCRIPTS})
   configure_file(
-    ${PROJECT_SOURCE_DIR}/${_script}
+    ${PROJECT_SOURCE_DIR}/scripts/${_script}
     ${PROJECT_BINARY_DIR}/${_script}
     COPYONLY
     )

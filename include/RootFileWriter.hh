@@ -97,7 +97,7 @@ private:
     static const G4String foldername_out;
 
     G4bool quickmode = false;
-    
+
     G4double beamEnergy; // [MeV]
     // Compute statistics for charged particles with energy > this cutoff
     static constexpr G4double beamEnergy_cutoff = 0.95;
