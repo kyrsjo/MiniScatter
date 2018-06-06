@@ -69,7 +69,8 @@ void printHelp(G4double target_thick,
                G4double beam_zpos,
                G4bool   doBacktrack,
                G4int    rngSeed,
-               G4String filename_out);
+               G4String filename_out,
+               G4bool   quickmode);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -93,10 +94,11 @@ int main(int argc,char** argv) {
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
     G4int    numEvents    = 0;                // Number of events to generate
     G4bool   useGUI       = false;            // GUI on/off
+    G4bool   quickmode    = false;            // Don't make slow plots
     G4String filename_out = "output";         // Output filename
     G4int    rngSeed      = 123;              // RNG seed
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hg")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgq")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
@@ -110,7 +112,8 @@ int main(int argc,char** argv) {
                       beam_zpos,
                       doBacktrack,
                       rngSeed,
-                      filename_out);
+                      filename_out,
+                      quickmode);
             exit(1);
             break;
 
@@ -244,6 +247,10 @@ int main(int argc,char** argv) {
             }
             break;
 
+        case 'q': // Quick mode (skip most plots)
+            quickmode = true;
+            break;
+
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
@@ -270,7 +277,8 @@ int main(int argc,char** argv) {
               beam_zpos,
               doBacktrack,
               rngSeed,
-              filename_out);
+              filename_out,
+              quickmode);
     G4cout << "Status of other arguments:" << G4endl
            << "numEvents         =  " << numEvents << G4endl
            << "useGUI            =  " << (useGUI==true ? "yes" : "no") << G4endl;
@@ -349,6 +357,7 @@ int main(int argc,char** argv) {
 
     //Set root file output filename
     RootFileWriter::GetInstance()->setFilename(filename_out);
+    RootFileWriter::GetInstance()->setQuickmode(quickmode);
 
 #ifdef G4VIS_USE
     // Initialize visualization
@@ -393,6 +402,8 @@ int main(int argc,char** argv) {
         UImanager->ApplyCommand(G4String("/run/beamOn ") + std::to_string(numEvents));
     }
 
+    G4cout <<"Done." << G4endl;
+
     // Job termination
     // Free the store: user actions, physics_list and detector_description are
     //                 owned and deleted by the run manager, so they should not
@@ -421,7 +432,8 @@ void printHelp(G4double target_thick,
                G4double beam_zpos,
                G4bool   doBacktrack,
                G4int    rngSeed,
-               G4String filename_out) {
+               G4String filename_out,
+               G4bool   quickmode) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
                    << "Usage/options:" << G4endl
@@ -459,6 +471,8 @@ void printHelp(G4double target_thick,
                    << "-s <int>    : Set the initial seed,   default/current value = "
                    << rngSeed << G4endl
                    << "-g : Use a GUI" << G4endl
+                   << "-q : Quickmode, skip most post-processing and plots, default/current value = "
+                   << (quickmode?"true":"false") << G4endl
                    << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl
                    << G4endl

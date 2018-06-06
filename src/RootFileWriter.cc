@@ -352,146 +352,148 @@ void RootFileWriter::finalizeRootFile() {
            << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
 
-    // Compute the analytical multiple scattering angle distribution
-    // Formulas from various sources:
-    //
-    // http://www-glast.slac.stanford.edu/software/AnaGroup/rev.pdf
-    // Document describing the validation of Geant4 multiple scattering
-    //
-    // http://cdsweb.cern.ch/record/1279627/files/PH-EP-Tech-Note-2010-013.pdf
-    // (note: Missing factor A in radiation length formula)
-    //
-    // https://en.wikipedia.org/wiki/Radiation_length
-    // Checked: April 15th 2018
-    //
-    // http://pdg.lbl.gov/2004/reviews/passagerpp.pdf
-    // This seems to be the base reference for the "compact fit to the data"
-    // used for the radiation length, which is the formula found
-    // in Wikipedia and in PH-EP-Tech-Note-2010-013.
-    //
-    // http://pdg.lbl.gov/2017/reviews/rpp2017-rev-passage-particles-matter.pdf
-    // Multiple scattering formulas
-    //
-    // http://pdg.lbl.gov/2017/AtomicNuclearProperties/index.html
-    // Tables used to crosscheck computed radiation lenghts
-
-    G4cout << G4endl
-           << "Computing analytical scattering..." << G4endl;
-    G4RunManager*           run    = G4RunManager::GetRunManager();
-
-    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
-    G4double targetThickness = detCon->getTargetThickness(); //Geant units
-    G4cout << "targetThickness = " << targetThickness/mm << " [mm]" << G4endl;
-    G4int targetZ = detCon->GetTargetMaterialZ();
-    G4cout << "targetZ         = " << targetZ << " [e]" << G4endl;
-    G4double targetA = detCon->GetTargetMaterialA();
-    G4cout << "targetA         = " << targetA << " [amu]" << G4endl;
-
-    G4double targetDensity = detCon->GetTargetMaterialDensity();
-    G4cout << "targetDensity   = " << targetDensity*cm3/g << " [g/cm]" << G4endl;
-
-    G4double radiationLength = 716.4 * targetA /
-        (targetZ*(targetZ+1)*log(287.0/sqrt(targetZ))); //[g/cm^2]
-    G4cout << "RadiationLength = " << radiationLength << " [g/cm^2]" << G4endl;
-    radiationLength /= targetDensity*cm3/g; //[cm]
-    radiationLength *= cm; //Geant4 units
-    G4cout << "                = " << radiationLength/cm << " [cm]" << G4endl;
-
-    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
-    G4double beamMass   = genAct->get_beam_particlemass(); // Geant4 units
-    G4cout << "beamMass        = " << beamMass / MeV << " [MeV/c^2]" <<G4endl;
-    G4double beamCharge = genAct->get_beam_particlecharge(); // [e]
-    G4cout << "beamCharge      = " << beamCharge << " [e]" << G4endl;
-    G4double beamBeta2   = 1 - pow(beamMass/beamEnergy*MeV, 2);
-    G4cout << "beamBeta2       = " << beamBeta2 << G4endl;
-
-    G4double theta0 = 13.6*MeV / (beamEnergy*MeV - pow(beamMass,2)/beamEnergy*MeV) *
-        fabs(beamCharge) * sqrt(targetThickness/radiationLength) *
-        (1 + 0.038 * log(targetThickness*pow(beamCharge,2)/(radiationLength*beamBeta2)) );
-    //TF1* highland = new TF1("highland", "Highland scattering distribution",0,90);
-    G4cout << "theta0          = " << theta0 << " [rad]" << G4endl
-           << "                = " << theta0/deg << " [deg]" << G4endl;
-    G4cout << G4endl;
-
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
     PrintTwissParameters(init_phasespaceY);
     PrintTwissParameters(tracker_phasespaceX_cutoff);
     PrintTwissParameters(tracker_phasespaceY_cutoff);
 
-    // Write the ROOT file.
-    init_phasespaceX->Write();
-    delete init_phasespaceX; init_phasespaceX = NULL;
-    init_phasespaceY->Write();
-    delete init_phasespaceY; init_phasespaceY = NULL;
+    if (not quickmode) {
+        // Compute the analytical multiple scattering angle distribution
+        // Formulas from various sources:
+        //
+        // http://www-glast.slac.stanford.edu/software/AnaGroup/rev.pdf
+        // Document describing the validation of Geant4 multiple scattering
+        //
+        // http://cdsweb.cern.ch/record/1279627/files/PH-EP-Tech-Note-2010-013.pdf
+        // (note: Missing factor A in radiation length formula)
+        //
+        // https://en.wikipedia.org/wiki/Radiation_length
+        // Checked: April 15th 2018
+        //
+        // http://pdg.lbl.gov/2004/reviews/passagerpp.pdf
+        // This seems to be the base reference for the "compact fit to the data"
+        // used for the radiation length, which is the formula found
+        // in Wikipedia and in PH-EP-Tech-Note-2010-013.
+        //
+        // http://pdg.lbl.gov/2017/reviews/rpp2017-rev-passage-particles-matter.pdf
+        // Multiple scattering formulas
+        //
+        // http://pdg.lbl.gov/2017/AtomicNuclearProperties/index.html
+        // Tables used to crosscheck computed radiation lenghts
 
-    targetEdep->Write();
-    delete targetEdep; targetEdep = NULL;
-    targetEdep_NIEL->Write();
-    delete targetEdep_NIEL; targetEdep_NIEL = NULL;
-    targetEdep_IEL->Write();
-    delete targetEdep_IEL; targetEdep_IEL = NULL;
+        G4cout << G4endl
+               << "Computing analytical scattering..." << G4endl;
+        G4RunManager*           run    = G4RunManager::GetRunManager();
 
-    target_exitangle_hist->Write();
-    delete target_exitangle_hist; target_exitangle_hist = NULL;
+        DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+        G4double targetThickness = detCon->getTargetThickness(); //Geant units
+        G4cout << "targetThickness = " << targetThickness/mm << " [mm]" << G4endl;
+        G4int targetZ = detCon->GetTargetMaterialZ();
+        G4cout << "targetZ         = " << targetZ << " [e]" << G4endl;
+        G4double targetA = detCon->GetTargetMaterialA();
+        G4cout << "targetA         = " << targetA << " [amu]" << G4endl;
 
-    tracker_phasespaceX_cutoff->Write();
-    delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
-    tracker_phasespaceY_cutoff->Write();
-    delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
+        G4double targetDensity = detCon->GetTargetMaterialDensity();
+        G4cout << "targetDensity   = " << targetDensity*cm3/g << " [g/cm]" << G4endl;
 
-    target_exitangle_hist_cutoff->Write(); // Write the unaltered histogram
+        G4double radiationLength = 716.4 * targetA /
+            (targetZ*(targetZ+1)*log(287.0/sqrt(targetZ))); //[g/cm^2]
+        G4cout << "RadiationLength = " << radiationLength << " [g/cm^2]" << G4endl;
+        radiationLength /= targetDensity*cm3/g; //[cm]
+        radiationLength *= cm; //Geant4 units
+        G4cout << "                = " << radiationLength/cm << " [cm]" << G4endl;
 
-    //Plot the analytical scattering distribution and the histogram together
-    TCanvas* c1 = new TCanvas("scatterPlot");
-    target_exitangle_hist_cutoff->GetXaxis()->SetRangeUser(-3*theta0/deg,3*theta0/deg);
-    target_exitangle_hist_cutoff->GetXaxis()->SetTitle("Angle [deg]");
-    target_exitangle_hist_cutoff->Scale(1.0/target_exitangle_hist_cutoff->Integral(), "width");
-    target_exitangle_hist_cutoff->Draw();
+        PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
+        G4double beamMass   = genAct->get_beam_particlemass(); // Geant4 units
+        G4cout << "beamMass        = " << beamMass / MeV << " [MeV/c^2]" <<G4endl;
+        G4double beamCharge = genAct->get_beam_particlecharge(); // [e]
+        G4cout << "beamCharge      = " << beamCharge << " [e]" << G4endl;
+        G4double beamBeta2   = 1 - pow(beamMass/beamEnergy*MeV, 2);
+        G4cout << "beamBeta2       = " << beamBeta2 << G4endl;
 
-    G4double exitangle_analytic_xmin = target_exitangle_hist_cutoff->GetXaxis()->GetXmin();
-    G4double exitangle_analytic_xmax = target_exitangle_hist_cutoff->GetXaxis()->GetXmax();
-    G4double exitangle_analytic_xrange = exitangle_analytic_xmax - exitangle_analytic_xmin;
-    int exitangle_analytic_npoints = target_exitangle_hist_cutoff->GetNbinsX();
-    G4double* exitangle_analytic_x = new G4double[exitangle_analytic_npoints];
-    G4double* exitangle_analytic_y = new G4double[exitangle_analytic_npoints];
+        G4double theta0 = 13.6*MeV / (beamEnergy*MeV - pow(beamMass,2)/beamEnergy*MeV) *
+            fabs(beamCharge) * sqrt(targetThickness/radiationLength) *
+            (1 + 0.038 * log(targetThickness*pow(beamCharge,2)/(radiationLength*beamBeta2)) );
+        //TF1* highland = new TF1("highland", "Highland scattering distribution",0,90);
+        G4cout << "theta0          = " << theta0 << " [rad]" << G4endl
+               << "                = " << theta0/deg << " [deg]" << G4endl;
+        G4cout << G4endl;
 
-    for (int i = 0; i < exitangle_analytic_npoints; i++) {
-        exitangle_analytic_x[i] =
-            exitangle_analytic_xrange/((G4double)exitangle_analytic_npoints-1) * i
-            + exitangle_analytic_xmin;
+        target_exitangle_hist_cutoff->Write(); // Write the unaltered histogram
 
-        exitangle_analytic_y[i] = 1.0/sqrt(2.0*M_PI*pow(theta0/deg,2)) *
-            exp( - pow(exitangle_analytic_x[i]/(theta0/deg),2) / 2.0);
+        //Plot the analytical scattering distribution and the histogram together
+        TCanvas* c1 = new TCanvas("scatterPlot");
+        target_exitangle_hist_cutoff->GetXaxis()->SetRangeUser(-3*theta0/deg,3*theta0/deg);
+        target_exitangle_hist_cutoff->GetXaxis()->SetTitle("Angle [deg]");
+        target_exitangle_hist_cutoff->Scale(1.0/target_exitangle_hist_cutoff->Integral(), "width");
+        target_exitangle_hist_cutoff->Draw();
 
+        G4double exitangle_analytic_xmin = target_exitangle_hist_cutoff->GetXaxis()->GetXmin();
+        G4double exitangle_analytic_xmax = target_exitangle_hist_cutoff->GetXaxis()->GetXmax();
+        G4double exitangle_analytic_xrange = exitangle_analytic_xmax - exitangle_analytic_xmin;
+        int exitangle_analytic_npoints = target_exitangle_hist_cutoff->GetNbinsX();
+        G4double* exitangle_analytic_x = new G4double[exitangle_analytic_npoints];
+        G4double* exitangle_analytic_y = new G4double[exitangle_analytic_npoints];
+
+        for (int i = 0; i < exitangle_analytic_npoints; i++) {
+            exitangle_analytic_x[i] =
+                exitangle_analytic_xrange/((G4double)exitangle_analytic_npoints-1) * i
+                + exitangle_analytic_xmin;
+
+            exitangle_analytic_y[i] = 1.0/sqrt(2.0*M_PI*pow(theta0/deg,2)) *
+                exp( - pow(exitangle_analytic_x[i]/(theta0/deg),2) / 2.0);
+        }
+        TGraph* exitangle_analytic     = new TGraph(exitangle_analytic_npoints,
+                                                    exitangle_analytic_x,
+                                                    exitangle_analytic_y       );
+        exitangle_analytic->Draw("same");
+        /*
+        // Debug
+        G4cout << "integral = " << exitangle_analytic->Integral() << G4endl;
+        G4cout << "integral = " << target_exitangle_hist_cutoff->Integral("width") << G4endl;
+        */
+
+        G4String plot_filename = foldername_out + "/" + filename_out + "_angles.png";
+        c1->SaveAs(plot_filename);
+        c1->Write();
+
+        // Write the ROOT file.
+        exitangle_analytic->Write();
+        delete exitangle_analytic; exitangle_analytic = NULL;
+
+        init_phasespaceX->Write();
+        init_phasespaceY->Write();
+
+        targetEdep->Write();
+        targetEdep_NIEL->Write();
+        targetEdep_IEL->Write();
+
+        target_exitangle_hist->Write();
+
+        tracker_phasespaceX_cutoff->Write();
+        tracker_phasespaceY_cutoff->Write();
     }
-    TGraph* exitangle_analytic     = new TGraph(exitangle_analytic_npoints,
-                                                exitangle_analytic_x,
-                                                exitangle_analytic_y       );
-    exitangle_analytic->Draw("same");
-    /*
-    // Debug
-    G4cout << "integral = " << exitangle_analytic->Integral() << G4endl;
-    G4cout << "integral = " << target_exitangle_hist_cutoff->Integral("width") << G4endl;
-    */
-
-    G4String plot_filename = foldername_out + "/" + filename_out + "_angles.png";
-    c1->SaveAs(plot_filename);
-    c1->Write();
 
     //Now we have plotted, delete stuff
-    //target_exitangle_hist_cutoff->Write();
-    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
-    exitangle_analytic->Write();
-    delete exitangle_analytic; exitangle_analytic = NULL;
 
-    tracker_numParticles->Write();
+    delete init_phasespaceX; init_phasespaceX = NULL;
+    delete init_phasespaceY; init_phasespaceY = NULL;
+
+    delete targetEdep; targetEdep = NULL;
+    delete targetEdep_NIEL; targetEdep_NIEL = NULL;
+    delete targetEdep_IEL; targetEdep_IEL = NULL;
+
+    delete target_exitangle_hist; target_exitangle_hist = NULL;
+
+    delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
+    delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
+
+    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+
     delete tracker_numParticles; tracker_numParticles = NULL;
-    tracker_energy->Write();
     delete tracker_energy; tracker_energy = NULL;
-    tracker_hitPos->Write();
     delete tracker_hitPos; tracker_hitPos = NULL;
-    tracker_hitPos_cutoff->Write();
     delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
 
     histFile->Write();
