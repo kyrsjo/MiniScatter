@@ -5,6 +5,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+
 import miniScatterDriver
 
 def TwissDrift(beta_in:float, gamma_in:float, alpha_in:float, L:float) -> tuple:
@@ -23,24 +24,40 @@ def getGamma(beta_in:float, alpha_in:float):
     return (1.0 + alpha_in**2)/beta_in
 
 #Parameters at the capillary
-#eps_0    = 5.0                   # [um]
-eps_0    = 1.0                   # [um]
-#beta_0  = np.linspace(0.01,1.50,30) # [m]
-beta_0   = np.logspace(np.log10(0.0001),np.log10(1.50),4) #[m]
-alpha_0  = -5.0                   # [1]
+import sys
+if len(sys.argv) == 3 or len(sys.argv) == 5:
+    eps_0 = float(sys.argv[1])
+    alpha_0 = float(sys.argv[2])
+else:
+    eps_0    = 1.0                   # [um]
+    alpha_0  = -5.0                   # [1]
+beta_0   = np.logspace(np.log10(0.0001),np.log10(1.50),10) #[m]
+
 
 #System parameters
 L = 0.202 #[m] Capillary-to-foil distance
 Lcap = 0.015 #[m] Capillary length
 L = L + Lcap/2.0 #We actually care about the middle of the capillary
 
-plottitle = "3 $\\mu$m Mylar, $\\alpha_0={0:.1f}$, $\\varepsilon_0 = {1:.1f}$ [$\\mu$m]".format(alpha_0, eps_0)
-THICK = 3e-3 #[mm]
-MAT   = "G4_MYLAR"
-#MAT   = "G4_Galactic"
+if len(sys.argv) == 5:
+    THICK = float(sys.argv[3])
+    MAT   = sys.argv[4]
+    matstr = MAT
+    if MAT == "G4_MYLAR":
+        matstr = "Mylar"
+    elif MAT == "G4_KAPTON":
+        matstr = "Kapton"
+    plottitle = "{0:.1f} $\\mu$m {1}, $\\alpha_0={2:.1f}$, $\\varepsilon_0 = {3:.1f}$ [$\\mu$m]".\
+                                                  format(THICK*1000, matstr, alpha_0, eps_0)
+else:
+    plottitle = "3.0 $\\mu$m Mylar, $\\alpha_0={0:.1f}$, $\\varepsilon_0 = {1:.1f}$ [$\\mu$m]".format(alpha_0, eps_0)
+    THICK = 3e-3 #[mm]
+    MAT   = "G4_MYLAR"
+    #MAT   = "G4_Galactic"
+    #MAT   ="G4_KAPTON"
 
 #Simulation parameters
-N         = 100000
+N         = 1000000
 #DIST      = THICK
 DIST      = L*1000 #[mm]
 ENERGY    = 210.0
@@ -294,11 +311,4 @@ plt.plot([0.0,xlim_old[1]],[0.0,ylim_old[1]],color='green',ls='--', label="$\\si
 plt.legend()
 plt.savefig(dirpath + "/" + "sigmaCap-sigmaCap0.png")
 
-#plt.figure()
-#plt.title(plottitle)
-#plt.plot(beta_0, eps_x/)
-#plt.plot(beta_0, )
-#plt.ylabel("$\\sigma_{capillary}$ [$\\mu$m]")
-#plt.xlabel("$\\sigma_{0,capillary}$ [m]")
-
-plt.show()
+#plt.show()
