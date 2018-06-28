@@ -14,23 +14,25 @@ def TwissDrift(beta_in:float, gamma_in:float, alpha_in:float, L:float) -> tuple:
     alpha_out =         -    L * gamma_in     + alpha_in
     return (beta_out, gamma_out, alpha_out)
 
-# def TwissBackwardsDrift(beta_in:float, gamma_in:float, alpha_in:float, L:float) -> tuple:
-#     beta_out  = beta_in + L**2 * gamma_in + 2*L*alpha_in
-#     gamma_out =                  gamma_in
-#     alpha_out =              L * gamma_in     + alpha_in
-#     return (beta_out, gamma_out, alpha_out)
-
 def getGamma(beta_in:float, alpha_in:float):
     return (1.0 + alpha_in**2)/beta_in
 
 #Parameters at the capillary
 import sys
 if len(sys.argv) == 3 or len(sys.argv) == 5:
-    eps_0 = float(sys.argv[1])
+    if ":" in sys.argv[1]:
+        ls = sys.argv[1].split(":")
+        eps_0x = float(ls[0])
+        eps_0y = float(ls[1])
+    else:
+        eps_0x = float(sys.argv[1])
+        eps_0y = float(sys.argv[1])
     alpha_0 = float(sys.argv[2])
 else:
-    eps_0    = 1.0                   # [um]
+    eps_0x    = 1.0                   # [um]
+    eps_0y    = 1.0                   # [um]
     alpha_0  = -5.0                   # [1]
+
 beta_0   = np.logspace(np.log10(0.0001),np.log10(1.50),10) #[m]
 
 
@@ -47,8 +49,8 @@ if len(sys.argv) == 5:
         matstr = "Mylar"
     elif MAT == "G4_KAPTON":
         matstr = "Kapton"
-    plottitle = "{0:.1f} $\\mu$m {1}, $\\alpha_0={2:.1f}$, $\\varepsilon_0 = {3:.1f}$ [$\\mu$m]".\
-                                                  format(THICK*1000, matstr, alpha_0, eps_0)
+    plottitle = "{0:.1f} $\\mu$m {1}, $\\alpha_0={2:.1f}$, $\\varepsilon_0 = {3:.1f}:{4:.1f}$ [$\\mu$m]".\
+                                                  format(THICK*1000, matstr, alpha_0, eps_0x,eps_0y)
 else:
     plottitle = "3.0 $\\mu$m Mylar, $\\alpha_0={0:.1f}$, $\\varepsilon_0 = {1:.1f}$ [$\\mu$m]".format(alpha_0, eps_0)
     THICK = 3e-3 #[mm]
@@ -75,8 +77,8 @@ print ("gamma_rel =", gamma_rel)
 print ("beta_rel  =", beta_rel)
 #Make output folder
 import os
-dirpath="plots/beamParamScan_alpha0={0:.1f}_eps0={1:.1f}_THICK={2}_MAT={3}_Npoints={4}".\
-                                     format(alpha_0,eps_0,THICK,MAT,len(beta_0))
+dirpath="plots/beamParamScan_alpha0={0:.1f}_eps0={1:.1f}:{2:.1f}_THICK={3}_MAT={4}_Npoints={5}".\
+                                     format(alpha_0,eps_0x,eps_0y,THICK,MAT,len(beta_0))
 
 try:
     print()
@@ -100,8 +102,9 @@ beta_y  = np.empty_like(beta_0)
 alpha_y = np.empty_like(beta_0)
 sigma_y = np.empty_like(beta_0)
 
-sigma_0   = np.empty_like(beta_0)
-beta_foil = np.empty_like(beta_0)
+sigma_0x   = np.empty_like(beta_0)
+sigma_0y   = np.empty_like(beta_0)
+beta_foil  = np.empty_like(beta_0)
 alpha_foil = np.empty_like(beta_0)
 
 #Plot the beam development as function of s
@@ -120,12 +123,13 @@ for i in range(len(beta_0)):
     gamma_0 = getGamma(beta_0[i],alpha_0)
     (beta_foil[i],gamma_foil,alpha_foil[i]) = TwissDrift(beta_0[i],gamma_0,alpha_0,-L)
 
-    COVAR = (eps_0,beta_foil[i],alpha_foil[i])
+    COVAR = (eps_0x,beta_foil[i],alpha_foil[i],eps_0y,beta_foil[i],alpha_foil[i])
 
-    sigma_0[i] = np.sqrt(eps_0*beta_0[i]*1e6/(gamma_rel*beta_rel))
+    sigma_0x[i] = np.sqrt(eps_0x*beta_0[i]*1e6/(gamma_rel*beta_rel))
+    sigma_0y[i] = np.sqrt(eps_0y*beta_0[i]*1e6/(gamma_rel*beta_rel))
     print("Simulation", i+1, "of",len(beta_0))
     print("Simulating for beta_0 =", beta_0[i], "[m]")
-    print("Sigma_0               =", sigma_0[i], "[um]")
+    print("Sigma_0               =", sigma_0x[i], "and", sigma_0y[i], "[um]")
 
     miniScatterDriver.runScatter(THICK=THICK,MAT=MAT,DIST=DIST,PHYS=PHYS,N=N,\
                                  ENERGY=ENERGY,ZOFFSET=ZOFFSET,ZOFFSET_BACKTRACK=ZOFFSET_BACKTRACK,\
@@ -146,7 +150,7 @@ for i in range(len(beta_0)):
     beta0_s = TwissDrift(beta_0[i],gamma_0,alpha_0,sPos)[0]
     gamma_x = getGamma(beta_x[i],alpha_x[i])
     beta_xs = TwissDrift(beta_x[i],gamma_x,alpha_x[i],sPos)[0]
-    l1 = plt.plot(sPos,np.sqrt(eps_0*beta0_s*1e6/(gamma_rel*beta_rel)), ls="--" )[0]
+    l1 = plt.plot(sPos,np.sqrt(eps_0x*beta0_s*1e6/(gamma_rel*beta_rel)), ls="--" )[0]
     plt.plot(sPos,np.sqrt(eps_x[i]*beta_xs*1e6/(gamma_rel*beta_rel)),\
              label='{0:.3g}'.format(beta_0[i]*100), ls="-",color=l1.get_color())
 
@@ -154,7 +158,7 @@ for i in range(len(beta_0)):
     beta0_s = TwissDrift(beta_0[i],gamma_0,alpha_0,sPos)[0]
     gamma_y = getGamma(beta_y[i],alpha_y[i])
     beta_ys = TwissDrift(beta_y[i],gamma_y,alpha_y[i],sPos)[0]
-    l1 = plt.plot(sPos,np.sqrt(eps_0*beta0_s*1e6/(gamma_rel*beta_rel)), ls="--" )[0]
+    l1 = plt.plot(sPos,np.sqrt(eps_0y*beta0_s*1e6/(gamma_rel*beta_rel)), ls="--" )[0]
     plt.plot(sPos,np.sqrt(eps_y[i]*beta_ys*1e6/(gamma_rel*beta_rel)),\
              label='{0:.3g}'.format(beta_0[i]*100), ls="-",color=l1.get_color())
 
@@ -177,10 +181,12 @@ outputfile.create_dataset("N",data=N)
 outputfile.create_dataset("ENERGY",data=N)
 outputfile.create_dataset("PHYS",data=PHYS)
 
-outputfile.create_dataset("eps_0",data=eps_0)
+outputfile.create_dataset("eps_0x",data=eps_0x)
+outputfile.create_dataset("eps_0y",data=eps_0y)
 outputfile.create_dataset("alpha_0",data=alpha_0)
 outputfile.create_dataset("beta_0",data=beta_0)
-outputfile.create_dataset("sigma_0",data=sigma_0)
+outputfile.create_dataset("sigma_0x",data=sigma_0x)
+outputfile.create_dataset("sigma_0y",data=sigma_0y)
 
 outputfile.create_dataset("alpha_foil",data=alpha_foil)
 outputfile.create_dataset("beta_foil",data=beta_foil)
@@ -231,17 +237,21 @@ plt.savefig(dirpath + "/" + "sigmay-s-ZOOM.png")
 plt.ylim(0,100)
 plt.savefig(dirpath + "/" + "sigmay-s-ZOOM2.png")
 
+#Used for a lot of vertical lines
 minEpsIdx_x = np.argmin(eps_x)
+minEpsIdx_y = np.argmin(eps_y)
 
 plt.figure()
 plt.title(plottitle)
-plt.plot(beta_0*100,eps_x, label="$\\varepsilon_x$")
-plt.plot(beta_0*100,eps_y, label="$\\varepsilon_y$")
+l_x = plt.plot(beta_0*100,eps_x, label="$\\varepsilon_x$")[0]
+l_y = plt.plot(beta_0*100,eps_y, label="$\\varepsilon_y$")[0]
 plt.xlabel("$\\beta_{0,capillary}$ [cm]")
 plt.ylabel("$\\varepsilon_N$ [$\\mu$m]")
-plt.axhline(eps_0,color='green',ls='--', label="$\\varepsilon_0$")
+plt.axhline(eps_0x,ls='--', label="$\\varepsilon_{x,0}$", color=l_x.get_color())
+plt.axhline(eps_0y,ls='--', label="$\\varepsilon_{y,0}$", color=l_y.get_color())
 plt.legend(loc=0)
-plt.axvline(beta_0[minEpsIdx_x]*100,color='black',ls='--')
+plt.axvline(beta_0[minEpsIdx_x]*100,color=l_x.get_color(),ls='--')
+plt.axvline(beta_0[minEpsIdx_y]*100,color=l_y.get_color(),ls='--')
 plt.savefig(dirpath + "/" + "epsN-beta0.png")
 plt.ylim(0,max(eps_x[-1],eps_y[-1])*1.2)
 plt.savefig(dirpath + "/" + "epsN-beta0-ZOOM.png")
@@ -252,7 +262,8 @@ plt.title(plottitle)
 l_bf = plt.plot(beta_0*100,beta_foil*100)[0]
 plt.ylabel("$\\beta_{foil} [cm]$")
 plt.xlabel("$\\beta_{0,capillary}$ [cm]")
-plt.axvline(beta_0[minEpsIdx_x]*100,color='black',ls='--')
+plt.axvline(beta_0[minEpsIdx_x]*100,color=l_x.get_color(),ls='--')
+plt.axvline(beta_0[minEpsIdx_y]*100,color=l_y.get_color(),ls='--')
 ax2=plt.twinx()
 l_af = ax2.plot(beta_0*100,alpha_foil, ls="--")[0]
 ax2.set_ylabel("$\\alpha_{foil}$")
@@ -270,7 +281,8 @@ l_bx=plt.plot(beta_0*100,beta_x*100)[0]
 l_by=plt.plot(beta_0*100,beta_y*100)[0]
 plt.ylabel("$\\beta_{capillary} [cm]$")
 plt.xlabel("$\\beta_{0,capillary}$ [cm]")
-plt.axvline(beta_0[minEpsIdx_x]*100,color='black',ls='--')
+plt.axvline(beta_0[minEpsIdx_x]*100,color=l_bx.get_color(),ls='--')
+plt.axvline(beta_0[minEpsIdx_y]*100,color=l_by.get_color(),ls='--')
 ax2=plt.twinx()
 l_ax=ax2.plot(beta_0*100,alpha_x, ls="--")[0]
 l_ay=ax2.plot(beta_0*100,alpha_y, ls="--")[0]
@@ -285,9 +297,10 @@ plt.savefig(dirpath + "/" + "twissCap-beta0.png")
 
 plt.figure()
 plt.title(plottitle)
-plt.plot(beta_0*100,sigma_x, label="$\\sigma_x$")
-plt.plot(beta_0*100,sigma_y, label="$\\sigma_y$")
-plt.axvline(beta_0[minEpsIdx_x]*100,color='black',ls='--')
+l_x = plt.plot(beta_0*100,sigma_x, label="$\\sigma_x$")[0]
+l_y = plt.plot(beta_0*100,sigma_y, label="$\\sigma_y$")[0]
+plt.axvline(beta_0[minEpsIdx_x]*100,color=l_x.get_color(),ls='--')
+plt.axvline(beta_0[minEpsIdx_y]*100,color=l_y.get_color(),ls='--')
 plt.ylabel("$\\sigma_{capillary}$ [$\\mu$m]")
 plt.xlabel("$\\beta_{0,capillary}$ [cm]")
 ylim_old = plt.ylim()
@@ -298,9 +311,10 @@ plt.savefig(dirpath + "/" + "sigmaCap-beta0.png")
 
 plt.figure()
 plt.title(plottitle)
-plt.plot(sigma_0, sigma_x, label="$\\sigma_x$")
-plt.plot(sigma_0, sigma_y, label="$\\sigma_y$")
-plt.axvline(sigma_0[minEpsIdx_x],color='black',ls='--')
+l_x = plt.plot(sigma_0x, sigma_x, label="$\\sigma_x$")[0]
+l_y = plt.plot(sigma_0y, sigma_y, label="$\\sigma_y$")[0]
+plt.axvline(sigma_0x[minEpsIdx_x],color=l_x.get_color(),ls='--')
+plt.axvline(sigma_0y[minEpsIdx_y],color=l_y.get_color(),ls='--')
 plt.ylabel("$\\sigma_{capillary}$ [$\\mu$m]")
 plt.xlabel("$\\sigma_{0,capillary}$ [$\\mu$m]")
 ylim_old = plt.ylim()
