@@ -75,6 +75,7 @@ set(MiniScatter_SCRIPTS
   distScan.py
   beamParamScan.py
   miniScatterDriver.py
+  PressureScan.ipynb
 )
 
 foreach(_script ${MiniScatter_SCRIPTS})
