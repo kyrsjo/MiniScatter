@@ -7,7 +7,7 @@ import ROOT.TFile, ROOT.TVector
 def runScatter(THICK:float=None, MAT:str=None, DIST:float=None, ANG:float=None, PHYS:str=None, \
                N:int=None, ENERGY:float=None, BEAM:str=None, \
                XOFFSET:float=None, ZOFFSET:float=None, ZOFFSET_BACKTRACK:bool=None, COVAR:tuple=None, \
-               SEED:int=None, OUTNAME:str=None, QUICKMODE:bool=None) -> None:
+               SEED:int=None, OUTNAME:str=None, QUICKMODE:bool=None, quiet=False) -> None:
     #Parameters are descibed by running "./Miniscatter -h"
 
     cmd = ["./MiniScatter"]
@@ -48,7 +48,7 @@ def runScatter(THICK:float=None, MAT:str=None, DIST:float=None, ANG:float=None, 
             print ("ZOFFSET_BACKTRACK=",ZOFFSET_BACKTRACK, "is inconsistent with ZOFFSET=",ZOFFSET)
             exit(1)
     else:
-        if (ZOFFSET_BACKTRACK == None or ZOFFSET_BACKTRACK == False):
+        if not (ZOFFSET_BACKTRACK == None or ZOFFSET_BACKTRACK == False):
             print ("ZOFFSET_BACKTRACK=",ZOFFSET_BACKTRACK, "is inconsistent with ZOFFSET=",ZOFFSET)
             exit(1)
 
@@ -73,12 +73,14 @@ def runScatter(THICK:float=None, MAT:str=None, DIST:float=None, ANG:float=None, 
     cmdline = ""
     for c in cmd:
         cmdline += c + " "
-    print ("Running command line: '" + cmdline[:-1] + "'")
-    runResults = subprocess.run(cmd, stdout=subprocess.PIPE )
+    if not quiet:
+        print ("Running command line: '" + cmdline[:-1] + "'")
+    runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE)
     #print (runResults)
-    print ("Done!")
+    if not quiet:
+        print ("Done!")
 
-def getData(filename="plots/output.root"):
+def getData(filename="plots/output.root", quiet=False):
     data = ROOT.TFile(filename)
     
     x_init = data.Get("initPhasespaceX_TWISS")
@@ -88,8 +90,9 @@ def getData(filename="plots/output.root"):
     y_final = data.Get("trackerPhasespaceY_cutoff_TWISS")
 
     #print("Got initial parameters:")
-    print("X :", x_init[0],x_init[1],x_init[2])
-    print("Y :", y_init[0],y_init[1],y_init[2])
+    if not quiet:
+        print("X :", x_init[0],x_init[1],x_init[2])
+        print("Y :", y_init[0],y_init[1],y_init[2])
 
     final_tup = (x_final[0],x_final[1],x_final[2],y_final[0],y_final[1],y_final[2])
 

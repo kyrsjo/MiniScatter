@@ -35,7 +35,6 @@ else:
 
 beta_0   = np.logspace(np.log10(0.0001),np.log10(1.50),10) #[m]
 
-
 #System parameters
 L = 0.202 #[m] Capillary-to-foil distance
 Lcap = 0.015 #[m] Capillary length
@@ -52,7 +51,7 @@ if len(sys.argv) == 5:
     plottitle = "{0:.1f} $\\mu$m {1}, $\\alpha_0={2:.1f}$, $\\varepsilon_0 = {3:.1f}:{4:.1f}$ [$\\mu$m]".\
                                                   format(THICK*1000, matstr, alpha_0, eps_0x,eps_0y)
 else:
-    plottitle = "3.0 $\\mu$m Mylar, $\\alpha_0={0:.1f}$, $\\varepsilon_0 = {1:.1f}$ [$\\mu$m]".format(alpha_0, eps_0)
+    plottitle = "3.0 $\\mu$m Mylar, $\\alpha_0={0:.1f}$, $\\varepsilon_0 = {1:.1f}$ [$\\mu$m]".format(alpha_0, eps_0x)
     THICK = 3e-3 #[mm]
     MAT   = "G4_MYLAR"
     #MAT   = "G4_Galactic"
