@@ -62,8 +62,9 @@ private:
     G4Material*        KaptonMaterial = NULL;
     //G4Material*        StainlessSteel;
 
+    G4Material*        gasH_2         = NULL;
     G4Material*        gasHe          = NULL;
-    G4Material*        gasN           = NULL;
+    G4Material*        gasN_2         = NULL;
     G4Material*        gasNe          = NULL;
     G4Material*        gasAr          = NULL;
 

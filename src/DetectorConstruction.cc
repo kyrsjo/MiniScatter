@@ -269,6 +269,29 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
     // Compute properties
     constexpr G4double temperature = 300*kelvin;
 
+    //Define materials (Hydrogen-1 / H_2)
+    G4double aH         = 1.008*g/mole;
+    G4double densityH_2 = 2*aH*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isH1    = new G4Isotope("H1",    //Name
+                                       1,       //iz
+                                       1,       //n
+                                       aH);     //a
+    G4Element* elH  = new G4Element("Hydrogen",   //name
+                                    "H",          //symbol
+                                    1);           //ncomponents
+    elH->AddIsotope(isH1, 1.0);
+    this->gasH_2 = new G4Material("HydrogenGas",      //name
+                                densityH_2,         //density
+                                1,                  //ncomponents
+                                kStateGas,          //state
+                                temperature,        //temp
+                                pressure*bar*1e-3 );//pressure
+    gasH_2->AddElement(elH, 2);
+    G4cout << "Built H_2 gas, pressure = "<< pressure
+           << " [mbar], temperature = " << temperature/kelvin
+           << " [K], density = " << densityH_2 / g * meter3 << " [g/m3]"
+           << G4endl;
+
     //Define materials (Helium-4)
     G4double aHe       = 4.002602*g/mole;
     G4double densityHe = aHe*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
@@ -292,10 +315,10 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
            << " [K], density = " << densityHe / g * meter3 << " [g/m3]"
            << G4endl;
 
-    //Define materials (Nitrogen-14)
-    G4double aN       = 14.007*g/mole;
-    G4double densityN = aN*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
-    G4Isotope* isN14    = new G4Isotope("N14",    //Name
+    //Define materials (Nitrogen-14 / N_2)
+    G4double aN        = 14.007*g/mole;
+    G4double densityN_2 = 2*aN*(pressure*bar*1e-3)/(temperature*Avogadro*CLHEP::k_Boltzmann);
+    G4Isotope* isN14   = new G4Isotope("N14",    //Name
                                          7,       //iz
                                          14,      //n
                                          aN);     //a
@@ -303,16 +326,16 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
                                     "N",          //symbol
                                     1);           //ncomponents
     elN->AddIsotope(isN14, 1.0);
-    this->gasN = new G4Material("NitrogenGas",      //name
-                                densityN,           //density
-                                1,                  //ncomponents
-                                kStateGas,          //state
-                                temperature,        //temp
-                                pressure*bar*1e-3 );//pressure
-    gasN->AddElement(elN, 2);
-    G4cout << "Built N gas, pressure = "<< pressure
+    this->gasN_2 = new G4Material("NitrogenGas",      //name
+                                  densityN_2,         //density
+                                  1,                  //ncomponents
+                                  kStateGas,          //state
+                                  temperature,        //temp
+                                  pressure*bar*1e-3 );//pressure
+    gasN_2->AddElement(elN, 2);
+    G4cout << "Built N_2 gas, pressure = "<< pressure
            << " [mbar], temperature = " << temperature/kelvin
-           << " [K], density = " << densityN / g * meter3 << " [g/m3]"
+           << " [K], density = " << densityN_2 / g * meter3 << " [g/m3]"
            << G4endl;
 
     //Define materials (Neon-20)
@@ -361,11 +384,14 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
            << " [K], density = " << densityAr / g * meter3 << " [g/m3]"
            << G4endl;
 
-    if (material_in == "He") {
+    if (material_in == "H_2") {
+        TargetMaterial = this->gasH_2;
+    }
+    else if (material_in == "He") {
         TargetMaterial = this->gasHe;
     }
-    else if (material_in == "N") {
-        TargetMaterial = this->gasN;
+    else if (material_in == "N_2") {
+        TargetMaterial = this->gasN_2;
     }
     else if (material_in == "Ne") {
         TargetMaterial = this->gasNe;
@@ -374,7 +400,7 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
         TargetMaterial = this->gasAr;
     }
     else {
-        G4cerr << "Error in DetectorConstricton::DefineGas()" << G4endl;
+        G4cerr << "Error in DetectorConstruction::DefineGas()" << G4endl;
         G4cerr << "Gas type '" << material_in << "' unknown." << G4endl;
         exit(1);
     }

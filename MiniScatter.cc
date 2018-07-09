@@ -444,7 +444,8 @@ void printHelp(G4double target_thick,
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si'," <<
                 "'G4_MYLAR', 'G4_KAPTON', 'G4_Galactic'" << G4endl
                    << " Also possible: 'gas::pressure' "
-                   << " where 'gas' is 'He', 'N', 'Ne', or 'Ar', and pressure is given in mbar (T=300K is assumed)." << G4endl
+                   << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
+                   << " and pressure is given in mbar (T=300K is assumed)." << G4endl
                    << "-d <double> : Detector distance [mm], default/current value = "
                    << detector_distance << G4endl
                    << "-a <double> : Detector angle [deg],   default/current value = "
