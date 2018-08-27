@@ -5,9 +5,29 @@
 #include "DetectorConstruction.hh"
 
 #include "TFile.h"
+#include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
 #include <map>
+
+// Use a simple struct for writing to ROOT file,
+// since this requires no dictionary to read.
+struct trackerHitStruct {
+    Double_t x; // [mm]
+    Double_t y; // [mm]
+    Double_t z; // [mm]
+
+    Double_t px; // [MeV/c]
+    Double_t py; // [MeV/c]
+    Double_t pz; // [MeV/c]
+
+    Double_t E; // [MeV]
+
+    Int_t PDG;
+    Int_t charge;
+
+    Int_t eventID;
+};
 
 class RootFileWriter {
 public:
@@ -40,7 +60,13 @@ private:
     //The ROOT file
     TFile *histFile;
 
-    //Histograms
+    // TTrees //
+    TTree* targetExit;
+    TTree* trackerHits;
+    trackerHitStruct targetExitBuffer;
+    trackerHitStruct trackerHitsBuffer;
+
+    // Histograms //
 
     // Target histograms
     TH1D* targetEdep;
@@ -101,6 +127,8 @@ private:
     G4double beamEnergy; // [MeV]
     // Compute statistics for charged particles with energy > this cutoff
     static constexpr G4double beamEnergy_cutoff = 0.95;
+
+    Int_t eventCounter; // Used for EventID-ing
 
     void PrintTwissParameters(TH2D* phaseSpaceHist);
 };

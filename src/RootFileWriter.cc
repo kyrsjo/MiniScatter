@@ -2,6 +2,8 @@
 
 #include "TGraph.h"
 #include "TCanvas.h"
+#include "TTree.h"
+#include "TBranch.h"
 
 #include "MyEdepHit.hh"
 #include "MyTrackerHit.hh"
@@ -45,6 +47,18 @@ void RootFileWriter::initializeRootFile(){
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
 
+    eventCounter = 0;
+
+    // TTrees for external analysis
+    targetExit = new TTree("TargetExit","TargetExit tree");
+    targetExit->Branch("TargetExitBranch", &targetExitBuffer,
+                       "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+
+    trackerHits = new TTree("TrackerHits","TrackerHits tree");
+    trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
+                        "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+
+    // Target energy deposition
     targetEdep = new TH1D("targetEdep","targetEdep",1000,0,6);
     targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
     targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
@@ -130,6 +144,8 @@ void RootFileWriter::initializeRootFile(){
 
 void RootFileWriter::doEvent(const G4Event* event){
 
+    eventCounter++;
+
     G4HCofThisEvent* HCE=event->GetHCofThisEvent();
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
@@ -172,9 +188,10 @@ void RootFileWriter::doEvent(const G4Event* event){
                 //Get the data from the event
                 const G4double       energy      = (*targetExitposHitsCollection)[i]->GetTrackEnergy();
                 const G4int          charge      = (*targetExitposHitsCollection)[i]->GetCharge();
-                const G4ThreeVector& momentum      = (*targetExitposHitsCollection)[i]->GetMomentum();
-                //G4double exitangle = momentum.theta()/deg;
-                G4double exitangle = atan(momentum.x()/momentum.z())/deg;
+                const G4ThreeVector& momentum    = (*targetExitposHitsCollection)[i]->GetMomentum();
+                G4double             exitangle   = atan(momentum.x()/momentum.z())/deg;
+                const G4ThreeVector& hitPos      = (*targetExitposHitsCollection)[i]->GetPosition();
+                const G4int          PDG         = (*targetExitposHitsCollection)[i]->GetPDG();
 
                 //Exit angle
                 target_exitangle_hist->Fill(exitangle);
@@ -191,6 +208,24 @@ void RootFileWriter::doEvent(const G4Event* event){
                     target_exitangle2_cutoff             += exitangle*exitangle;
                     target_exitangle_cutoff_numparticles += 1;
                 }
+
+                //Fill the TTree
+                targetExitBuffer.x = hitPos.x()/mm;
+                targetExitBuffer.y = hitPos.x()/mm;
+                targetExitBuffer.z = hitPos.z()/mm;
+
+                targetExitBuffer.px = momentum.x()/MeV;
+                targetExitBuffer.py = momentum.y()/MeV;
+                targetExitBuffer.pz = momentum.z()/MeV;
+
+                targetExitBuffer.E = beamEnergy / MeV;
+
+                targetExitBuffer.PDG = PDG;
+                targetExitBuffer.charge = charge;
+
+                targetExitBuffer.eventID = eventCounter;
+
+                targetExit->Fill();
             }
 
         }
@@ -251,6 +286,24 @@ void RootFileWriter::doEvent(const G4Event* event){
                     tracker_particleHit_yy_cutoff += (hitPos.y()/mm)*(hitPos.y()/mm);
                     numParticles_cutoff += 1;
                 }
+
+                //Fill the TTree
+                trackerHitsBuffer.x = hitPos.x()/mm;
+                trackerHitsBuffer.y = hitPos.x()/mm;
+                trackerHitsBuffer.z = hitPos.z()/mm;
+
+                trackerHitsBuffer.px = momentum.x()/MeV;
+                trackerHitsBuffer.py = momentum.y()/MeV;
+                trackerHitsBuffer.pz = momentum.z()/MeV;
+
+                trackerHitsBuffer.E = beamEnergy / MeV;
+
+                trackerHitsBuffer.PDG = PDG;
+                trackerHitsBuffer.charge = charge;
+
+                trackerHitsBuffer.eventID = eventCounter;
+
+                trackerHits->Fill();
             }
 
             tracker_numParticles->Fill(nEntries);
