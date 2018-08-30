@@ -10,11 +10,16 @@ import threading
 import sys
 import traceback
 
+import os
+
 SEED = 1
+
+PDG_keep = (11,-11,22,2212,2112,'other');
 
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
-                    detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None):
+                    detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None, \
+                    cleanROOT=True):
     """
     This routine is built to scan arbitrary parameters with MiniScatter.
     It can cache the results in HDF5-files with long and difficult names, as well as call detailed analysis routines.
@@ -34,6 +39,10 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     sigma_x = np.zeros_like(scanVarRange)
     sigma_y = np.zeros_like(scanVarRange)
+
+    numPart = {}
+    for pdg in PDG_keep:
+        numPart[pdg] = np.zeros_like(scanVarRange)
 
     analysis_output = {}
     if detailedAnalysisRoutine:
@@ -85,6 +94,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 sigma_x = np.asarray(loadFile["sigma_x"])
                 sigma_y = np.asarray(loadFile["sigma_y"])
 
+                numPart = {}
+                for pdg in PDG_keep:
+                    if not "numPart_"+pdg in loadFile:
+                        print("Could not find numPart for PDG={} in the file. Please recompute.".format(pdg))
+                        loadFile.close()
+                        return
+                    numPart[pdg] = loadFile["numPart_"+pdg]
+
                 if detailedAnalysisRoutine:
                     for name in detailedAnalysisRoutine_names:
                         nameMangle = "ANALYSIS_"+name
@@ -97,7 +114,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 loadFile.close()
 
                 print("Loaded! That was fast.")
-                return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, analysis_output)
+                return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
+
             else:
                 print ("Scan variable ranges did not match, run with tryLoad=False to recompute.")
                 loadFile.close()
@@ -122,7 +140,21 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         simSetup["OUTNAME"] = filenameROOT
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
 
-        (emittances,datafile) = miniScatterDriver.getData(filename="plots/"+filenameROOT+".root",quiet=QUIET,getRaw=True)
+        filenameROOTfile = "plots/"+filenameROOT+".root"
+        badSim=False
+        if os.path.isfile(filenameROOTfile):
+            (emittances,numPart_singleSim,datafile) = miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True)
+            if cleanROOT:
+                os.remove(filenameROOTfile)
+                if not QUIET:
+                    with lock:
+                        print("Deleting '{}'.".format(filenameROOTfile))
+        else:
+            with lock:
+                print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
+            badSim=True
+            emittances = (float('nan'),float('nan'),float('nan'),float('nan'),float('nan'),float('nan'))
+            numPart_singleSim = {}
 
         #Fill the raw emittance arrays
         gamma_rel = simSetup["ENERGY"]/0.511 #assume electron beam!
@@ -132,14 +164,25 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         beta_x[i]  = emittances[1]
         alpha_x[i] = emittances[2]
         sigma_x[i] = np.sqrt(eps_x[i]*beta_x[i]*1e6/(gamma_rel*beta_rel))
-
         eps_y[i]   = emittances[3]
         beta_y[i]  = emittances[4]
         alpha_y[i] = emittances[5]
         sigma_y[i] = np.sqrt(eps_y[i]*beta_y[i]*1e6/(gamma_rel*beta_rel))
 
+        #Fill the NumPart array
+        for pdg in PDG_keep:
+            if pdg in numPart_singleSim:
+                numPart[pdg][i] = numPart_singleSim[pdg]
+        for pdg in numPart_singleSim.keys():
+            if pdg in PDG_keep:
+                numPart[pdg][i] = numPart_singleSim[pdg]
+            else:
+                numPart[pdg]['other'] += numPart_singleSim[pdg]
+                with lock:
+                    print("Found pdg={}".format(pdg))
+
         #Do special analysis over the TTrees
-        if detailedAnalysisRoutine:
+        if detailedAnalysisRoutine and not badSim:
             #Put the call to the external routine in a try/catch,
             # so that the thread will actually finish correctly in case of a user error.
             try:
@@ -147,7 +190,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 for k in detailedData.keys():
                     analysis_output[k][i]=detailedData[k]
             except Exception as err:
-                traceback.print_tb(err.__traceback__)
+                with lock:
+                    traceback.print_tb(err.__traceback__)
 
         datafile.Close()
 
@@ -185,6 +229,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     saveFile["sigma_x"] = sigma_x
     saveFile["sigma_y"] = sigma_y
 
+    for pdg in PDG_keep:
+        saveFile["numPart_"+str(pdg)] = numPart[pdg]
+
     if detailedAnalysisRoutine:
         for name in detailedAnalysisRoutine_names:
             nameMangle = "ANALYSIS_"+name
@@ -192,4 +239,4 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     saveFile.close()
 
-    return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, analysis_output)
+    return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)

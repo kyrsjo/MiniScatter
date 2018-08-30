@@ -328,6 +328,9 @@ void RootFileWriter::finalizeRootFile() {
     //Print out the particle types hitting the tracker
     G4cout << endl;
     G4cout << "Got types at tracker:" << G4endl;
+    TVectorD tracker_particleTypes_PDG    (tracker_particleTypes.size());
+    TVectorD tracker_particleTypes_numpart(tracker_particleTypes.size());
+    size_t tracker_particleTypes_i = 0;
     for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
         G4cout << std::setw(15) << it->first << " = "
                << std::setw(15) << tracker_particleNames[it->first] << ": "
@@ -335,8 +338,15 @@ void RootFileWriter::finalizeRootFile() {
         G4int numHashes = (G4int) ((it->second / ((double)numParticles_total)) * 100);
         for (int i = 0; i < numHashes; i++) G4cout << "#";
         G4cout << endl;
+
+        //Also put them in the ROOT file
+        // Unfortunately, there is no TObject array type for ints (?!?),
+        // and I don't want  to depend on a ROOT dictionary file.
+        tracker_particleTypes_PDG[tracker_particleTypes_i] = int(it->first);
+        tracker_particleTypes_numpart[tracker_particleTypes_i] = int(it->second);
     }
-    tracker_particleTypes.clear();
+    tracker_particleTypes_PDG.Write("tracker_ParticleTypes_PDG");
+    tracker_particleTypes_numpart.Write("tracker_ParticleTypes_numpart");
 
     // ** Below cutoff **
 
@@ -584,7 +594,7 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     double epsN = epsG*beta_rel*gamma_rel;  //[mm*rad]
     double beta = posVar/epsG; // [mm]
     double alpha = -coVar/epsG;
-    
+
     G4cout << "Geometrical emittance  = " << epsG*1e3 << " [um]" << G4endl;
     G4cout << "Normalized emittance   = " << epsN*1e3 << " [um]"
            << ", assuming beam energy = " << genAct->get_beam_energy() << " [MeV]"
@@ -592,7 +602,7 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
            << G4endl;
     G4cout << "Twiss beta  = " << beta*1e-3  << " [m]" << G4endl
            << "Twiss alpha = " << alpha << " [-]"  << G4endl;
-    
+
     G4cout << G4endl;
 
     // Write to root file
