@@ -210,22 +210,24 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
 
                 //Fill the TTree
-                targetExitBuffer.x = hitPos.x()/mm;
-                targetExitBuffer.y = hitPos.x()/mm;
-                targetExitBuffer.z = hitPos.z()/mm;
+                if (not miniFile) {
+                    targetExitBuffer.x = hitPos.x()/mm;
+                    targetExitBuffer.y = hitPos.x()/mm;
+                    targetExitBuffer.z = hitPos.z()/mm;
 
-                targetExitBuffer.px = momentum.x()/MeV;
-                targetExitBuffer.py = momentum.y()/MeV;
-                targetExitBuffer.pz = momentum.z()/MeV;
+                    targetExitBuffer.px = momentum.x()/MeV;
+                    targetExitBuffer.py = momentum.y()/MeV;
+                    targetExitBuffer.pz = momentum.z()/MeV;
 
-                targetExitBuffer.E = beamEnergy / MeV;
+                    targetExitBuffer.E = beamEnergy / MeV;
 
-                targetExitBuffer.PDG = PDG;
-                targetExitBuffer.charge = charge;
+                    targetExitBuffer.PDG = PDG;
+                    targetExitBuffer.charge = charge;
 
-                targetExitBuffer.eventID = eventCounter;
+                    targetExitBuffer.eventID = eventCounter;
 
-                targetExit->Fill();
+                    targetExit->Fill();
+                }
             }
 
         }
@@ -288,22 +290,24 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
 
                 //Fill the TTree
-                trackerHitsBuffer.x = hitPos.x()/mm;
-                trackerHitsBuffer.y = hitPos.x()/mm;
-                trackerHitsBuffer.z = hitPos.z()/mm;
+                if (not miniFile) {
+                    trackerHitsBuffer.x = hitPos.x()/mm;
+                    trackerHitsBuffer.y = hitPos.x()/mm;
+                    trackerHitsBuffer.z = hitPos.z()/mm;
 
-                trackerHitsBuffer.px = momentum.x()/MeV;
-                trackerHitsBuffer.py = momentum.y()/MeV;
-                trackerHitsBuffer.pz = momentum.z()/MeV;
+                    trackerHitsBuffer.px = momentum.x()/MeV;
+                    trackerHitsBuffer.py = momentum.y()/MeV;
+                    trackerHitsBuffer.pz = momentum.z()/MeV;
 
-                trackerHitsBuffer.E = beamEnergy / MeV;
+                    trackerHitsBuffer.E = beamEnergy / MeV;
 
-                trackerHitsBuffer.PDG = PDG;
-                trackerHitsBuffer.charge = charge;
+                    trackerHitsBuffer.PDG = PDG;
+                    trackerHitsBuffer.charge = charge;
 
-                trackerHitsBuffer.eventID = eventCounter;
+                    trackerHitsBuffer.eventID = eventCounter;
 
-                trackerHits->Fill();
+                    trackerHits->Fill();
+                }
             }
 
             tracker_numParticles->Fill(nEntries);
@@ -328,6 +332,7 @@ void RootFileWriter::finalizeRootFile() {
     //Print out the particle types hitting the tracker
     G4cout << endl;
     G4cout << "Got types at tracker:" << G4endl;
+    G4cout << tracker_particleTypes.size() << G4endl;
     TVectorD tracker_particleTypes_PDG    (tracker_particleTypes.size());
     TVectorD tracker_particleTypes_numpart(tracker_particleTypes.size());
     size_t tracker_particleTypes_i = 0;
@@ -342,8 +347,10 @@ void RootFileWriter::finalizeRootFile() {
         //Also put them in the ROOT file
         // Unfortunately, there is no TObject array type for ints (?!?),
         // and I don't want  to depend on a ROOT dictionary file.
-        tracker_particleTypes_PDG[tracker_particleTypes_i] = int(it->first);
+        tracker_particleTypes_PDG    [tracker_particleTypes_i] = int(it->first);
         tracker_particleTypes_numpart[tracker_particleTypes_i] = int(it->second);
+
+        tracker_particleTypes_i++;
     }
     tracker_particleTypes_PDG.Write("tracker_ParticleTypes_PDG");
     tracker_particleTypes_numpart.Write("tracker_ParticleTypes_numpart");

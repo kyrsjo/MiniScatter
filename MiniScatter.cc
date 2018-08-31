@@ -70,7 +70,8 @@ void printHelp(G4double target_thick,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
-               G4bool   quickmode);
+               G4bool   quickmode,
+               G4bool   miniROOTfile);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -92,13 +93,18 @@ int main(int argc,char** argv) {
     G4String covarianceString = "";  // Beam covariance matrix parameters
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
+
     G4int    numEvents    = 0;                // Number of events to generate
+
     G4bool   useGUI       = false;            // GUI on/off
     G4bool   quickmode    = false;            // Don't make slow plots
     G4String filename_out = "output";         // Output filename
+    G4bool   miniROOTfile = false;            // Write small root file
+                                              // (only analysis output, no TTrees)
+
     G4int    rngSeed      = 123;              // RNG seed
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgq")) != -1) {
+    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgqr")) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
@@ -113,7 +119,8 @@ int main(int argc,char** argv) {
                       doBacktrack,
                       rngSeed,
                       filename_out,
-                      quickmode);
+                      quickmode,
+                      miniROOTfile);
             exit(1);
             break;
 
@@ -235,6 +242,10 @@ int main(int argc,char** argv) {
             filename_out = G4String(optarg);
             break;
 
+        case 'r': //Mini ROOT file
+            miniROOTfile = true;
+            break;
+
         case 's': //RNG seed
             try {
                 rngSeed = std::stoi(string(optarg));
@@ -278,7 +289,8 @@ int main(int argc,char** argv) {
               doBacktrack,
               rngSeed,
               filename_out,
-              quickmode);
+              quickmode,
+              miniROOTfile);
     G4cout << "Status of other arguments:" << G4endl
            << "numEvents         =  " << numEvents << G4endl
            << "useGUI            =  " << (useGUI==true ? "yes" : "no") << G4endl;
@@ -358,6 +370,7 @@ int main(int argc,char** argv) {
     //Set root file output filename
     RootFileWriter::GetInstance()->setFilename(filename_out);
     RootFileWriter::GetInstance()->setQuickmode(quickmode);
+    RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
 
 #ifdef G4VIS_USE
     // Initialize visualization
@@ -433,7 +446,8 @@ void printHelp(G4double target_thick,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
-               G4bool   quickmode) {
+               G4bool   quickmode,
+               G4bool   miniROOTfile) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
                    << "Usage/options:" << G4endl
@@ -474,6 +488,9 @@ void printHelp(G4double target_thick,
                    << "-g : Use a GUI" << G4endl
                    << "-q : Quickmode, skip most post-processing and plots, default/current value = "
                    << (quickmode?"true":"false") << G4endl
+                   << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
+                   << (miniROOTfile?"true":"false") << G4endl
+
                    << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl
                    << G4endl

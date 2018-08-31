@@ -144,11 +144,6 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         badSim=False
         if os.path.isfile(filenameROOTfile):
             (emittances,numPart_singleSim,datafile) = miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True)
-            if cleanROOT:
-                os.remove(filenameROOTfile)
-                if not QUIET:
-                    with lock:
-                        print("Deleting '{}'.".format(filenameROOTfile))
         else:
             with lock:
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
@@ -170,14 +165,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         sigma_y[i] = np.sqrt(eps_y[i]*beta_y[i]*1e6/(gamma_rel*beta_rel))
 
         #Fill the NumPart array
-        for pdg in PDG_keep:
-            if pdg in numPart_singleSim:
-                numPart[pdg][i] = numPart_singleSim[pdg]
         for pdg in numPart_singleSim.keys():
             if pdg in PDG_keep:
                 numPart[pdg][i] = numPart_singleSim[pdg]
             else:
-                numPart[pdg]['other'] += numPart_singleSim[pdg]
+                print(pdg, numPart_singleSim)
+                numPart['other'][i] += numPart_singleSim[pdg]
                 with lock:
                     print("Found pdg={}".format(pdg))
 
@@ -193,7 +186,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 with lock:
                     traceback.print_tb(err.__traceback__)
 
-        datafile.Close()
+        if cleanROOT and not badSim:
+            datafile.Close()
+            os.remove(filenameROOTfile)
+            if not QUIET:
+                with lock:
+                    print("Deleting '{}'.".format(filenameROOTfile))
 
     def threadWorker(jobQueue_local,lock):
         while not jobQueue_local.empty():
@@ -239,4 +237,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     saveFile.close()
 
-    return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
+    if detailedAnalysisRoutine:
+        return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
+    else:
+        return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart)

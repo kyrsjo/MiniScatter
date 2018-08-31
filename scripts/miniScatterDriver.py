@@ -73,6 +73,9 @@ def runScatter(simSetup, quiet=False):
     if "QUICKMODE" in simSetup:
         cmd += ["-q"]
 
+    if "MINIROOT" in simSetup:
+        cmd += ["-r"]
+
     cmdline = ""
     for c in cmd:
         cmdline += c + " "
