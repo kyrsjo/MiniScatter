@@ -332,7 +332,6 @@ void RootFileWriter::finalizeRootFile() {
     //Print out the particle types hitting the tracker
     G4cout << endl;
     G4cout << "Got types at tracker:" << G4endl;
-    G4cout << tracker_particleTypes.size() << G4endl;
     TVectorD tracker_particleTypes_PDG    (tracker_particleTypes.size());
     TVectorD tracker_particleTypes_numpart(tracker_particleTypes.size());
     size_t tracker_particleTypes_i = 0;
@@ -421,6 +420,7 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << G4endl
            << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
+    G4cout << G4endl;
 
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);

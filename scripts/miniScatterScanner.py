@@ -44,8 +44,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     for pdg in PDG_keep:
         numPart[pdg] = np.zeros_like(scanVarRange)
 
-    analysis_output = {}
+    analysis_output = None
     if detailedAnalysisRoutine:
+        analysis_output = {}
         assert type(detailedAnalysisRoutine_names)==list
         for name in detailedAnalysisRoutine_names:
             analysis_output[name] = np.zeros_like(scanVarRange)
@@ -56,72 +57,92 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     assert baseSimSetup["BEAM"] == "e+" or baseSimSetup["BEAM"] == "e-"
     assert "ENERGY" in baseSimSetup or scanVar=="ENERGY"
 
-    #Loading a pre-ran simulation?
-    loadFileName = ""
-    for key in sorted(baseSimSetup.keys()):
-        value = baseSimSetup[key]
-        loadFileName += str(key) + "=" + str(value) + "--"
-    loadFileName += "SCANVAR=" + scanVar + '=['
-    for var in scanVarRange:
-        loadFileName += str(var) + ','
-    loadFileName = loadFileName[:-1] + "]--"
-    loadFileName += "COMMENT=" + COMMENT
-    loadFileName = "SaveSim_" + loadFileName +".h5"
+    #Sanity check
+    if scanVar in baseSimSetup:
+        print("Please do not put scanVar in the baseSimSetup!")
+        exit(1)
 
+    #Loading a pre-ran simulation?
+    loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
     print("LoadFile filename and status: '" + loadFileName + "'", tryLoad)
     if tryLoad:
         print("Loading...")
         try:
             loadFile = h5py.File(loadFileName,mode='r')
 
-            scanVar_loaded = loadFile["scanVarName"]
+            #Check that the file is workable
+            scanVar_loaded = loadFile.attrs["scanVarName"]
             if scanVar != scanVar_loaded:
                 print("Scan variables did not match even tough the filename did")
                 print("please run with tryLoad=False to recompute.")
                 loadFile.close()
-                return
+                exit(1)
 
-            scanVarRange_loaded = np.asarray(loadFile[scanVar])
-            if len(scanVarRange)==len(scanVarRange_loaded) and np.all(np.equal(scanVarRange, scanVarRange_loaded)):
-                print("Scan variable ranges match, let's load!")
+            for key in baseSimSetup.keys():
+                if not key in loadFile.attrs:
+                    print ("Key '{}' found in baseSimSetup but not in the file.".format(key))
+                    print ("Please run with tryLoad=False to recompute.")
+                    loadFile.close()
+                    exit(1)
+                if not loadFile.attrs[key] == baseSimSetup[key]:
+                    print ("Value of key '{}' found in baseSimSetup".format(key))
+                    print (" did not match what was found in the file.")
+                    print ("Values: baseSimSetup={}, file={}".format(baseSimSetup[key],loadFile[key]))
+                    print ("Please run with tryLoad=False to recompute.")
+                    exit(1)
+            for key in loadFile.attrs:
+                if key == scanVar or key=='scanVarName':
+                    continue
+                if not key in baseSimSetup.keys():
+                    print("Key {} found in file but not in baseSimSetup.".format(key))
+                    print ("Please run with tryLoad=False to recompute.")
+                    exit(1)
 
-                eps_x = np.asarray(loadFile["eps_x"])
-                eps_y = np.asarray(loadFile["eps_y"])
+            scanVarRange_loaded = np.asarray(loadFile.attrs[scanVar])
+            if len(scanVarRange) != len(scanVarRange_loaded) or \
+               not np.all(np.equal(scanVarRange, scanVarRange_loaded)):
+                print ("Scan variable ranges did not match, run with tryLoad=False to recompute.")
+                print ("Now :", scanVarRange)
+                print ("File:", scanVarRange_loaded)
+                # for i in range(min(len(scanVarRange),len(scanVarRange_loaded))):
+                #     print(scanVarRange[i], scanVarRange_loaded[i],\
+                #           scanVarRange[i]-scanVarRange_loaded[i], \
+                #           (scanVarRange[i]-scanVarRange_loaded[i])==0.0)
+                loadFile.close()
+                exit(1)
 
-                alpha_x = np.asarray(loadFile["alpha_x"])
-                alpha_y = np.asarray(loadFile["alpha_y"])
+            print("Scan variable ranges match, let's load!")
 
-                sigma_x = np.asarray(loadFile["sigma_x"])
-                sigma_y = np.asarray(loadFile["sigma_y"])
+            eps_x = np.asarray(loadFile["eps_x"])
+            eps_y = np.asarray(loadFile["eps_y"])
 
-                numPart = {}
-                for pdg in PDG_keep:
-                    if not "numPart_"+pdg in loadFile:
-                        print("Could not find numPart for PDG={} in the file. Please recompute.".format(pdg))
+            alpha_x = np.asarray(loadFile["alpha_x"])
+            alpha_y = np.asarray(loadFile["alpha_y"])
+
+            sigma_x = np.asarray(loadFile["sigma_x"])
+            sigma_y = np.asarray(loadFile["sigma_y"])
+
+            numPart = {}
+            for pdg in PDG_keep:
+                if not "numPart_"+str(pdg) in loadFile:
+                    print("Could not find numPart for PDG={} in the file. Please recompute.".format(pdg))
+                    loadFile.close()
+                    exit(1)
+                numPart[pdg] = np.asarray(loadFile["numPart_"+str(pdg)])
+
+            if detailedAnalysisRoutine:
+                for name in detailedAnalysisRoutine_names:
+                    nameMangle = "ANALYSIS_"+name
+                    if not (nameMangle) in loadFile:
+                        print("Could not find '"+name+"' in the file. Please recompute.")
                         loadFile.close()
                         return
-                    numPart[pdg] = loadFile["numPart_"+pdg]
+                    analysis_output[name] = np.asarray(loadFile["ANALYSIS_"+name])
+            loadFile.close()
 
-                if detailedAnalysisRoutine:
-                    for name in detailedAnalysisRoutine_names:
-                        nameMangle = "ANALYSIS_"+name
-                        if not (nameMangle) in loadFile:
-                            print("Could not find '"+name+"' in the file. Please recompute.")
-                            loadFile.close()
-                            return
-                        analysis_output[name] = np.asarray(loadFile["ANALYSIS_"+name])
-
-                loadFile.close()
-
-                print("Loaded! That was fast.")
-                return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
-
-            else:
-                print ("Scan variable ranges did not match, run with tryLoad=False to recompute.")
-                loadFile.close()
-
-                return
-            return
+            print("Loaded! That was fast.")
+            return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y,\
+                    numPart, analysis_output)
 
         except OSError:
             print("File not found. Computing...")
@@ -215,8 +236,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     print("Simulation complete, saving data to h5 for later retrival.")
     #Write out the data
     saveFile = h5py.File(loadFileName,mode="w")
-    saveFile["scanVarName"] = scanVar
-    saveFile[scanVar] = scanVarRange
+
+    saveFile.attrs["scanVarName"] = scanVar
+    saveFile.attrs[scanVar]       = scanVarRange
+    for key in baseSimSetup.keys():
+        if key in saveFile.attrs:
+            print("Attribute '{}' already written to file? Probably a bug!".format(key))
+            exit(1)
+        value = baseSimSetup[key]
+        saveFile.attrs[key] = value
 
     saveFile["eps_x"] = eps_x
     saveFile["eps_y"] = eps_y
@@ -237,7 +265,4 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     saveFile.close()
 
-    if detailedAnalysisRoutine:
-        return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
-    else:
-        return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart)
+    return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
