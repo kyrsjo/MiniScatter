@@ -114,10 +114,11 @@ void RootFileWriter::initializeRootFile(){
                  50001, -M_PI, M_PI);
     //init_phasespaceY->Sumw2();
 
-    //For counting the types of particles hitting the tracker
-    tracker_particleTypes.clear();
-    tracker_particleNames.clear();
-    numParticles_total = 0;
+    //For counting the types of particles hitting the trackers
+    typeCounter["tracker"]       = particleTypesCounter();
+    typeCounter["tracker_cutoff"] = particleTypesCounter();
+    typeCounter["target"]        = particleTypesCounter();
+    typeCounter["target_cutoff"] = particleTypesCounter();
 
     //Compute means and RMS of where they hit
     tracker_particleHit_x  = 0.0;
@@ -192,6 +193,13 @@ void RootFileWriter::doEvent(const G4Event* event){
                 G4double             exitangle   = atan(momentum.x()/momentum.z())/deg;
                 const G4ThreeVector& hitPos      = (*targetExitposHitsCollection)[i]->GetPosition();
                 const G4int          PDG         = (*targetExitposHitsCollection)[i]->GetPDG();
+                const G4String&      type        = (*targetExitposHitsCollection)[i]->GetType();
+
+                //Particle type counting
+                FillParticleTypes(typeCounter["target"], PDG, type);
+                if (energy >= beamEnergy*beamEnergy_cutoff) {
+                    FillParticleTypes(typeCounter["target_cutoff"], PDG, type);
+                }
 
                 //Exit angle
                 target_exitangle_hist->Fill(exitangle);
@@ -268,14 +276,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                 //Phase space
                 tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                 tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-                //Particle type counting
-                if (tracker_particleTypes.count(PDG) == 0) {
-                    tracker_particleTypes[PDG] = 0;
-                    tracker_particleNames[PDG] = type;
-                }
-                tracker_particleTypes[PDG] += 1;
-                numParticles_total += 1;
 
+                //Particle type counting
+                FillParticleTypes(typeCounter["tracker"], PDG, type);
+                if (energy >= beamEnergy*beamEnergy_cutoff) {
+                    FillParticleTypes(typeCounter["tracker_cutoff"], PDG, type);
+                }
+
+                //Hit positions
                 tracker_particleHit_x  +=  hitPos.x()/mm;
                 tracker_particleHit_xx += (hitPos.x()/mm)*(hitPos.x()/mm);
                 tracker_particleHit_y  +=  hitPos.y()/mm;
@@ -329,41 +337,21 @@ void RootFileWriter::doEvent(const G4Event* event){
 }
 void RootFileWriter::finalizeRootFile() {
 
-    //Print out the particle types hitting the tracker
-    G4cout << endl;
-    G4cout << "Got types at tracker:" << G4endl;
-    TVectorD tracker_particleTypes_PDG    (tracker_particleTypes.size());
-    TVectorD tracker_particleTypes_numpart(tracker_particleTypes.size());
-    size_t tracker_particleTypes_i = 0;
-    for(std::map<G4int,G4int>::iterator it=tracker_particleTypes.begin(); it !=tracker_particleTypes.end(); it++){
-        G4cout << std::setw(15) << it->first << " = "
-               << std::setw(15) << tracker_particleNames[it->first] << ": "
-               << std::setw(15) << it->second << " = ";// << G4endl;
-        G4int numHashes = (G4int) ((it->second / ((double)numParticles_total)) * 100);
-        for (int i = 0; i < numHashes; i++) G4cout << "#";
-        G4cout << endl;
-
-        //Also put them in the ROOT file
-        // Unfortunately, there is no TObject array type for ints (?!?),
-        // and I don't want  to depend on a ROOT dictionary file.
-        tracker_particleTypes_PDG    [tracker_particleTypes_i] = int(it->first);
-        tracker_particleTypes_numpart[tracker_particleTypes_i] = int(it->second);
-
-        tracker_particleTypes_i++;
+    //Print out the particle types on all detector planes
+    for (auto it : typeCounter) {
+        PrintParticleTypes(it.second, it.first);
     }
-    tracker_particleTypes_PDG.Write("tracker_ParticleTypes_PDG");
-    tracker_particleTypes_numpart.Write("tracker_ParticleTypes_numpart");
 
     // ** Below cutoff **
 
     //Average position and RMS
-    double xave  = tracker_particleHit_x / ((double)numParticles_total);
-    double yave  = tracker_particleHit_y / ((double)numParticles_total);
-    double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)numParticles_total)) ) /
-        (((double)numParticles_total)-1.0);
+    double xave  = tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles);
+    double yave  = tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles);
+    double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles)) ) /
+        (((double)typeCounter["tracker"].numParticles)-1.0);
     xrms = sqrt(xrms);
-    double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)numParticles_total)) ) /
-        (((double)numParticles_total)-1.0);
+    double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles)) ) /
+        (((double)typeCounter["tracker"].numParticles)-1.0);
     yrms = sqrt(yrms);
     //Exitangle
     G4double exitangle_avg = target_exitangle /
@@ -375,7 +363,7 @@ void RootFileWriter::finalizeRootFile() {
     exitangle_rms = sqrt(exitangle_rms);
 
     G4cout << G4endl
-           << "All particles (n=" << numParticles_total << "):" << G4endl;
+           << "All particles (n=" << typeCounter["tracker"].numParticles << "):" << G4endl;
 
     G4cout << "Average x = " << xave << " [mm], RMS = " << xrms << " [mm]" << G4endl
            << "Average y = " << yave << " [mm], RMS = " << yrms << " [mm]" << G4endl;
@@ -618,4 +606,47 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     twissVector[1] = beta*1e-3;
     twissVector[2] = alpha;
     twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
+}
+
+void RootFileWriter::PrintParticleTypes(particleTypesCounter& pt, G4String name) {
+    //Print out the particle types hitting the tracker
+    G4cout << endl;
+    G4cout << "Got types at " << name << ":" << G4endl;
+    if (pt.numParticles == 0){
+        G4cout << "No particles hit!" << G4endl;
+        return;
+    }
+
+    TVectorD particleTypes_PDG    (pt.particleTypes.size());
+    TVectorD particleTypes_numpart(pt.particleTypes.size());
+
+    size_t particleTypes_i = 0;
+    for(std::map<G4int,G4int>::iterator it = pt.particleTypes.begin(); it != pt.particleTypes.end(); it++){
+        G4cout << std::setw(15) << it->first << " = "
+               << std::setw(15) << pt.particleNames[it->first] << ": "
+               << std::setw(15) << it->second << " = ";// << G4endl;
+        G4int numHashes = (G4int) ((it->second / ((double)pt.numParticles)) * 100);
+        for (int i = 0; i < numHashes; i++) G4cout << "#";
+        G4cout << endl;
+
+        //Also put them in the ROOT file
+        // Unfortunately, there is no TObject array type for ints (?!?),
+        // and I don't want  to depend on a ROOT dictionary file.
+        particleTypes_PDG     [particleTypes_i] = int(it->first);
+        particleTypes_numpart [particleTypes_i] = int(it->second);
+
+        particleTypes_i++;
+    }
+    particleTypes_PDG.Write((name + "_ParticleTypes_PDG").c_str());
+    particleTypes_numpart.Write((name + "_ParticleTypes_numpart").c_str());
+
+}
+
+void RootFileWriter::FillParticleTypes(particleTypesCounter& pt, G4int PDG, G4String type) {
+    if (pt.particleTypes.count(PDG) == 0) {
+        pt.particleTypes[PDG] = 0;
+        pt.particleNames[PDG] = type;
+    }
+    pt.particleTypes[PDG] += 1;
+    pt.numParticles       += 1;
 }

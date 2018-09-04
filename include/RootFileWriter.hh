@@ -29,6 +29,19 @@ struct trackerHitStruct {
     Int_t eventID;
 };
 
+class particleTypesCounter {
+public:
+    particleTypesCounter(){
+        particleTypes.clear();
+        particleNames.clear();
+        numParticles = 0;
+    }
+    // In both cases, the index is the PDG id.
+    std::map<G4int,G4int> particleTypes;    // The number of particles of each type
+    std::map<G4int,G4String> particleNames; // The name of each particle type
+    G4int numParticles;
+};
+
 class RootFileWriter {
 public:
     //! Singleton pattern
@@ -94,9 +107,7 @@ private:
     // End-of-run statistics
 
     // Count the number of each particle type that hits the tracker
-    std::map<G4int,G4int> tracker_particleTypes;
-    std::map<G4int,G4String> tracker_particleNames;
-    G4int numParticles_total;
+    std::map<G4String,particleTypesCounter> typeCounter;
 
     // Compute means and standard deviations of where the particles hit the tracker
     G4double tracker_particleHit_x;
@@ -135,6 +146,8 @@ private:
     Int_t eventCounter; // Used for EventID-ing
 
     void PrintTwissParameters(TH2D* phaseSpaceHist);
+    void PrintParticleTypes(particleTypesCounter& pt, G4String name);
+    void FillParticleTypes(particleTypesCounter& pt, G4int PDG, G4String type);
 };
 
 #endif

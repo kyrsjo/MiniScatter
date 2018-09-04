@@ -14,7 +14,9 @@ import os
 
 SEED = 1
 
+#Used for particle-type countings
 PDG_keep = (11,-11,22,2212,2112,'other');
+det_keep = ("tracker", "tracker_cutoff", "target", "target_cutoff")
 
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
@@ -41,8 +43,10 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     sigma_y = np.zeros_like(scanVarRange)
 
     numPart = {}
-    for pdg in PDG_keep:
-        numPart[pdg] = np.zeros_like(scanVarRange)
+    for det in det_keep:
+        numPart[det] = {}
+        for pdg in PDG_keep:
+            numPart[det][pdg] = np.zeros_like(scanVarRange)
 
     analysis_output = None
     if detailedAnalysisRoutine:
@@ -123,12 +127,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             sigma_y = np.asarray(loadFile["sigma_y"])
 
             numPart = {}
-            for pdg in PDG_keep:
-                if not "numPart_"+str(pdg) in loadFile:
-                    print("Could not find numPart for PDG={} in the file. Please recompute.".format(pdg))
-                    loadFile.close()
-                    exit(1)
-                numPart[pdg] = np.asarray(loadFile["numPart_"+str(pdg)])
+            for det in det_keep:
+                for pdg in PDG_keep:
+                    arrayName = "numPart_"+det+"_"+str(pdg)
+                    if not arrayName in loadFile:
+                        print("Could not find numPart for {}, PDG={} in the file. Please recompute.".format(det,pdg))
+                        loadFile.close()
+                        exit(1)
+                    numPart[pdg] = np.asarray(loadFile[arrayName])
 
             if detailedAnalysisRoutine:
                 for name in detailedAnalysisRoutine_names:
@@ -170,7 +176,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
             badSim=True
             emittances = (float('nan'),float('nan'),float('nan'),float('nan'),float('nan'),float('nan'))
-            numPart_singleSim = {}
+            numPart_singleSim = {{}}
 
         #Fill the raw emittance arrays
         gamma_rel = simSetup["ENERGY"]/0.511 #assume electron beam!
@@ -186,14 +192,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         sigma_y[i] = np.sqrt(eps_y[i]*beta_y[i]*1e6/(gamma_rel*beta_rel))
 
         #Fill the NumPart array
-        for pdg in numPart_singleSim.keys():
-            if pdg in PDG_keep:
-                numPart[pdg][i] = numPart_singleSim[pdg]
-            else:
-                print(pdg, numPart_singleSim)
-                numPart['other'][i] += numPart_singleSim[pdg]
-                with lock:
-                    print("Found pdg={}".format(pdg))
+        for detDictKey in numPart_singleSim.keys():
+            for pdg in numPart_singleSim[detDictKey].keys():
+                if pdg in PDG_keep:
+                    numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
+                else:
+                    numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
+                    with lock:
+                        print("Found pdg={} for detector={}".format(pdg,detDictKey))
 
         #Do special analysis over the TTrees
         if detailedAnalysisRoutine and not badSim:
@@ -255,8 +261,10 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     saveFile["sigma_x"] = sigma_x
     saveFile["sigma_y"] = sigma_y
 
-    for pdg in PDG_keep:
-        saveFile["numPart_"+str(pdg)] = numPart[pdg]
+    for det in det_keep:
+        for pdg in PDG_keep:
+            arrayName = "numPart_"+det+"_"+str(pdg)
+            saveFile[arrayName] = numPart[det][pdg]
 
     if detailedAnalysisRoutine:
         for name in detailedAnalysisRoutine_names:

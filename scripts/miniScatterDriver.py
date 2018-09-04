@@ -99,16 +99,22 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False):
     x_final = data.Get("trackerPhasespaceX_cutoff_TWISS")
     y_final = data.Get("trackerPhasespaceY_cutoff_TWISS")
 
-    #print("Got initial parameters:")
     if not quiet:
+        print("Got initial parameters:")
         print("X :", x_init[0],x_init[1],x_init[2])
         print("Y :", y_init[0],y_init[1],y_init[2])
 
-    numPart_PDG = data.Get("tracker_ParticleTypes_PDG")
-    numPart_num = data.Get("tracker_ParticleTypes_numpart")
     numPart = {}
-    for i in range(len(numPart_PDG)):
-        numPart[int(numPart_PDG[i])] = numPart_num[i]
+    for det in ("tracker", "tracker_cutoff", "target", "target_cutoff"):
+        numPart[det] = {}
+        if not data.GetListOfKeys().Contains(det+"_ParticleTypes_PDG") or \
+           not data.GetListOfKeys().Contains(det+"_ParticleTypes_numpart"):
+            print("No particles found for det={}".format(det))
+            continue
+        numPart_PDG = data.Get(det+"_ParticleTypes_PDG")
+        numPart_num = data.Get(det+"_ParticleTypes_numpart")
+        for i in range(len(numPart_PDG)):
+            numPart[det][int(numPart_PDG[i])] = numPart_num[i]
 
     final_tup = (x_final[0],x_final[1],x_final[2],y_final[0],y_final[1],y_final[2])
 
