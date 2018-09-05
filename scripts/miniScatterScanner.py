@@ -64,7 +64,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     #Sanity check
     if scanVar in baseSimSetup:
         print("Please do not put scanVar in the baseSimSetup!")
-        exit(1)
+        raise ValueError("Found scanVar in the baseSimSetup")
 
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
@@ -80,27 +80,31 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 print("Scan variables did not match even tough the filename did")
                 print("please run with tryLoad=False to recompute.")
                 loadFile.close()
-                exit(1)
+                raise ValueError("scanVar did not match loaded file")
 
             for key in baseSimSetup.keys():
-                if not key in loadFile.attrs:
+                if not (key in loadFile.attrs):
                     print ("Key '{}' found in baseSimSetup but not in the file.".format(key))
                     print ("Please run with tryLoad=False to recompute.")
                     loadFile.close()
-                    exit(1)
+                    raise ValueError("Found key {} in baseSimSetup but not in the file".format(key))
+
                 if not loadFile.attrs[key] == baseSimSetup[key]:
                     print ("Value of key '{}' found in baseSimSetup".format(key))
                     print (" did not match what was found in the file.")
-                    print ("Values: baseSimSetup={}, file={}".format(baseSimSetup[key],loadFile[key]))
+                    print ("Values: baseSimSetup={}, file={}".format(baseSimSetup[key],loadFile.attrs[key]))
                     print ("Please run with tryLoad=False to recompute.")
-                    exit(1)
+                    loadFile.close()
+                    raise ValueError("Value of key {} did not match with baseSimSetup and file".format(key))
+
             for key in loadFile.attrs:
                 if key == scanVar or key=='scanVarName':
                     continue
                 if not key in baseSimSetup.keys():
                     print("Key {} found in file but not in baseSimSetup.".format(key))
                     print ("Please run with tryLoad=False to recompute.")
-                    exit(1)
+                    loadFile.close()
+                    raise ValueError("Key {} found in file but not in baseSimSetup".format(key))
 
             scanVarRange_loaded = np.asarray(loadFile.attrs[scanVar])
             if len(scanVarRange) != len(scanVarRange_loaded) or \
@@ -113,7 +117,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 #           scanVarRange[i]-scanVarRange_loaded[i], \
                 #           (scanVarRange[i]-scanVarRange_loaded[i])==0.0)
                 loadFile.close()
-                exit(1)
+                raise ValueError("ScanVar range did not match with loaded file")
 
             print("Scan variable ranges match, let's load!")
 
@@ -128,13 +132,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             numPart = {}
             for det in det_keep:
+                numPart[det]={}
                 for pdg in PDG_keep:
                     arrayName = "numPart_"+det+"_"+str(pdg)
                     if not arrayName in loadFile:
                         print("Could not find numPart for {}, PDG={} in the file. Please recompute.".format(det,pdg))
                         loadFile.close()
-                        exit(1)
-                    numPart[pdg] = np.asarray(loadFile[arrayName])
+                        raise ValueError("NumPart for det={}, PDG={} was not found in the file".format(det,pdg))
+
+                    numPart[det][pdg] = np.asarray(loadFile[arrayName])
 
             if detailedAnalysisRoutine:
                 for name in detailedAnalysisRoutine_names:
@@ -176,7 +182,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
             badSim=True
             emittances = (float('nan'),float('nan'),float('nan'),float('nan'),float('nan'),float('nan'))
-            numPart_singleSim = {{}}
+            numPart_singleSim = None
 
         #Fill the raw emittance arrays
         gamma_rel = simSetup["ENERGY"]/0.511 #assume electron beam!
@@ -192,14 +198,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         sigma_y[i] = np.sqrt(eps_y[i]*beta_y[i]*1e6/(gamma_rel*beta_rel))
 
         #Fill the NumPart array
-        for detDictKey in numPart_singleSim.keys():
-            for pdg in numPart_singleSim[detDictKey].keys():
-                if pdg in PDG_keep:
-                    numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
-                else:
-                    numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
-                    with lock:
-                        print("Found pdg={} for detector={}".format(pdg,detDictKey))
+        if numPart_singleSim != None:
+            for detDictKey in numPart_singleSim.keys():
+                for pdg in numPart_singleSim[detDictKey].keys():
+                    if pdg in PDG_keep:
+                        numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
+                    else:
+                        numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
+                        with lock:
+                            print("Found pdg={} for detector={}".format(pdg,detDictKey))
 
         #Do special analysis over the TTrees
         if detailedAnalysisRoutine and not badSim:
@@ -247,8 +254,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     saveFile.attrs[scanVar]       = scanVarRange
     for key in baseSimSetup.keys():
         if key in saveFile.attrs:
-            print("Attribute '{}' already written to file? Probably a bug!".format(key))
-            exit(1)
+            saveFile.close()
+            raise RuntimeError("Attribute '{}' already written to file? Probably a bug!".format(key))
         value = baseSimSetup[key]
         saveFile.attrs[key] = value
 
