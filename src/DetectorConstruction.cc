@@ -223,6 +223,8 @@ void DetectorConstruction::DefineMaterials() {
     PbMaterial = man->FindOrBuildMaterial("G4_Pb");
     TiMaterial = man->FindOrBuildMaterial("G4_Ti");
     SiMaterial = man->FindOrBuildMaterial("G4_Si");
+    WMaterial  = man->FindOrBuildMaterial("G4_W");
+    UMaterial  = man->FindOrBuildMaterial("G4_U");
 
     MylarMaterial  = man->FindOrBuildMaterial("G4_MYLAR");
     KaptonMaterial = man->FindOrBuildMaterial("G4_KAPTON");

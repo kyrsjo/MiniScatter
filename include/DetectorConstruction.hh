@@ -57,6 +57,8 @@ private:
     G4Material*        PbMaterial     = NULL;
     G4Material*        TiMaterial     = NULL;
     G4Material*        SiMaterial     = NULL;
+    G4Material*        WMaterial      = NULL;
+    G4Material*        UMaterial      = NULL;
 
     G4Material*        MylarMaterial  = NULL;
     G4Material*        KaptonMaterial = NULL;
