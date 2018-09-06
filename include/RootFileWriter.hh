@@ -92,6 +92,11 @@ private:
     TH1D* target_exitangle_hist;
     TH1D* target_exitangle_hist_cutoff;
 
+    TH2D* target_exit_phasespaceX;
+    TH2D* target_exit_phasespaceY;
+    TH2D* target_exit_phasespaceX_cutoff;
+    TH2D* target_exit_phasespaceY_cutoff;
+
     //Tracker histograms
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;

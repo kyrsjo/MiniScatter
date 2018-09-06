@@ -74,6 +74,24 @@ void RootFileWriter::initializeRootFile(){
                                             "Exit angle from tracker (charged, energy > cutoff)",
                                             50001, -10, 10);
 
+    // Target exit phasespace histograms
+    target_exit_phasespaceX        = new TH2D("target_exit_x",
+                                              "Target exit phase space (x)",
+                                              1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
+                                              50001, -M_PI, M_PI);
+    target_exit_phasespaceY        = new TH2D("target_exit_y",
+                                              "Target exit phase space (y)",
+                                              1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
+                                              50001, -M_PI, M_PI);
+    target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
+                                              "Target exit phase space (x) (charged, energy > cutoff)",
+                                              1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
+                                              50001, -M_PI, M_PI);
+    target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
+                                              "Target exit phase space (y) (charged, energy > cutoff)",
+                                              1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
+                                              50001, -M_PI, M_PI);
+
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
     tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
@@ -228,6 +246,15 @@ void RootFileWriter::doEvent(const G4Event* event){
                     target_exitangle_cutoff              += exitangle;
                     target_exitangle2_cutoff             += exitangle*exitangle;
                     target_exitangle_cutoff_numparticles += 1;
+                }
+
+                //Phase space
+                target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                    target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                 }
 
                 //Fill the TTree
@@ -431,6 +458,10 @@ void RootFileWriter::finalizeRootFile() {
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
     PrintTwissParameters(init_phasespaceY);
+    PrintTwissParameters(target_exit_phasespaceX);
+    PrintTwissParameters(target_exit_phasespaceY);
+    PrintTwissParameters(target_exit_phasespaceX_cutoff);
+    PrintTwissParameters(target_exit_phasespaceY_cutoff);
     PrintTwissParameters(tracker_phasespaceX);
     PrintTwissParameters(tracker_phasespaceY);
     PrintTwissParameters(tracker_phasespaceX_cutoff);
@@ -539,22 +570,30 @@ void RootFileWriter::finalizeRootFile() {
         // Write the ROOT file.
         exitangle_analytic->Write();
         delete exitangle_analytic; exitangle_analytic = NULL;
-
-        init_phasespaceX->Write();
-        init_phasespaceY->Write();
-
-        targetEdep->Write();
-        targetEdep_NIEL->Write();
-        targetEdep_IEL->Write();
-
-        target_exitangle_hist->Write();
-
-        tracker_phasespaceX->Write();
-        tracker_phasespaceY->Write();
-
-        tracker_phasespaceX_cutoff->Write();
-        tracker_phasespaceY_cutoff->Write();
     }
+
+    //Write the histograms to the ROOT file
+
+    init_phasespaceX->Write();
+    init_phasespaceY->Write();
+
+    targetEdep->Write();
+    targetEdep_NIEL->Write();
+    targetEdep_IEL->Write();
+
+    target_exitangle_hist->Write();
+
+    target_exit_phasespaceX->Write();
+    target_exit_phasespaceY->Write();
+
+    target_exit_phasespaceX_cutoff->Write();
+    target_exit_phasespaceY_cutoff->Write();
+
+    tracker_phasespaceX->Write();
+    tracker_phasespaceY->Write();
+
+    tracker_phasespaceX_cutoff->Write();
+    tracker_phasespaceY_cutoff->Write();
 
     //Now we have plotted, delete stuff
 
@@ -566,6 +605,12 @@ void RootFileWriter::finalizeRootFile() {
     delete targetEdep_IEL; targetEdep_IEL = NULL;
 
     delete target_exitangle_hist; target_exitangle_hist = NULL;
+
+    delete target_exit_phasespaceX; target_exit_phasespaceX = NULL;
+    delete target_exit_phasespaceY; target_exit_phasespaceY = NULL;
+
+    delete target_exit_phasespaceX_cutoff; target_exit_phasespaceX_cutoff = NULL;
+    delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
 
     delete tracker_phasespaceX; tracker_phasespaceX = NULL;
     delete tracker_phasespaceY; tracker_phasespaceY = NULL;

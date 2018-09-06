@@ -88,10 +88,10 @@ def runScatter(simSetup, quiet=False):
 
 #Names of the planes in which the twiss parameters / number of particles of each type
 # have been extracted
-twissDets    = ("init","tracker","tracker_cutoff")
+twissDets    = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
 numPartDets = ("tracker", "tracker_cutoff", "target", "target_cutoff")
 
-def getData(filename="plots/output.root", quiet=False, getRaw=False):
+def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=None):
     """
     Collects data from the ROOT file, and optionally returns the file for looping over the ttrees.
     If the file is returned, the caller is responsible for closing it.
@@ -103,6 +103,8 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False):
         twiss[det] = {}
         for p in ("x","y"):
             dataName = det + "_" + p + "_TWISS"
+            if not dataFile.GetListOfKeys().Contains(dataName):
+                raise KeyError("Object {} not found in file".format(dataName,filename))
             twissData = dataFile.Get(dataName)
             twiss[det][p] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
 
@@ -119,8 +121,20 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False):
         for i in range(len(numPart_PDG)):
             numPart[det][int(numPart_PDG[i])] = numPart_num[i]
 
+    objects = None
+    if getObjects:
+        objects = {}
+        for objName in getObjects:
+            if not dataFile.GetListOfKeys().Contains(objName):
+                dataFile.ls()
+                dataFile.Close()
+                raise KeyError("Object {} not found in file {}".format(objName,filename))
+            #Clone the object -- the name can be changed later, but make it unique
+            objects[objName] = dataFile.Get(objName).Clone(objName+"-localClone")
+            objects[objName].SetDirectory(0) # make it independent of the datafile TFile
+
     if getRaw:
-        return (twiss, numPart, dataFile)
+        return (twiss, numPart, objects, dataFile)
     else:
         dataFile.Close()
-        return(twiss, numPart)
+        return(twiss, numPart, objects)

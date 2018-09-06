@@ -22,7 +22,7 @@ m_twiss = 0.511 #[MeV/c^2], assumed mass of the particles used for TWISS computa
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
                     detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None, \
-                    cleanROOT=True):
+                    cleanROOT=True, getObjects=None):
     """
     This routine is built to scan arbitrary parameters with MiniScatter.
     It can cache the results in HDF5-files with long and difficult names, as well as call detailed analysis routines.
@@ -55,6 +55,13 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     else:
         assert detailedAnalysisRoutine_names == None
 
+    objects = None
+    if getObjects:
+        objects = {}
+        assert type(getObjects) == list
+        for objName in getObjects:
+            objects[objName] = [] #One entry per scanVarRange value
+
     #Later we have assumed electron beam for emittance calculation
     assert baseSimSetup["BEAM"] == "e+" or baseSimSetup["BEAM"] == "e-"
     assert "ENERGY" in baseSimSetup or scanVar=="ENERGY"
@@ -67,7 +74,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
     print("LoadFile filename and status: '" + loadFileName + "'", tryLoad)
-    if tryLoad:
+    if tryLoad and not getObjects: #For now, we can't load the ROOT objects, so force recomputation
         print("Loading...")
         try:
             loadFile = h5py.File(loadFileName,mode='r')
@@ -122,7 +129,11 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             for det in miniScatterDriver.twissDets:
                 for p in ('x','y'):
                     for t in ('eps','beta','alpha','sigma'):
-                        twiss[det][p][t] = np.asarray(loadFile["twiss_"+det+"_"+p+"_"+t])
+                        dataName = "twiss_"+det+"_"+p+"_"+t
+                        if not dataName in loadFile:
+                            raise ValueError("Did not find array '{}' for twissDet={} in the loaded file.".\
+                                             format(dataName,det))
+                        twiss[det][p][t] = np.asarray(loadFile[dataName])
 
             for det in miniScatterDriver.numPartDets:
                 for pdg in PDG_keep:
@@ -145,7 +156,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             loadFile.close()
 
             print("Loaded! That was fast.")
-            return (twiss, numPart, analysis_output)
+            return (twiss, numPart, objects, analysis_output)
 
         except OSError:
             print("File not found. Computing...")
@@ -167,8 +178,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         filenameROOTfile = "plots/"+filenameROOT+".root"
         badSim=False
         if os.path.isfile(filenameROOTfile):
-            (twiss_singlesim,numPart_singleSim,datafile) = \
-                miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True)
+            #Always getRaw, and handle the cleanup here in Scanner.
+            (twiss_singleSim, numPart_singleSim, objects_singleSim, datafile) = \
+                miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True,getObjects=getObjects)
         else:
             with lock:
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
@@ -181,7 +193,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             for det in miniScatterDriver.twissDets:
                 for p in ('x','y'):
                     for t in ('eps','beta','alpha'):
-                        twiss[det][p][t][i] = twiss_singlesim[det][p][t]
+                        twiss[det][p][t][i] = twiss_singleSim[det][p][t]
                     twiss[det][p]['sigma'][i] = \
                         np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
                                  (gamma_rel*beta_rel)                                     )
@@ -196,6 +208,13 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         with lock:
                             print("Found pdg={} for detector={}".format(pdg,detDictKey))
 
+            #File the objects in the appropriate positions
+            if getObjects:
+                for objName in getObjects:
+                    thisObj = objects_singleSim[objName]
+                    thisObjName = thisObj.GetName()
+                    thisObj.SetName(objName + "_"+str(i))
+                    objects[objName].append(thisObj)
             #Do special analysis over the TTrees
             if detailedAnalysisRoutine:
                 #Put the call to the external routine in a try/catch,
@@ -208,8 +227,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     with lock:
                         traceback.print_tb(err.__traceback__)
 
+            # Cleanup the ROOT file
+            datafile.Close()
             if cleanROOT:
-                datafile.Close()
                 os.remove(filenameROOTfile)
                 if not QUIET:
                     with lock:
@@ -264,4 +284,4 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     saveFile.close()
 
-    return (twiss, numPart, analysis_output)
+    return (twiss, numPart, objects, analysis_output)
