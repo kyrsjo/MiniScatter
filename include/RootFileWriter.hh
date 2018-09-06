@@ -89,6 +89,8 @@ private:
     TH1D* targetEdep_NIEL;
     TH1D* targetEdep_IEL;
 
+    std::map<G4int,TH1D*> target_exit_energy;
+
     TH1D* target_exitangle_hist;
     TH1D* target_exitangle_hist_cutoff;
 

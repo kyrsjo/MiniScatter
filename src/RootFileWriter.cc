@@ -66,6 +66,22 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,6);
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
+    target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
+                                      "Particle energy when exiting target (electrons)",
+                                      1000,0,beamEnergy);
+    target_exit_energy[-11] = new TH1D("target_exit_energy_PDG-11",
+                                      "Particle energy when exiting target (positrons)",
+                                      1000,0,beamEnergy);
+    target_exit_energy[22]  = new TH1D("target_exit_energy_PDG22",
+                                      "Particle energy when exiting target (photons)",
+                                      1000,0,beamEnergy);
+    target_exit_energy[0]   = new TH1D("target_exit_energy_PDGother",
+                                      "Particle energy when exiting target (other)",
+                                      1000,0,beamEnergy);
+    for (auto it : target_exit_energy) {
+        it.second->GetXaxis()->SetTitle("Energy [MeV]");
+    }
+
     // Target exit angle histogram
     target_exitangle_hist        = new TH1D("exitangle",
                                             "Exit angle from tracker",
@@ -96,8 +112,8 @@ void RootFileWriter::initializeRootFile(){
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
     tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
 
-    tracker_energy       = new TH1D("energy","energy",10000,0,beamEnergy);
-    tracker_energy->GetXaxis()->SetTitle("Energy of particles on the tracker [MeV]");
+    tracker_energy       = new TH1D("energy","Energy of all particles hitting the tracker",10000,0,beamEnergy);
+    tracker_energy->GetXaxis()->SetTitle("Energy per particle [MeV]");
 
     tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
                1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
@@ -228,13 +244,13 @@ void RootFileWriter::doEvent(const G4Event* event){
 
                 //Particle type counting
                 FillParticleTypes(typeCounter["target"], PDG, type);
-                if (energy >= beamEnergy*beamEnergy_cutoff) {
+                if (energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     FillParticleTypes(typeCounter["target_cutoff"], PDG, type);
                 }
 
                 //Exit angle
                 target_exitangle_hist->Fill(exitangle);
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     target_exitangle_hist_cutoff->Fill(exitangle);
                 }
 
@@ -242,7 +258,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 target_exitangle2             += exitangle*exitangle;
                 target_exitangle_numparticles += 1;
 
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     target_exitangle_cutoff              += exitangle;
                     target_exitangle2_cutoff             += exitangle*exitangle;
                     target_exitangle_cutoff_numparticles += 1;
@@ -252,9 +268,17 @@ void RootFileWriter::doEvent(const G4Event* event){
                 target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                 target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                }
+
+                //Energy
+                if (target_exit_energy.find(PDG) != target_exit_energy.end()) {
+                    target_exit_energy[PDG]->Fill(energy/MeV);
+                }
+                else {
+                    target_exit_energy[0]->Fill(energy/MeV);
                 }
 
                 //Fill the TTree
@@ -267,7 +291,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     targetExitBuffer.py = momentum.y()/MeV;
                     targetExitBuffer.pz = momentum.z()/MeV;
 
-                    targetExitBuffer.E = beamEnergy / MeV;
+                    targetExitBuffer.E = energy / MeV;
 
                     targetExitBuffer.PDG = PDG;
                     targetExitBuffer.charge = charge;
@@ -309,7 +333,7 @@ void RootFileWriter::doEvent(const G4Event* event){
 
                 //Hit position
                 tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     tracker_hitPos_cutoff->Fill(hitPos.x()/mm, hitPos.y()/mm);
                 }
 
@@ -317,14 +341,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                 tracker_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                 tracker_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                 }
 
                 //Particle type counting
                 FillParticleTypes(typeCounter["tracker"], PDG, type);
-                if (energy >= beamEnergy*beamEnergy_cutoff) {
+                if (energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     FillParticleTypes(typeCounter["tracker_cutoff"], PDG, type);
                 }
 
@@ -334,7 +358,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 tracker_particleHit_y  +=  hitPos.y()/mm;
                 tracker_particleHit_yy += (hitPos.y()/mm)*(hitPos.y()/mm);
 
-                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
                     tracker_particleHit_x_cutoff  +=  hitPos.x()/mm;
                     tracker_particleHit_xx_cutoff += (hitPos.x()/mm)*(hitPos.x()/mm);
                     tracker_particleHit_y_cutoff  +=  hitPos.y()/mm;
@@ -352,7 +376,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     trackerHitsBuffer.py = momentum.y()/MeV;
                     trackerHitsBuffer.pz = momentum.z()/MeV;
 
-                    trackerHitsBuffer.E = beamEnergy / MeV;
+                    trackerHitsBuffer.E = energy / MeV;
 
                     trackerHitsBuffer.PDG = PDG;
                     trackerHitsBuffer.charge = charge;
@@ -581,6 +605,10 @@ void RootFileWriter::finalizeRootFile() {
     targetEdep_NIEL->Write();
     targetEdep_IEL->Write();
 
+    for (auto it : target_exit_energy) {
+        it.second->Write();
+    }
+
     target_exitangle_hist->Write();
 
     target_exit_phasespaceX->Write();
@@ -603,6 +631,11 @@ void RootFileWriter::finalizeRootFile() {
     delete targetEdep; targetEdep = NULL;
     delete targetEdep_NIEL; targetEdep_NIEL = NULL;
     delete targetEdep_IEL; targetEdep_IEL = NULL;
+
+    for (auto it : target_exit_energy) {
+        delete it.second;
+    }
+    target_exit_energy.clear();
 
     delete target_exitangle_hist; target_exitangle_hist = NULL;
 
