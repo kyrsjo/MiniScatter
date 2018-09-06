@@ -88,27 +88,40 @@ void RootFileWriter::initializeRootFile(){
                1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
                1000,detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
 
+    tracker_phasespaceX   =
+        new TH2D("tracker_x",
+                 "Tracker phase space (x)",
+                 1000,detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //tracker_phasespaceX->Sumw2();
+    tracker_phasespaceY   =
+        new TH2D("tracker_y",
+                 "Tracker phase space (y)",
+                 1000, detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
+                 50001, -M_PI, M_PI);
+    //tracker_phasespaceY->Sumw2();
+
     tracker_phasespaceX_cutoff   =
-        new TH2D("trackerPhasespaceX_cutoff",
+        new TH2D("tracker_cutoff_x",
                  "Tracker phase space (x) (charged, energy > cutoff)",
                  1000,detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
     //tracker_phasespaceX_cutoff->Sumw2();
     tracker_phasespaceY_cutoff   =
-        new TH2D("trackerPhasespaceY_cutoff",
+        new TH2D("tracker_cutoff_y",
                  "Tracker phase space (y) (charged, energy > cutoff)",
                  1000, detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
     //tracker_phasespaceY_cutoff->Sumw2();
 
     init_phasespaceX   =
-        new TH2D("initPhasespaceX",
+        new TH2D("init_x",
                  "Initial phase space (x)",
                  1000,detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
     //init_phasespaceX->Sumw2();
     init_phasespaceY   =
-        new TH2D("initPhasespaceY",
+        new TH2D("init_y",
                  "Initial phase space (y)",
                  1000, detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
@@ -274,8 +287,13 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
 
                 //Phase space
-                tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                tracker_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                tracker_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+
+                if (charge != 0 and energy >= beamEnergy*beamEnergy_cutoff) {
+                    tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                    tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                }
 
                 //Particle type counting
                 FillParticleTypes(typeCounter["tracker"], PDG, type);
@@ -413,6 +431,8 @@ void RootFileWriter::finalizeRootFile() {
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
     PrintTwissParameters(init_phasespaceY);
+    PrintTwissParameters(tracker_phasespaceX);
+    PrintTwissParameters(tracker_phasespaceY);
     PrintTwissParameters(tracker_phasespaceX_cutoff);
     PrintTwissParameters(tracker_phasespaceY_cutoff);
 
@@ -529,6 +549,9 @@ void RootFileWriter::finalizeRootFile() {
 
         target_exitangle_hist->Write();
 
+        tracker_phasespaceX->Write();
+        tracker_phasespaceY->Write();
+
         tracker_phasespaceX_cutoff->Write();
         tracker_phasespaceY_cutoff->Write();
     }
@@ -543,6 +566,9 @@ void RootFileWriter::finalizeRootFile() {
     delete targetEdep_IEL; targetEdep_IEL = NULL;
 
     delete target_exitangle_hist; target_exitangle_hist = NULL;
+
+    delete tracker_phasespaceX; tracker_phasespaceX = NULL;
+    delete tracker_phasespaceY; tracker_phasespaceY = NULL;
 
     delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
     delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;

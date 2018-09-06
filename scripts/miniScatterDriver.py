@@ -86,40 +86,41 @@ def runScatter(simSetup, quiet=False):
     if not quiet:
         print ("Done!")
 
+#Names of the planes in which the twiss parameters / number of particles of each type
+# have been extracted
+twissDets    = ("init","tracker","tracker_cutoff")
+numPartDets = ("tracker", "tracker_cutoff", "target", "target_cutoff")
+
 def getData(filename="plots/output.root", quiet=False, getRaw=False):
     """
-    Collects twiss parameters from the ROOT file, and optionally returns the file for looping over the ttrees.
+    Collects data from the ROOT file, and optionally returns the file for looping over the ttrees.
     If the file is returned, the caller is responsible for closing it.
     """
-    data = ROOT.TFile(filename)
+    dataFile = ROOT.TFile(filename)
 
-    x_init = data.Get("initPhasespaceX_TWISS")
-    y_init = data.Get("initPhasespaceY_TWISS")
-
-    x_final = data.Get("trackerPhasespaceX_cutoff_TWISS")
-    y_final = data.Get("trackerPhasespaceY_cutoff_TWISS")
-
-    if not quiet:
-        print("Got initial parameters:")
-        print("X :", x_init[0],x_init[1],x_init[2])
-        print("Y :", y_init[0],y_init[1],y_init[2])
+    twiss = {}
+    for det in twissDets:
+        twiss[det] = {}
+        for p in ("x","y"):
+            dataName = det + "_" + p + "_TWISS"
+            twissData = dataFile.Get(dataName)
+            twiss[det][p] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
 
     numPart = {}
-    for det in ("tracker", "tracker_cutoff", "target", "target_cutoff"):
+    for det in numPartDets:
         numPart[det] = {}
-        if not data.GetListOfKeys().Contains(det+"_ParticleTypes_PDG") or \
-           not data.GetListOfKeys().Contains(det+"_ParticleTypes_numpart"):
-            print("No particles found for det={}".format(det))
+        if not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_PDG") or \
+           not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_numpart"):
+            if not quiet:
+                print("No particles found for det={}".format(det))
             continue
-        numPart_PDG = data.Get(det+"_ParticleTypes_PDG")
-        numPart_num = data.Get(det+"_ParticleTypes_numpart")
+        numPart_PDG = dataFile.Get(det+"_ParticleTypes_PDG")
+        numPart_num = dataFile.Get(det+"_ParticleTypes_numpart")
         for i in range(len(numPart_PDG)):
             numPart[det][int(numPart_PDG[i])] = numPart_num[i]
 
-    final_tup = (x_final[0],x_final[1],x_final[2],y_final[0],y_final[1],y_final[2])
-
     if getRaw:
-        return (final_tup, numPart, data)
+        return (twiss, numPart, dataFile)
     else:
-        data.Close()
-        return(final_tup, numPart)
+        dataFile.Close()
+        return(twiss, numPart)

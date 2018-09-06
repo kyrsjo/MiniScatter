@@ -14,9 +14,10 @@ import os
 
 SEED = 1
 
-#Used for particle-type countings
-PDG_keep = (11,-11,22,2212,2112,'other');
-det_keep = ("tracker", "tracker_cutoff", "target", "target_cutoff")
+#Used for particle-type countings, what to return
+PDG_keep    = (11,-11,22,2212,2112,'other');
+
+m_twiss = 0.511 #[MeV/c^2], assumed mass of the particles used for TWISS computation, assume electrons.
 
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
@@ -29,21 +30,18 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     global SEED # Updated every time one does a scan
 
-    #Output arrays
-    eps_x  = np.zeros_like(scanVarRange)
-    eps_y  = np.zeros_like(scanVarRange)
+    ### Create the output arrays ###
 
-    beta_x  = np.zeros_like(scanVarRange)
-    beta_y  = np.zeros_like(scanVarRange)
-
-    alpha_x = np.zeros_like(scanVarRange)
-    alpha_y = np.zeros_like(scanVarRange)
-
-    sigma_x = np.zeros_like(scanVarRange)
-    sigma_y = np.zeros_like(scanVarRange)
+    twiss = {}
+    for det in miniScatterDriver.twissDets:
+        twiss[det] = {}
+        for p in ('x','y'):
+            twiss[det][p] = {}
+            for t in ('eps','beta','alpha','sigma'):
+                twiss[det][p][t] = np.zeros_like(scanVarRange)
 
     numPart = {}
-    for det in det_keep:
+    for det in miniScatterDriver.numPartDets:
         numPart[det] = {}
         for pdg in PDG_keep:
             numPart[det][pdg] = np.zeros_like(scanVarRange)
@@ -121,18 +119,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             print("Scan variable ranges match, let's load!")
 
-            eps_x = np.asarray(loadFile["eps_x"])
-            eps_y = np.asarray(loadFile["eps_y"])
+            for det in miniScatterDriver.twissDets:
+                for p in ('x','y'):
+                    for t in ('eps','beta','alpha','sigma'):
+                        twiss[det][p][t] = np.asarray(loadFile["twiss_"+det+"_"+p+"_"+t])
 
-            alpha_x = np.asarray(loadFile["alpha_x"])
-            alpha_y = np.asarray(loadFile["alpha_y"])
-
-            sigma_x = np.asarray(loadFile["sigma_x"])
-            sigma_y = np.asarray(loadFile["sigma_y"])
-
-            numPart = {}
-            for det in det_keep:
-                numPart[det]={}
+            for det in miniScatterDriver.numPartDets:
                 for pdg in PDG_keep:
                     arrayName = "numPart_"+det+"_"+str(pdg)
                     if not arrayName in loadFile:
@@ -153,13 +145,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             loadFile.close()
 
             print("Loaded! That was fast.")
-            return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y,\
-                    numPart, analysis_output)
+            return (twiss, numPart, analysis_output)
 
         except OSError:
             print("File not found. Computing...")
 
-    ## Build the job queue
+    ### Build the job queue ###
 
     def computeOnePoint(var,i,lock):
         with lock:
@@ -176,29 +167,26 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         filenameROOTfile = "plots/"+filenameROOT+".root"
         badSim=False
         if os.path.isfile(filenameROOTfile):
-            (emittances,numPart_singleSim,datafile) = miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True)
+            (twiss_singlesim,numPart_singleSim,datafile) = \
+                miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True)
         else:
             with lock:
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
             badSim=True
-            emittances = (float('nan'),float('nan'),float('nan'),float('nan'),float('nan'),float('nan'))
-            numPart_singleSim = None
 
-        #Fill the raw emittance arrays
-        gamma_rel = simSetup["ENERGY"]/0.511 #assume electron beam!
-        beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
+        #Fill the emittance arrays
+        if not badSim:
+            gamma_rel = simSetup["ENERGY"]/m_twiss
+            beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
+            for det in miniScatterDriver.twissDets:
+                for p in ('x','y'):
+                    for t in ('eps','beta','alpha'):
+                        twiss[det][p][t][i] = twiss_singlesim[det][p][t]
+                    twiss[det][p]['sigma'][i] = \
+                        np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
+                                 (gamma_rel*beta_rel)                                     )
 
-        eps_x[i]   = emittances[0]
-        beta_x[i]  = emittances[1]
-        alpha_x[i] = emittances[2]
-        sigma_x[i] = np.sqrt(eps_x[i]*beta_x[i]*1e6/(gamma_rel*beta_rel))
-        eps_y[i]   = emittances[3]
-        beta_y[i]  = emittances[4]
-        alpha_y[i] = emittances[5]
-        sigma_y[i] = np.sqrt(eps_y[i]*beta_y[i]*1e6/(gamma_rel*beta_rel))
-
-        #Fill the NumPart array
-        if numPart_singleSim != None:
+            #Fill the NumPart array
             for detDictKey in numPart_singleSim.keys():
                 for pdg in numPart_singleSim[detDictKey].keys():
                     if pdg in PDG_keep:
@@ -208,24 +196,24 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         with lock:
                             print("Found pdg={} for detector={}".format(pdg,detDictKey))
 
-        #Do special analysis over the TTrees
-        if detailedAnalysisRoutine and not badSim:
-            #Put the call to the external routine in a try/catch,
-            # so that the thread will actually finish correctly in case of a user error.
-            try:
-                detailedData = detailedAnalysisRoutine(datafile)
-                for k in detailedData.keys():
-                    analysis_output[k][i]=detailedData[k]
-            except Exception as err:
-                with lock:
-                    traceback.print_tb(err.__traceback__)
+            #Do special analysis over the TTrees
+            if detailedAnalysisRoutine:
+                #Put the call to the external routine in a try/catch,
+                # so that the thread will actually finish correctly in case of a user error.
+                try:
+                    detailedData = detailedAnalysisRoutine(datafile)
+                    for k in detailedData.keys():
+                        analysis_output[k][i]=detailedData[k]
+                except Exception as err:
+                    with lock:
+                        traceback.print_tb(err.__traceback__)
 
-        if cleanROOT and not badSim:
-            datafile.Close()
-            os.remove(filenameROOTfile)
-            if not QUIET:
-                with lock:
-                    print("Deleting '{}'.".format(filenameROOTfile))
+            if cleanROOT:
+                datafile.Close()
+                os.remove(filenameROOTfile)
+                if not QUIET:
+                    with lock:
+                        print("Deleting '{}'.".format(filenameROOTfile))
 
     def threadWorker(jobQueue_local,lock):
         while not jobQueue_local.empty():
@@ -259,16 +247,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         value = baseSimSetup[key]
         saveFile.attrs[key] = value
 
-    saveFile["eps_x"] = eps_x
-    saveFile["eps_y"] = eps_y
+    for det in miniScatterDriver.twissDets:
+        for p in ('x','y'):
+            for t in ('eps','beta','alpha','sigma'):
+                saveFile["twiss_"+det+"_"+p+"_"+t] = twiss[det][p][t]
 
-    saveFile["alpha_x"] = alpha_x
-    saveFile["alpha_y"] = alpha_y
-
-    saveFile["sigma_x"] = sigma_x
-    saveFile["sigma_y"] = sigma_y
-
-    for det in det_keep:
+    for det in miniScatterDriver.numPartDets:
         for pdg in PDG_keep:
             arrayName = "numPart_"+det+"_"+str(pdg)
             saveFile[arrayName] = numPart[det][pdg]
@@ -280,4 +264,4 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     saveFile.close()
 
-    return (eps_x,eps_y, beta_x,beta_y, alpha_x,alpha_y, sigma_x,sigma_y, numPart, analysis_output)
+    return (twiss, numPart, analysis_output)

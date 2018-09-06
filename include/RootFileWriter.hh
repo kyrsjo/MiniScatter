@@ -97,6 +97,8 @@ private:
     TH1D* tracker_energy;
     TH2D* tracker_hitPos;
     TH2D* tracker_hitPos_cutoff;
+    TH2D* tracker_phasespaceX;
+    TH2D* tracker_phasespaceY;
     TH2D* tracker_phasespaceX_cutoff;
     TH2D* tracker_phasespaceY_cutoff;
 
