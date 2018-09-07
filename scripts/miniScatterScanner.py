@@ -3,6 +3,7 @@ import miniScatterDriver
 import numpy as np
 
 import h5py
+import ROOT
 
 from queue import Queue
 import threading
@@ -60,7 +61,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         objects = {}
         assert type(getObjects) == list
         for objName in getObjects:
-            objects[objName] = [] #One entry per scanVarRange value
+            objects[objName] = [None]*len(scanVarRange) #One entry per scanVarRange value
 
     #Later we have assumed electron beam for emittance calculation
     assert baseSimSetup["BEAM"] == "e+" or baseSimSetup["BEAM"] == "e-"
@@ -74,7 +75,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
     print("LoadFile filename and status: '" + loadFileName + "'", tryLoad)
-    if tryLoad and not getObjects: #For now, we can't load the ROOT objects, so force recomputation
+    if tryLoad:
         print("Loading...")
         try:
             loadFile = h5py.File(loadFileName,mode='r')
@@ -103,7 +104,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     raise ValueError("Value of key {} did not match with baseSimSetup and file".format(key))
 
             for key in loadFile.attrs:
-                if key == scanVar or key=='scanVarName':
+                if key == scanVar or key=='scanVarName' or key=='objectsFileName':
                     continue
                 if not key in baseSimSetup.keys():
                     print("Key {} found in file but not in baseSimSetup.".format(key))
@@ -153,8 +154,37 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         loadFile.close()
                         return
                     analysis_output[name] = np.asarray(loadFile["ANALYSIS_"+name])
-            loadFile.close()
 
+            if getObjects:
+                if not "objectsFileName" in loadFile.attrs:
+                    raise ValueError("No objectsFileName in loadFile={}".format(loadFileName))
+                objectsFileName = str(loadFile.attrs["objectsFileName"])
+                objectsFile = ROOT.TFile(objectsFileName, 'READ')
+
+                #Load the objects from file
+                for objName in getObjects:
+                    for i in range(len(scanVarRange)):
+                        thisObjName = objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT + "-fileClone"
+                        if not objectsFile.GetListOfKeys().Contains(thisObjName):
+                            objectsFile.Close()
+                            loadFile.close()
+                            raise KeyError("Did not find key {} in ROOT file {}".format(thisObjName,objectsFileName))
+
+                        thisObj = objectsFile.Get(thisObjName)
+                        objects[objName][i] = thisObj.Clone(thisObj.GetName()+ "-clone")
+                        objects[objName][i].SetDirectory(0)
+
+                objectsFile.Close()
+
+                #Fix the names
+                for objName in getObjects:
+                    assert len(objects[objName]) == len(scanVarRange)
+                    for i in range(len(scanVarRange)):
+                        thisObjName = objects[objName][i].GetName()
+                        objects[objName][i].SetName(thisObjName[:-16]) # remove '-fileClone-clone'
+                print("Auxillary ROOT file {} loaded.".format(objectsFileName))
+
+            loadFile.close()
             print("Loaded! That was fast.")
             return (twiss, numPart, objects, analysis_output)
 
@@ -168,6 +198,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             #print ("pressure = {0} [mbar] ({1}/{2})".format(p,i+1,len(pressures)))
             print("{} = {} ({}/{})".format(scanVar, var, i+1, len(scanVarRange)))
 
+        #Run the simulation -- this MUST be done in parallel
         filenameROOT = 'output_'+scanVar+"="+str(var)
         simSetup = baseSimSetup.copy()
         simSetup[scanVar]   = var
@@ -177,62 +208,67 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
         filenameROOTfile = "plots/"+filenameROOT+".root"
         badSim=False
-        if os.path.isfile(filenameROOTfile):
-            #Always getRaw, and handle the cleanup here in Scanner.
-            (twiss_singleSim, numPart_singleSim, objects_singleSim, datafile) = \
-                miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True,getObjects=getObjects)
-        else:
-            with lock:
+
+        ## Extract the data
+        # grab the lock since root histograms tend to have identical standard names
+        # when fresh off the file => occational crashes
+        with lock:
+            if os.path.isfile(filenameROOTfile):
+                #Always getRaw, and handle the cleanup here in Scanner.
+                (twiss_singleSim, numPart_singleSim, objects_singleSim, datafile) = \
+                    miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True,getObjects=getObjects)
+            else:
+                #with lock:
                 print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
-            badSim=True
+                badSim=True
 
-        #Fill the emittance arrays
-        if not badSim:
-            gamma_rel = simSetup["ENERGY"]/m_twiss
-            beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
-            for det in miniScatterDriver.twissDets:
-                for p in ('x','y'):
-                    for t in ('eps','beta','alpha'):
-                        twiss[det][p][t][i] = twiss_singleSim[det][p][t]
-                    twiss[det][p]['sigma'][i] = \
-                        np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
-                                 (gamma_rel*beta_rel)                                     )
+            #Fill the emittance arrays
+            if not badSim:
+                gamma_rel = simSetup["ENERGY"]/m_twiss
+                beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
+                for det in miniScatterDriver.twissDets:
+                    for p in ('x','y'):
+                        for t in ('eps','beta','alpha'):
+                            twiss[det][p][t][i] = twiss_singleSim[det][p][t]
+                        twiss[det][p]['sigma'][i] = \
+                            np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
+                                     (gamma_rel*beta_rel)                                     )
 
-            #Fill the NumPart array
-            for detDictKey in numPart_singleSim.keys():
-                for pdg in numPart_singleSim[detDictKey].keys():
-                    if pdg in PDG_keep:
-                        numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
-                    else:
-                        numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
-                        with lock:
+                #Fill the NumPart array
+                for detDictKey in numPart_singleSim.keys():
+                    for pdg in numPart_singleSim[detDictKey].keys():
+                        if pdg in PDG_keep:
+                            numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
+                        else:
+                            numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
+                            #with lock:
                             print("Found pdg={} for detector={}".format(pdg,detDictKey))
 
-            #File the objects in the appropriate positions
-            if getObjects:
-                for objName in getObjects:
-                    thisObj = objects_singleSim[objName]
-                    thisObjName = thisObj.GetName()
-                    thisObj.SetName(objName + "_"+str(i))
-                    objects[objName].append(thisObj)
-            #Do special analysis over the TTrees
-            if detailedAnalysisRoutine:
-                #Put the call to the external routine in a try/catch,
-                # so that the thread will actually finish correctly in case of a user error.
-                try:
-                    detailedData = detailedAnalysisRoutine(datafile)
-                    for k in detailedData.keys():
-                        analysis_output[k][i]=detailedData[k]
-                except Exception as err:
-                    with lock:
+                #File the objects in the appropriate positions
+                if getObjects:
+                    for objName in getObjects:
+                        thisObj = objects_singleSim[objName]
+                        thisObjName = thisObj.GetName()
+                        thisObj.SetName(objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT)
+                        objects[objName][i] = thisObj
+                #Do special analysis over the TTrees
+                if detailedAnalysisRoutine:
+                    #Put the call to the external routine in a try/catch,
+                    # so that the thread will actually finish correctly in case of a user error.
+                    try:
+                        detailedData = detailedAnalysisRoutine(datafile)
+                        for k in detailedData.keys():
+                            analysis_output[k][i]=detailedData[k]
+                    except Exception as err:
+                        #with lock:
                         traceback.print_tb(err.__traceback__)
 
-            # Cleanup the ROOT file
-            datafile.Close()
-            if cleanROOT:
-                os.remove(filenameROOTfile)
-                if not QUIET:
-                    with lock:
+                # Cleanup the ROOT file
+                datafile.Close()
+                if cleanROOT:
+                    os.remove(filenameROOTfile)
+                    if not QUIET:
+                        #with lock:
                         print("Deleting '{}'.".format(filenameROOTfile))
 
     def threadWorker(jobQueue_local,lock):
@@ -281,6 +317,17 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         for name in detailedAnalysisRoutine_names:
             nameMangle = "ANALYSIS_"+name
             saveFile["ANALYSIS_"+name] = analysis_output[name]
+
+    if getObjects:
+        objectsFileName = loadFileName[:-3] + ".root" #remove the .h5
+        saveFile.attrs["objectsFileName"] = objectsFileName
+        objectsFile = ROOT.TFile(objectsFileName,'RECREATE');
+        for objName in getObjects:
+            for i in range(len(scanVarRange)):
+                thisObjName = objects[objName][i].GetName() + "-fileClone"
+                objCopy = objects[objName][i].Clone(thisObjName)
+                objCopy.Write()
+        objectsFile.Close()
 
     saveFile.close()
 

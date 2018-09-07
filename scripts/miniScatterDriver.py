@@ -96,7 +96,7 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     Collects data from the ROOT file, and optionally returns the file for looping over the ttrees.
     If the file is returned, the caller is responsible for closing it.
     """
-    dataFile = ROOT.TFile(filename)
+    dataFile = ROOT.TFile(filename,'READ')
 
     twiss = {}
     for det in twissDets:
