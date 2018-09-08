@@ -55,8 +55,8 @@
 #include "G4UIExecutive.hh"
 #endif
 
-#include <unistd.h> //getopt()
-//#include <getopt.h> // Long options to getopt (GNU extension)
+//#include <unistd.h> //getopt()
+#include <getopt.h> // Long options to getopt (GNU extension)
 
 void printHelp(G4double target_thick,
                G4String target_material,
@@ -71,13 +71,17 @@ void printHelp(G4double target_thick,
                G4int    rngSeed,
                G4String filename_out,
                G4bool   quickmode,
-               G4bool   miniROOTfile);
+               G4bool   miniROOTfile,
+               G4double cutoff_energyFraction,
+               G4double cutoff_radius);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv) {
     //Parse command line arguments
     int getopt_char;
+    int getopt_idx;
+
     G4double target_thick    = 1.0;           //Target thickness  [mm]
     G4String target_material = "G4_Al";       //Name of target material to use
 
@@ -104,7 +108,35 @@ int main(int argc,char** argv) {
 
     G4int    rngSeed      = 123;              // RNG seed
 
-    while ( (getopt_char = getopt(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgqr")) != -1) {
+    G4double cutoff_energyFraction = 0.95;
+    G4double cutoff_radius         = 1.0; //[mm]
+
+    static struct option long_options[] = {
+                                           {"thick",                 required_argument, NULL, 't' },
+                                           {"mat",                   required_argument, NULL, 'm' },
+                                           {"dist",                  required_argument, NULL, 'd' },
+                                           {"ang",                   required_argument, NULL, 'a' },
+                                           {"dist",                  required_argument, NULL, 'd' },
+                                           {"ang",                   required_argument, NULL, 'a' },
+                                           {"phys",                  required_argument, NULL, 'p' },
+                                           // -n is only short
+                                           {"energy",                required_argument, NULL, 'e' },
+                                           {"beam",                  required_argument, NULL, 'b' },
+                                           {"xoffset",               required_argument, NULL, 'x' },
+                                           {"zoffset",               required_argument, NULL, 'z' },
+                                           {"covar",                 required_argument, NULL, 'c' },
+                                           {"outname",               required_argument, NULL, 'f' },
+                                           {"seed",                  required_argument, NULL, 's' },
+                                           {"help",                  no_argument,       NULL, 'h' },
+                                           {"gui",                   no_argument,       NULL, 'g' },
+                                           {"quickmode",             no_argument,       NULL, 'q' },
+                                           {"miniroot",              no_argument,       NULL, 'r' },
+                                           {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
+                                           {"cutoffRadius",          required_argument, NULL, 1001 },
+                                           {0,0,0,0}
+    };
+
+    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
@@ -120,7 +152,9 @@ int main(int argc,char** argv) {
                       rngSeed,
                       filename_out,
                       quickmode,
-                      miniROOTfile);
+                      miniROOTfile,
+                      cutoff_energyFraction,
+                      cutoff_radius);
             exit(1);
             break;
 
@@ -262,6 +296,14 @@ int main(int argc,char** argv) {
             quickmode = true;
             break;
 
+        case 1000: // Cutoff energy fraction
+            cutoff_energyFraction = std::stod(string(optarg));
+            break;
+
+        case 1001: // Cutoff radius [mm]
+            cutoff_radius = std::stod(string(optarg));
+            break;
+
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
@@ -290,7 +332,10 @@ int main(int argc,char** argv) {
               rngSeed,
               filename_out,
               quickmode,
-              miniROOTfile);
+              miniROOTfile,
+              cutoff_energyFraction,
+              cutoff_radius);
+
     G4cout << "Status of other arguments:" << G4endl
            << "numEvents         =  " << numEvents << G4endl
            << "useGUI            =  " << (useGUI==true ? "yes" : "no") << G4endl;
@@ -302,7 +347,7 @@ int main(int argc,char** argv) {
         G4cout << i << " '" << argv_effective[i] << "'" << G4endl;
     }
     G4cout << G4endl;
-    
+
     G4cout << "Starting Geant4..." << G4endl << G4endl;
 
     G4RunManager * runManager = new G4RunManager;
@@ -371,6 +416,8 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setFilename(filename_out);
     RootFileWriter::GetInstance()->setQuickmode(quickmode);
     RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
+    RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
+    RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
 
 #ifdef G4VIS_USE
     // Initialize visualization
@@ -447,12 +494,16 @@ void printHelp(G4double target_thick,
                G4int    rngSeed,
                G4String filename_out,
                G4bool   quickmode,
-               G4bool   miniROOTfile) {
+               G4bool   miniROOTfile,
+               G4double cutoff_energyFraction,
+               G4double cutoff_radius) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
                    << "Usage/options:" << G4endl
+
                    << "-t <double> : Target thickness [mm],  default/current value = "
                    << target_thick << G4endl
+
                    << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
@@ -460,20 +511,28 @@ void printHelp(G4double target_thick,
                    << " Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)." << G4endl
+
                    << "-d <double> : Detector distance [mm], default/current value = "
                    << detector_distance << G4endl
+
                    << "-a <double> : Detector angle [deg],   default/current value = "
                    << detector_angle << G4endl
+
                    << "-p <string> : Physics list name,      default/current       = '"
                    << physListName << G4endl
+
                    << "-n <int>    : Run a given number of events automatically"
                    << G4endl
+
                    << "-e <double> : Beam energy [MeV],      default/current value = "
                    << beam_energy << G4endl
+
                    << "-b <string> : Particle type,          default/current value = "
                    << beam_type << G4endl
+
                    << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl
+
                    << "-z (*)<double> : Beam offset (z) [mm],   default/current value = "
                    << beam_zpos
                    << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl
@@ -483,16 +542,27 @@ void printHelp(G4double target_thick,
                    << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
                    << " Set realistic beam distribution (on target surface); " << G4endl
                    << " if optional part given then x,y are treated separately" << G4endl
+
                    << "-s <int>    : Set the initial seed,   default/current value = "
                    << rngSeed << G4endl
+
                    << "-g : Use a GUI" << G4endl
+
                    << "-q : Quickmode, skip most post-processing and plots, default/current value = "
                    << (quickmode?"true":"false") << G4endl
+
                    << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
                    << (miniROOTfile?"true":"false") << G4endl
 
                    << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl
+
+                   << "--cutoffEnergyfraction : Minimum of beam energy to require for 'cutoff' plots, "
+                   << "default/current value = " << cutoff_energyFraction << G4endl
+
+                   << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
+                   << "default/current value = " << cutoff_radius << " [mm]" << G4endl
+
                    << G4endl
                    << G4endl;
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;

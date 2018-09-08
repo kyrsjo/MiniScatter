@@ -76,6 +76,12 @@ def runScatter(simSetup, quiet=False):
     if "MINIROOT" in simSetup:
         cmd += ["-r"]
 
+    if "CUTOFF_ENERGYFRACTION" in simSetup:
+        cmd += ["--cutoffEnergyFraction", str(simSetup["CUTOFF_ENERGYFRACTION"])]
+
+    if "CUTOFF_RADIUS" in simSetup:
+        cmd += ["--cutoffRadius", str(simSetup["CUTOFF_RADIUS"])]
+
     cmdline = ""
     for c in cmd:
         cmdline += c + " "

@@ -59,11 +59,11 @@ void RootFileWriter::initializeRootFile(){
                         "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
 
     // Target energy deposition
-    targetEdep = new TH1D("targetEdep","targetEdep",1000,0,6);
+    targetEdep = new TH1D("targetEdep","targetEdep",1000,0,beamEnergy);
     targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
     targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
     targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
-    targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,6);
+    targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
     target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
@@ -82,12 +82,29 @@ void RootFileWriter::initializeRootFile(){
         it.second->GetXaxis()->SetTitle("Energy [MeV]");
     }
 
+    target_exit_cutoff_energy[11]  = new TH1D("target_exit_cutoff_energy_PDG11",
+                                              "Particle energy when exiting target (electrons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    target_exit_cutoff_energy[-11] = new TH1D("target_exit_cutoff_energy_PDG-11",
+                                              "Particle energy when exiting target (positrons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    target_exit_cutoff_energy[22]  = new TH1D("target_exit_cutoff_energy_PDG22",
+                                              "Particle energy when exiting target (photons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    target_exit_cutoff_energy[0]   = new TH1D("target_exit_cutoff_energy_PDGother",
+                                              "Particle energy when exiting target (other) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    for (auto it : target_exit_cutoff_energy) {
+        it.second->GetXaxis()->SetTitle("Energy [MeV]");
+    }
+
+    
     // Target exit angle histogram
     target_exitangle_hist        = new TH1D("exitangle",
                                             "Exit angle from tracker",
                                             5001, -90, 90);
     target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff",
-                                            "Exit angle from tracker (charged, energy > cutoff)",
+                                            "Exit angle from tracker (charged, energy > Ecut, r < Rcut)",
                                             50001, -10, 10);
 
     // Target exit phasespace histograms
@@ -100,11 +117,11 @@ void RootFileWriter::initializeRootFile(){
                                               1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
                                               50001, -M_PI, M_PI);
     target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
-                                              "Target exit phase space (x) (charged, energy > cutoff)",
+                                              "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
                                               1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
                                               50001, -M_PI, M_PI);
     target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
-                                              "Target exit phase space (y) (charged, energy > cutoff)",
+                                              "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
                                               1000, detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
                                               50001, -M_PI, M_PI);
 
@@ -118,7 +135,7 @@ void RootFileWriter::initializeRootFile(){
     tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
                1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
                1000,detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
-    tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > cutoff)",
+    tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > Ecut)",
                1000,detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
                1000,detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
 
@@ -137,13 +154,13 @@ void RootFileWriter::initializeRootFile(){
 
     tracker_phasespaceX_cutoff   =
         new TH2D("tracker_cutoff_x",
-                 "Tracker phase space (x) (charged, energy > cutoff)",
+                 "Tracker phase space (x) (charged, energy > Ecut, r < Rcut)",
                  1000,detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
     //tracker_phasespaceX_cutoff->Sumw2();
     tracker_phasespaceY_cutoff   =
         new TH2D("tracker_cutoff_y",
-                 "Tracker phase space (y) (charged, energy > cutoff)",
+                 "Tracker phase space (y) (charged, energy > Ecut, r < Rcut)",
                  1000, detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
                  50001, -M_PI, M_PI);
     //tracker_phasespaceY_cutoff->Sumw2();
@@ -211,7 +228,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 edep      += (*targetEdepHitsCollection)[i]->GetDepositedEnergy();
                 edep_NIEL += (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
                 edep_IEL  += (*targetEdepHitsCollection)[i]->GetDepositedEnergy() -
-                    (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
+                             (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
             }
             targetEdep->Fill(edep/MeV);
             targetEdep_NIEL->Fill(edep_NIEL/keV);
@@ -237,20 +254,21 @@ void RootFileWriter::doEvent(const G4Event* event){
                 const G4double       energy      = (*targetExitposHitsCollection)[i]->GetTrackEnergy();
                 const G4int          charge      = (*targetExitposHitsCollection)[i]->GetCharge();
                 const G4ThreeVector& momentum    = (*targetExitposHitsCollection)[i]->GetMomentum();
-                G4double             exitangle   = atan(momentum.x()/momentum.z())/deg;
+                const G4double       exitangle   = atan(momentum.x()/momentum.z())/deg;
                 const G4ThreeVector& hitPos      = (*targetExitposHitsCollection)[i]->GetPosition();
                 const G4int          PDG         = (*targetExitposHitsCollection)[i]->GetPDG();
                 const G4String&      type        = (*targetExitposHitsCollection)[i]->GetType();
+                const G4double       hitR        = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
 
                 //Particle type counting
                 FillParticleTypes(typeCounter["target"], PDG, type);
-                if (energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     FillParticleTypes(typeCounter["target_cutoff"], PDG, type);
                 }
 
                 //Exit angle
                 target_exitangle_hist->Fill(exitangle);
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     target_exitangle_hist_cutoff->Fill(exitangle);
                 }
 
@@ -258,7 +276,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 target_exitangle2             += exitangle*exitangle;
                 target_exitangle_numparticles += 1;
 
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff  and hitR/mm < position_cutoffR) {
                     target_exitangle_cutoff              += exitangle;
                     target_exitangle2_cutoff             += exitangle*exitangle;
                     target_exitangle_cutoff_numparticles += 1;
@@ -268,7 +286,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                 target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                 }
@@ -279,6 +297,15 @@ void RootFileWriter::doEvent(const G4Event* event){
                 }
                 else {
                     target_exit_energy[0]->Fill(energy/MeV);
+                }
+
+                if (hitR/mm < position_cutoffR) {
+                    if (target_exit_cutoff_energy.find(PDG) != target_exit_cutoff_energy.end()) {
+                        target_exit_cutoff_energy[PDG]->Fill(energy/MeV);
+                    }
+                    else {
+                        target_exit_cutoff_energy[0]->Fill(energy/MeV);
+                    }
                 }
 
                 //Fill the TTree
@@ -327,13 +354,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                 const G4String& type   = (*trackerHitsCollection)[i]->GetType();
                 const G4ThreeVector& hitPos   = (*trackerHitsCollection)[i]->GetPosition();
                 const G4ThreeVector& momentum = (*trackerHitsCollection)[i]->GetMomentum();
+                const G4double       hitR     = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
 
                 //Overall histograms
                 tracker_energy->Fill(energy/MeV);
 
                 //Hit position
                 tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     tracker_hitPos_cutoff->Fill(hitPos.x()/mm, hitPos.y()/mm);
                 }
 
@@ -341,14 +369,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                 tracker_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                 tracker_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                 }
 
                 //Particle type counting
                 FillParticleTypes(typeCounter["tracker"], PDG, type);
-                if (energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                     FillParticleTypes(typeCounter["tracker_cutoff"], PDG, type);
                 }
 
@@ -358,7 +386,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                 tracker_particleHit_y  +=  hitPos.y()/mm;
                 tracker_particleHit_yy += (hitPos.y()/mm)*(hitPos.y()/mm);
 
-                if (charge != 0 and energy/MeV >= beamEnergy*beamEnergy_cutoff) {
+                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff) {
                     tracker_particleHit_x_cutoff  +=  hitPos.x()/mm;
                     tracker_particleHit_xx_cutoff += (hitPos.x()/mm)*(hitPos.x()/mm);
                     tracker_particleHit_y_cutoff  +=  hitPos.y()/mm;
@@ -467,7 +495,7 @@ void RootFileWriter::finalizeRootFile() {
     exitangle_rms_cutoff = sqrt(exitangle_rms_cutoff);
 
     G4cout << G4endl
-           << "Above cutoff (charged, energy >= "
+           << "Above cutoff (charged, energy > "
            << beamEnergy*beamEnergy_cutoff <<" [MeV], n=" << numParticles_cutoff
            << ") only:" << G4endl << G4endl;
 
@@ -609,6 +637,10 @@ void RootFileWriter::finalizeRootFile() {
         it.second->Write();
     }
 
+    for (auto it : target_exit_cutoff_energy) {
+        it.second->Write();
+    }
+
     target_exitangle_hist->Write();
 
     target_exit_phasespaceX->Write();
@@ -636,6 +668,11 @@ void RootFileWriter::finalizeRootFile() {
         delete it.second;
     }
     target_exit_energy.clear();
+
+    for (auto it : target_exit_cutoff_energy) {
+        delete it.second;
+    }
+    target_exit_cutoff_energy.clear();
 
     delete target_exitangle_hist; target_exitangle_hist = NULL;
 

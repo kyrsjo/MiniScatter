@@ -65,6 +65,13 @@ public:
         this->miniFile = miniFile_arg;
     };
 
+    void setBeamEnergyCutoff(G4double cutFrac){
+        this->beamEnergy_cutoff = cutFrac;
+    }
+    void setPositionCutoffR(G4double cutR) {
+        this->position_cutoffR = cutR;
+    }
+
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -90,6 +97,7 @@ private:
     TH1D* targetEdep_IEL;
 
     std::map<G4int,TH1D*> target_exit_energy;
+    std::map<G4int,TH1D*> target_exit_cutoff_energy;
 
     TH1D* target_exitangle_hist;
     TH1D* target_exitangle_hist_cutoff;
@@ -149,8 +157,11 @@ private:
     G4bool miniFile = false;
 
     G4double beamEnergy; // [MeV]
+
     // Compute statistics for charged particles with energy > this cutoff
-    static constexpr G4double beamEnergy_cutoff = 0.95;
+    G4double beamEnergy_cutoff = 0.95;
+    // Compute statistics for charged particles with position inside this radius
+    G4double position_cutoffR = 1.0; // [mm]
 
     Int_t eventCounter; // Used for EventID-ing
 
