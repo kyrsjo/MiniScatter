@@ -39,20 +39,20 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         for p in ('x','y'):
             twiss[det][p] = {}
             for t in ('eps','beta','alpha','sigma'):
-                twiss[det][p][t] = np.zeros_like(scanVarRange)
+                twiss[det][p][t] = np.zeros_like(scanVarRange,dtype=float)
 
     numPart = {}
     for det in miniScatterDriver.numPartDets:
         numPart[det] = {}
         for pdg in PDG_keep:
-            numPart[det][pdg] = np.zeros_like(scanVarRange)
+            numPart[det][pdg] = np.zeros_like(scanVarRange,dtype=float)
 
     analysis_output = None
     if detailedAnalysisRoutine:
         analysis_output = {}
         assert type(detailedAnalysisRoutine_names)==list
         for name in detailedAnalysisRoutine_names:
-            analysis_output[name] = np.zeros_like(scanVarRange)
+            analysis_output[name] = np.zeros_like(scanVarRange,dtype=float)
     else:
         assert detailedAnalysisRoutine_names == None
 
@@ -69,22 +69,22 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     #Sanity check
     if scanVar in baseSimSetup:
-        print("Please do not put scanVar in the baseSimSetup!")
+        print ("Please do not put scanVar in the baseSimSetup!")
         raise ValueError("Found scanVar in the baseSimSetup")
 
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
-    print("LoadFile filename and status: '" + loadFileName + "'", tryLoad)
+    print ("LoadFile filename and status: '" + loadFileName + "'", tryLoad)
     if tryLoad:
-        print("Loading...")
+        print ("Loading...")
         try:
             loadFile = h5py.File(loadFileName,mode='r')
 
             #Check that the file is workable
             scanVar_loaded = loadFile.attrs["scanVarName"]
             if scanVar != scanVar_loaded:
-                print("Scan variables did not match even tough the filename did")
-                print("please run with tryLoad=False to recompute.")
+                print ("Scan variables did not match even tough the filename did")
+                print ("please run with tryLoad=False to recompute.")
                 loadFile.close()
                 raise ValueError("scanVar did not match loaded file")
 
@@ -107,7 +107,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 if key == scanVar or key=='scanVarName' or key=='objectsFileName':
                     continue
                 if not key in baseSimSetup.keys():
-                    print("Key {} found in file but not in baseSimSetup.".format(key))
+                    print ("Key {} found in file but not in baseSimSetup.".format(key))
                     print ("Please run with tryLoad=False to recompute.")
                     loadFile.close()
                     raise ValueError("Key {} found in file but not in baseSimSetup".format(key))
@@ -119,13 +119,13 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 print ("Now :", scanVarRange)
                 print ("File:", scanVarRange_loaded)
                 # for i in range(min(len(scanVarRange),len(scanVarRange_loaded))):
-                #     print(scanVarRange[i], scanVarRange_loaded[i],\
-                #           scanVarRange[i]-scanVarRange_loaded[i], \
-                #           (scanVarRange[i]-scanVarRange_loaded[i])==0.0)
+                #     print (  scanVarRange[i], scanVarRange_loaded[i],\
+                #              scanVarRange[i]-scanVarRange_loaded[i], \
+                #            ( scanVarRange[i]-scanVarRange_loaded[i])==0.0)
                 loadFile.close()
                 raise ValueError("ScanVar range did not match with loaded file")
 
-            print("Scan variable ranges match, let's load!")
+            print ("Scan variable ranges match, let's load!")
 
             for det in miniScatterDriver.twissDets:
                 for p in ('x','y'):
@@ -140,7 +140,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 for pdg in PDG_keep:
                     arrayName = "numPart_"+det+"_"+str(pdg)
                     if not arrayName in loadFile:
-                        print("Could not find numPart for {}, PDG={} in the file. Please recompute.".format(det,pdg))
+                        print ("Could not find numPart for {}, PDG={} in the file. Please recompute.".format(det,pdg))
                         loadFile.close()
                         raise ValueError("NumPart for det={}, PDG={} was not found in the file".format(det,pdg))
 
@@ -150,7 +150,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 for name in detailedAnalysisRoutine_names:
                     nameMangle = "ANALYSIS_"+name
                     if not (nameMangle) in loadFile:
-                        print("Could not find '"+name+"' in the file. Please recompute.")
+                        print ("Could not find '"+name+"' in the file. Please recompute.")
                         loadFile.close()
                         return
                     analysis_output[name] = np.asarray(loadFile["ANALYSIS_"+name])
@@ -182,21 +182,20 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     for i in range(len(scanVarRange)):
                         thisObjName = objects[objName][i].GetName()
                         objects[objName][i].SetName(thisObjName[:-16]) # remove '-fileClone-clone'
-                print("Auxillary ROOT file {} loaded.".format(objectsFileName))
+                print ("Auxillary ROOT file {} loaded.".format(objectsFileName))
 
             loadFile.close()
-            print("Loaded! That was fast.")
+            print ("Loaded! That was fast.")
             return (twiss, numPart, objects, analysis_output)
 
         except OSError:
-            print("File not found. Computing...")
+            print ("File not found. Computing...")
 
     ### Build the job queue ###
 
     def computeOnePoint(var,i,lock):
         with lock:
-            #print ("pressure = {0} [mbar] ({1}/{2})".format(p,i+1,len(pressures)))
-            print("{} = {} ({}/{})".format(scanVar, var, i+1, len(scanVarRange)))
+            print ("{} = {} ({}/{})".format(scanVar, var, i+1, len(scanVarRange)))
 
         #Run the simulation -- this MUST be done in parallel
         filenameROOT = 'output_'+scanVar+"="+str(var)
@@ -219,7 +218,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     miniScatterDriver.getData(filename=filenameROOTfile,quiet=QUIET,getRaw=True,getObjects=getObjects)
             else:
                 #with lock:
-                print("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
+                print ("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
                 badSim=True
 
             #Fill the emittance arrays
@@ -242,7 +241,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         else:
                             numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
                             #with lock:
-                            print("Found pdg={} for detector={}".format(pdg,detDictKey))
+                            print ("Found pdg={} for detector={}".format(pdg,detDictKey))
 
                 #File the objects in the appropriate positions
                 if getObjects:
@@ -269,7 +268,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     os.remove(filenameROOTfile)
                     if not QUIET:
                         #with lock:
-                        print("Deleting '{}'.".format(filenameROOTfile))
+                        print ("Deleting '{}'.".format(filenameROOTfile))
 
     def threadWorker(jobQueue_local,lock):
         while not jobQueue_local.empty():
@@ -290,7 +289,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     jobQueue.join()
     SEED = SEED+i #Prepare the SEED for the next run of simulations
 
-    print("Simulation complete, saving data to h5 for later retrival.")
+    print ("Simulation complete, saving data to h5 for later retrival.")
     #Write out the data
     saveFile = h5py.File(loadFileName,mode="w")
 
