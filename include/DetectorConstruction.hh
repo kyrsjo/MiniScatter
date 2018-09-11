@@ -28,7 +28,7 @@ public:
     G4int    GetTargetMaterialZ();
     G4double GetTargetMaterialA();
     G4double GetTargetMaterialDensity();
-    
+
     void SetMagField(G4double);
     G4VPhysicalVolume* Construct();
 public:
@@ -63,6 +63,8 @@ private:
     G4Material*        MylarMaterial  = NULL;
     G4Material*        KaptonMaterial = NULL;
     //G4Material*        StainlessSteel;
+
+    G4Material*        SapphireMaterial = NULL;
 
     G4Material*        gasH_2         = NULL;
     G4Material*        gasHe          = NULL;

@@ -128,6 +128,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         // Solid target
         SetTargetMaterial(TargetMaterial_in);
     }
+
     DetectorMaterial = vacuumMaterial;
 
     G4cout << G4endl;
@@ -230,6 +231,12 @@ void DetectorConstruction::DefineMaterials() {
     KaptonMaterial = man->FindOrBuildMaterial("G4_KAPTON");
 
     vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
+
+    G4Element* elAl = new G4Element("Aluminium", "Al", 13.0, 26.9815385*g/mole);
+    G4Element* elO  = new G4Element("Oxygen",    "O",  8.0,  15.999*g/mole);
+    SapphireMaterial = new G4Material("Sapphire", 4.0*g/cm3, 2);
+    SapphireMaterial->AddElement(elAl, 2);
+    SapphireMaterial->AddElement(elO,  3);
 }
 
 //------------------------------------------------------------------------------

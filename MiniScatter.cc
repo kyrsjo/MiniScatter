@@ -507,7 +507,7 @@ void printHelp(G4double target_thick,
                    << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_Galactic'" << G4endl
+                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_Galactic', 'Sapphire'" << G4endl
                    << " Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)." << G4endl
