@@ -47,6 +47,8 @@
 #include "G4String.hh"
 #include <string> //C++11 std::stoi
 
+#include "TROOT.h"
+
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
 #endif
@@ -73,11 +75,18 @@ void printHelp(G4double target_thick,
                G4bool   quickmode,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
-               G4double cutoff_radius);
+               G4double cutoff_radius,
+               std::vector<G4String> &magnetDefinitions);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv) {
+
+    // Avoid problem (segfault)
+    // "Error in <UnknownClass::InitInterpreter()>: LLVM SYMBOLS ARE EXPOSED TO CLING! This will cause problems; please hide them or dlopen() them after the call to TROOT::InitInterpreter()!"
+    // when running with GUI.
+    gROOT->Reset();
+
     //Parse command line arguments
     int getopt_char;
     int getopt_idx;
@@ -111,6 +120,8 @@ int main(int argc,char** argv) {
     G4double cutoff_energyFraction = 0.95;
     G4double cutoff_radius         = 1.0; //[mm]
 
+    std::vector<G4String> magnetDefinitions;
+
     static struct option long_options[] = {
                                            {"thick",                 required_argument, NULL, 't' },
                                            {"mat",                   required_argument, NULL, 'm' },
@@ -133,6 +144,7 @@ int main(int argc,char** argv) {
                                            {"miniroot",              no_argument,       NULL, 'r' },
                                            {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
+                                           {"magnet",                required_argument, NULL, 1100 },
                                            {0,0,0,0}
     };
 
@@ -154,7 +166,8 @@ int main(int argc,char** argv) {
                       quickmode,
                       miniROOTfile,
                       cutoff_energyFraction,
-                      cutoff_radius);
+                      cutoff_radius,
+                      magnetDefinitions);
             exit(1);
             break;
 
@@ -262,7 +275,7 @@ int main(int argc,char** argv) {
             catch (const std::invalid_argument& ia) {
                 G4cout << "Invalid argument when reading beam offset (z)" << G4endl
                        << "Got: '" << optarg << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                       << "Expected a floating point number! (exponential notation and prepended '*' is accepted)" << G4endl;
                 exit(1);
             }
             break;
@@ -304,6 +317,10 @@ int main(int argc,char** argv) {
             cutoff_radius = std::stod(string(optarg));
             break;
 
+        case 1100: //Magnet definition
+            magnetDefinitions.push_back(string(optarg));
+            break;
+
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
             exit(1);
@@ -334,7 +351,8 @@ int main(int argc,char** argv) {
               quickmode,
               miniROOTfile,
               cutoff_energyFraction,
-              cutoff_radius);
+              cutoff_radius,
+              magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
            << "numEvents         =  " << numEvents << G4endl
@@ -360,8 +378,8 @@ int main(int argc,char** argv) {
                                                               target_material,
                                                               detector_distance,
                                                               detector_angle,
-                                                              detector_rotate
-                                                              );
+                                                              detector_rotate,
+                                                              magnetDefinitions);
     runManager->SetUserInitialization(detector);
 
     G4int verbose=0;
@@ -411,6 +429,8 @@ int main(int argc,char** argv) {
 
     // Initialize G4 kernel
     runManager->Initialize();
+
+    detector->PostInitialize();
 
     //Set root file output filename
     RootFileWriter::GetInstance()->setFilename(filename_out);
@@ -496,44 +516,45 @@ void printHelp(G4double target_thick,
                G4bool   quickmode,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
-               G4double cutoff_radius) {
+               G4double cutoff_radius,
+               std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
-                   << "Usage/options:" << G4endl
+                   << "Usage/options:" << G4endl;
 
-                   << "-t <double> : Target thickness [mm],  default/current value = "
-                   << target_thick << G4endl
+            G4cout << "-t <double> : Target thickness [mm],  default/current value = "
+                   << target_thick << G4endl;
 
-                   << "-m <string> : Target material name,   default/current       = '"
+            G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
                    << "'G4_MYLAR', 'G4_KAPTON', 'G4_Galactic', 'Sapphire'" << G4endl
                    << " Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
-                   << " and pressure is given in mbar (T=300K is assumed)." << G4endl
+                   << " and pressure is given in mbar (T=300K is assumed)." << G4endl;
 
-                   << "-d <double> : Detector distance [mm], default/current value = "
-                   << detector_distance << G4endl
+            G4cout << "-d <double> : Detector distance [mm], default/current value = "
+                   << detector_distance << G4endl;
 
-                   << "-a <double> : Detector angle [deg],   default/current value = "
-                   << detector_angle << G4endl
+            G4cout << "-a <double> : Detector angle [deg],   default/current value = "
+                   << detector_angle << G4endl;
 
-                   << "-p <string> : Physics list name,      default/current       = '"
-                   << physListName << G4endl
+            G4cout << "-p <string> : Physics list name,      default/current       = '"
+                   << physListName << G4endl;
 
-                   << "-n <int>    : Run a given number of events automatically"
-                   << G4endl
+            G4cout << "-n <int>    : Run a given number of events automatically"
+                   << G4endl;
 
-                   << "-e <double> : Beam energy [MeV],      default/current value = "
-                   << beam_energy << G4endl
+            G4cout << "-e <double> : Beam energy [MeV],      default/current value = "
+                   << beam_energy << G4endl;
 
-                   << "-b <string> : Particle type,          default/current value = "
-                   << beam_type << G4endl
+            G4cout << "-b <string> : Particle type,          default/current value = "
+                   << beam_type << G4endl;
 
-                   << "-x <double> : Beam offset (x) [mm],   default/current value = "
-                   << beam_offset << G4endl
+            G4cout << "-x <double> : Beam offset (x) [mm],   default/current value = "
+                   << beam_offset << G4endl;
 
-                   << "-z (*)<double> : Beam offset (z) [mm],   default/current value = "
+            G4cout << "-z (*)<double> : Beam offset (z) [mm],   default/current value = "
                    << beam_zpos
                    << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl
                    << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
@@ -541,30 +562,49 @@ void printHelp(G4double target_thick,
                    << " then backtracked to the given z value (which may be 0.0)" << G4endl
                    << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
                    << " Set realistic beam distribution (on target surface); " << G4endl
-                   << " if optional part given then x,y are treated separately" << G4endl
+                   << " if optional part given then x,y are treated separately" << G4endl;
 
-                   << "-s <int>    : Set the initial seed,   default/current value = "
-                   << rngSeed << G4endl
+            G4cout << "-s <int>    : Set the initial seed,   default/current value = "
+                   << rngSeed << G4endl;
 
-                   << "-g : Use a GUI" << G4endl
+            G4cout << "-g : Use a GUI" << G4endl;
 
-                   << "-q : Quickmode, skip most post-processing and plots, default/current value = "
-                   << (quickmode?"true":"false") << G4endl
+            G4cout << "-q : Quickmode, skip most post-processing and plots, default/current value = "
+                   << (quickmode?"true":"false") << G4endl;
 
-                   << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
-                   << (miniROOTfile?"true":"false") << G4endl
+            G4cout << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
+                   << (miniROOTfile?"true":"false") << G4endl;
 
-                   << "-f <string> : Output filename,        default/current value = "
-                   << filename_out << G4endl
+            G4cout << "-f <string> : Output filename,        default/current value = "
+                   << filename_out << G4endl;
 
-                   << "--cutoffEnergyfraction : Minimum of beam energy to require for 'cutoff' plots, "
-                   << "default/current value = " << cutoff_energyFraction << G4endl
+            G4cout << "--cutoffEnergyfraction : Minimum of beam energy to require for 'cutoff' plots, "
+                   << "default/current value = " << cutoff_energyFraction << G4endl;
 
-                   << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
-                   << "default/current value = " << cutoff_radius << " [mm]" << G4endl
+            G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
+                   << "default/current value = " << cutoff_radius << " [mm]" << G4endl;
 
-                   << G4endl
+            G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
+                   << " Create a magnet of the given type at the given position. " << G4endl
+                   << " If a '*' is prepended the position (<double> [mm]), the position is the start of the active element "
+                   << "relative to the end of the target; otherwize it is the z-position of the middle of the element." << G4endl
+                   << " The gradient (<double> [T/m]) is the focusing gradient of the device." << G4endl
+                   << " The length <double> [mm] is the total length of the volumes used by the device." << G4endl
+                   << " The type-specific arguments are given as key=value pairs." << G4endl
+                   << " Accepted types and their arguments:" << G4endl
+                   << "  'PLASMA1':" << G4endl
+                   << "     radius:    Capillary radius (<double> [mm])" << G4endl
+                   << "     totalAmps: Flag (<True/False>) to interpret the gradient parameter"
+                   << " as the total current [A] instead of in [T/m]." << G4endl
+
+                   << "Currently have the following magnet setups:" << G4endl;
+            for (auto mag : magnetDefinitions) {
+                G4cout << mag << G4endl;
+            }
+
+            G4cout << G4endl
                    << G4endl;
+
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
             G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
             G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;

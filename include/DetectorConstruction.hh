@@ -7,18 +7,22 @@
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4Material.hh"
-#include "G4UniformMagField.hh"
+
+#include <vector>
+
+class MagnetBase; // Forward declaration
 
 //--------------------------------------------------------------------------------
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
+
 public:
-    DetectorConstruction(G4double TargetThickness_in  = 1.0,
-                         G4String TargetMaterial_in   = "G4_Cu",
-                         G4double DetectorDistance_in = 500.0,
-                         G4double DetectorAngle_in    = 0.0,
-                         G4bool   DetectorRotated_in  = false
-                         );
+    DetectorConstruction(G4double TargetThickness_in,
+                         G4String TargetMaterial_in,
+                         G4double DetectorDistance_in,
+                         G4double DetectorAngle_in,
+                         G4bool   DetectorRotated_in,
+                         std::vector <G4String> &magnetDefinitions_in);
     ~DetectorConstruction(){};
 
 public:
@@ -29,8 +33,9 @@ public:
     G4double GetTargetMaterialA();
     G4double GetTargetMaterialDensity();
 
-    void SetMagField(G4double);
+    //    void SetMagField(G4double);
     G4VPhysicalVolume* Construct();
+    void PostInitialize(); // To be called after construct, but before tracking starts
 public:
 
     const G4VPhysicalVolume* getphysiWorld() {return physiWorld;};
@@ -104,7 +109,10 @@ private:
     G4LogicalVolume*   logicDetector; //pointer to the logical detector
     G4VPhysicalVolume* physiDetector; //pointer to the physical detector
 
-    G4UniformMagField* magField;      //pointer to the magnetic field
+    std::vector <G4String> &magnetDefinitions;
+    std::vector <MagnetBase*> magnets;
+    std::vector <G4VPhysicalVolume*> magnetPVs;
+    //TODO: Actual magnet definition objects
 
 private:
     void DefineMaterials();

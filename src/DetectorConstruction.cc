@@ -2,6 +2,8 @@
 #include "MyTargetSD.hh"
 #include "MyTrackerSD.hh"
 
+#include "MagnetClasses.hh"
+
 #include "G4Isotope.hh"
 #include "G4Element.hh"
 #include "G4Material.hh"
@@ -11,7 +13,6 @@
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4PVParameterised.hh"
-#include "G4UniformMagField.hh"
 
 #include "G4GeometryManager.hh"
 #include "G4PhysicalConstants.hh"
@@ -35,10 +36,11 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4String TargetMaterial_in,
                                            G4double DetectorDistance_in,
                                            G4double DetectorAngle_in,
-                                           G4bool   DetectorRotated_in) :
+                                           G4bool   DetectorRotated_in,
+                                           std::vector <G4String> &magnetDefinitions_in) :
     solidWorld(0),logicWorld(0),physiWorld(0),
     solidTarget(0),logicTarget(0),physiTarget(0),
-    magField(0) {
+    magnetDefinitions(magnetDefinitions_in) {
 
     G4cout << G4endl;
 
@@ -75,6 +77,10 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
         TargetSizeX = WorldSizeX;
         TargetSizeY = WorldSizeY;
+
+        for (auto mds : magnetDefinitions) {
+            magnets.push_back( MagnetBase::MagnetFactory(mds, this) );
+        }
 
     }
     else { //Detector has angle -- make sure that everything fits together
@@ -115,6 +121,11 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
         TargetSizeX = WorldSizeX;
         TargetSizeY = WorldSizeY;
+
+        if (magnetDefinitions.size() > 0) {
+            G4cerr << "Error: Magnet definitions not currently supported with a rotated detector." << G4endl;
+            exit(1);
+        }
     }
 
     // materials
@@ -206,6 +217,22 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
     SDman->AddNewDetector(detectorSD);
     logicDetector->SetSensitiveDetector(detectorSD);
+
+    // Build magnets
+    int i = 1;
+    for (auto magnet : magnets) {
+        G4String           magnetName = "magnet_" + std::to_string(i);
+        G4LogicalVolume*   magnetLV   = magnet->Construct(magnetName);
+        G4VPhysicalVolume* magnetPV   = new G4PVPlacement(NULL,
+                                                          G4ThreeVector(0.0,0.0,magnet->getZ0()),
+                                                          magnetLV,
+                                                          magnetName + "_mainPV",
+                                                          logicWorld,
+                                                          false,
+                                                          0,
+                                                          true);
+        magnetPVs.push_back(magnetPV);
+    }
 
     return physiWorld;
 }
@@ -489,3 +516,9 @@ G4double DetectorConstruction::GetTargetMaterialDensity() {
 }
 
 //------------------------------------------------------------------------------
+
+void DetectorConstruction::PostInitialize() {
+    for (auto mag : magnets) {
+        mag->PostInitialize();
+    }
+}
