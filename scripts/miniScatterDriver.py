@@ -81,10 +81,16 @@ def runScatter(simSetup, quiet=False):
         cmd += ["-f", simSetup["OUTNAME"]]
 
     if "QUICKMODE" in simSetup:
-        cmd += ["-q"]
+        if simSetup["QUICKMODE"] == True:
+            cmd += ["-q"]
+        else:
+            assert simSetup["QUICKMODE"] == False
 
     if "MINIROOT" in simSetup:
-        cmd += ["-r"]
+        if simSetup["MINIROOT"] == True:
+            cmd += ["-r"]
+        else:
+            assert simSetup["MINIROOT"] == False
 
     if "CUTOFF_ENERGYFRACTION" in simSetup:
         cmd += ["--cutoffEnergyFraction", str(simSetup["CUTOFF_ENERGYFRACTION"])]

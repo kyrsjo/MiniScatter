@@ -27,6 +27,9 @@ using namespace std;
 RootFileWriter* RootFileWriter::singleton = 0;
 const G4String  RootFileWriter::foldername_out = "plots";
 
+const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm;
+const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
+
 void RootFileWriter::initializeRootFile(){
     G4RunManager*           run    = G4RunManager::GetRunManager();
     DetectorConstruction*   detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
@@ -109,20 +112,20 @@ void RootFileWriter::initializeRootFile(){
     // Target exit phasespace histograms
     target_exit_phasespaceX        = new TH2D("target_exit_x",
                                               "Target exit phase space (x)",
-                                              1000,  -detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeX()/2.0/mm,
-                                              50001, -M_PI, M_PI);
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceY        = new TH2D("target_exit_y",
                                               "Target exit phase space (y)",
-                                              1000,  -detCon->getTargetSizeY()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
-                                              50001, -M_PI, M_PI);
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
                                               "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
-                                              1000,  -detCon->getTargetSizeX()/2.0/mm, detCon->getTargetSizeX()/2.0/mm,
-                                              50001, -M_PI, M_PI);
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
                                               "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
-                                              1000,  -detCon->getTargetSizeY()/2.0/mm, detCon->getTargetSizeY()/2.0/mm,
-                                              50001, -M_PI, M_PI);
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
@@ -141,40 +144,40 @@ void RootFileWriter::initializeRootFile(){
     tracker_phasespaceX   =
         new TH2D("tracker_x",
                  "Tracker phase space (x)",
-                 1000,  -detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeX()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX->Sumw2();
     tracker_phasespaceY   =
         new TH2D("tracker_y",
                  "Tracker phase space (y)",
-                 1000,  -detCon->getDetectorSizeY()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY->Sumw2();
 
     tracker_phasespaceX_cutoff   =
         new TH2D("tracker_cutoff_x",
                  "Tracker phase space (x) (charged, energy > Ecut, r < Rcut)",
-                 1000,  -detCon->getDetectorSizeX()/2.0/mm, detCon->getDetectorSizeX()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX_cutoff->Sumw2();
     tracker_phasespaceY_cutoff   =
         new TH2D("tracker_cutoff_y",
                  "Tracker phase space (y) (charged, energy > Ecut, r < Rcut)",
-                 1000,  -detCon->getDetectorSizeY()/2.0/mm, detCon->getDetectorSizeY()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY_cutoff->Sumw2();
 
     init_phasespaceX   =
         new TH2D("init_x",
                  "Initial phase space (x)",
-                 1000,  -detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeX()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceX->Sumw2();
     init_phasespaceY   =
         new TH2D("init_y",
                  "Initial phase space (y)",
-                 1000,  -detCon->getWorldSizeY()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
-                 50001, -M_PI, M_PI);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceY->Sumw2();
 
     // Target R position
@@ -315,24 +318,28 @@ void RootFileWriter::initializeRootFile(){
         magnet_exit_phasespaceX.push_back(
             new TH2D("magnet_x",
                      "Magnet phase space (x)",
-                     1000,  -detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeX()/2.0/mm,
-                     50001, -M_PI, M_PI));
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+                                          );
         magnet_exit_phasespaceY.push_back(
             new TH2D("magnet_y",
                      "Magnet phase space (y)",
-                     1000,  -detCon->getWorldSizeY()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
-                     50001, -M_PI, M_PI));
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+                                          );
 
         magnet_exit_phasespaceX_cutoff.push_back(
             new TH2D("magnet_cutoff_x",
                      "Magnet phase space (x) (charged, energy > Ecut, r < Rcut)",
-                     1000,  -detCon->getWorldSizeX()/2.0/mm, detCon->getWorldSizeX()/2.0/mm,
-                     50001, -M_PI, M_PI));
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+                                                 );
         magnet_exit_phasespaceY_cutoff.push_back(
             new TH2D("magnet_cutoff_y",
                      "Magnet phase space (y) (charged, energy > Ecut, r < Rcut)",
-                     1000,  -detCon->getWorldSizeY()/2.0/mm, detCon->getWorldSizeY()/2.0/mm,
-                     50001, -M_PI, M_PI) );
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+                                                 );
 
         typeCounter[magName]             = particleTypesCounter();
         typeCounter[magName + "_cutoff"] = particleTypesCounter();

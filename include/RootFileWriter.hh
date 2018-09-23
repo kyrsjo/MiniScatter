@@ -178,6 +178,9 @@ private:
     // Compute statistics for charged particles with position inside this radius
     G4double position_cutoffR = 1.0; // [mm]
 
+    static const G4double phasespacehist_posLim;
+    static const G4double phasespacehist_angLim;
+
     Int_t eventCounter; // Used for EventID-ing
 
     void PrintTwissParameters(TH2D* phaseSpaceHist);
