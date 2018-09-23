@@ -7,6 +7,15 @@ import ROOT.TFile, ROOT.TVector
 def runScatter(simSetup, quiet=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
 
+    for key in simSetup.keys():
+        if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "PHYS",\
+                       "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
+                       "COVAR", "SEED", "OUTNAME", "QUICKMODE", "MINIROOT",\
+                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS"):
+            if key.startswith("MAGNET"):
+                continue
+            raise KeyError("Did not expect key {} in the simSetup".format(key))
+
     cmd = ["./MiniScatter"]
 
     if "THICK" in simSetup:
@@ -18,8 +27,7 @@ def runScatter(simSetup, quiet=False):
             cmd += ["-m", simSetup["MAT"]]
     else:
         if "PRESS" in simSetup:
-            print ("Found PRESS="+str(simSetup["PRESS"]) + " but no MAT. This makes no sense.")
-            exit(1)
+            raise ValueError("Found PRESS="+str(simSetup["PRESS"]) + " but no MAT. This makes no sense.")
 
     if "DIST" in simSetup:
         cmd += ["-d", str(simSetup["DIST"])]
@@ -48,12 +56,14 @@ def runScatter(simSetup, quiet=False):
         elif simSetup["ZOFFSET_BACKTRACK"] == True:
             cmd += ["-z", "*"+str(simSetup["ZOFFSET"])]
         else:
-            print ("ZOFFSET_BACKTRACK=",simSetup["ZOFFSET_BACKTRACK"], "is inconsistent with ZOFFSET=",simSetup["ZOFFSET"])
-            exit(1)
+            raise ValueError("ZOFFSET_BACKTRACK=" +\
+                             str(simSetup["ZOFFSET_BACKTRACK"]) +\
+                             " is inconsistent with ZOFFSET="+str(simSetup["ZOFFSET"]))
     else:
         if "ZOFFSET_BACKTRACK" in simSetup or simSetup["ZOFFSET_BACKTRACK"] == False:
-            print ("ZOFFSET_BACKTRACK=",simSetup["ZOFFSET_BACKTRACK"], "is inconsistent with ZOFFSET=",simSetup["ZOFFSET"])
-            exit(1)
+            raise ValueError("ZOFFSET_BACKTRACK=" +\
+                             str(simSetup["ZOFFSET_BACKTRACK"]) +\
+                             " is inconsistent with ZOFFSET="+str(simSetup["ZOFFSET"]))
 
     if "COVAR" in simSetup:
         if len(simSetup["COVAR"]) == 3:
@@ -62,8 +72,8 @@ def runScatter(simSetup, quiet=False):
             cmd += ["-c", str(simSetup["COVAR"][0]) + ":" + str(simSetup["COVAR"][1]) + ":" + str(simSetup["COVAR"][2])+"::" \
                     + str(simSetup["COVAR"][3]) + ":" + str(simSetup["COVAR"][4]) + ":" + str(simSetup["COVAR"][5])]
         else:
-            print("Expected len(COVAR) == 3 or 6")
-            exit(1)
+            raise ValueError("Expected len(COVAR) == 3 or 6")
+
     if "SEED" in simSetup:
         cmd += ["-s", str(simSetup["SEED"])]
 
@@ -81,6 +91,19 @@ def runScatter(simSetup, quiet=False):
 
     if "CUTOFF_RADIUS" in simSetup:
         cmd += ["--cutoffRadius", str(simSetup["CUTOFF_RADIUS"])]
+
+    if "MAGNET" in simSetup:
+        for mag in simSetup["MAGNET"]:
+            mag_cmd = ""
+            if mag["mag_pos_relative"] == True:
+                mag_cmd += "*"
+            mag_cmd += str(float(mag["pos"]))       + ":"
+            mag_cmd += str(mag["type"])             + ":"
+            mag_cmd += str(float(mag["length"]))    + ":"
+            mag_cmd += str(float(mag["gradient"]))
+            for k,v in mag["keyval"].items():
+                mag_cmd += ":" + str(k)+"="+str(v)
+        cmd += ["--magnet", mag_cmd]
 
     cmdline = ""
     for c in cmd:

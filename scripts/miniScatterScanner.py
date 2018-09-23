@@ -31,6 +31,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     global SEED # Updated every time one does a scan
 
+    # Initialize the scanVar in case of magnet
+    scanVarMagnet = None
+    if scanVar.startswith("MAGNET"):
+        scanVarMagnet = scanVar.split(".")
+        assert len(scanVarMagnet) > 1
+
     ### Create the output arrays ###
 
     twiss = {}
@@ -71,6 +77,21 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     if scanVar in baseSimSetup:
         print ("Please do not put scanVar in the baseSimSetup!")
         raise ValueError("Found scanVar in the baseSimSetup")
+    if scanVarMagnet != None:
+        assert "MAGNET" in baseSimSetup
+        magnetCounter = 0
+        for mag in baseSimSetup["MAGNET"]:
+            if len(scanVarMagnet) == 2 and scanVarMagnet[1] in mag:
+                print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]".\
+                       format(magnetCounter))
+                raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]".\
+                                 format(magnetCounter))
+            elif len(scanVarMagnet) == 3 and scanVarManget[2] in mag["keyval"]:
+                    print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
+                           format(magnetCounter))
+                    raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
+                                     format(magnetCounter))
+            magnetCounter += 1
 
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
@@ -88,12 +109,26 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 loadFile.close()
                 raise ValueError("scanVar did not match loaded file")
 
+            # Check that all the keys in the basesimsetup are in the loadFile
             for key in baseSimSetup.keys():
+                if key == "MAGNET":
+                    #Handle this separately
+                    continue
                 if not (key in loadFile.attrs):
                     print ("Key '{}' found in baseSimSetup but not in the file.".format(key))
                     print ("Please run with tryLoad=False to recompute.")
                     loadFile.close()
                     raise ValueError("Found key {} in baseSimSetup but not in the file".format(key))
+
+                if key == "COVAR":
+                    if not (np.all(loadFile.attrs[key] == baseSimSetup[key])):
+                        print ("Value of key '{}' found in baseSimSetup".format(key))
+                        print (" did not match what was found in the file.")
+                        print ("Values: baseSimSetup={}, file={}".format(baseSimSetup[key],loadFile.attrs[key]))
+                        print ("Please run with tryLoad=False to recompute.")
+                        loadFile.close()
+                        raise ValueError("Value of key {} did not match with baseSimSetup and file".format(key))
+                    continue
 
                 if not loadFile.attrs[key] == baseSimSetup[key]:
                     print ("Value of key '{}' found in baseSimSetup".format(key))
@@ -103,8 +138,94 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     loadFile.close()
                     raise ValueError("Value of key {} did not match with baseSimSetup and file".format(key))
 
+            if "MAGNET" in baseSimSetup.keys():
+                magnetCounter = 0
+                for mag in baseSimSetup["MAGNET"]:
+
+                    for key,val in mag.items():
+
+                        if key == "keyval":
+                            #another level
+                            for key2,val2 in val.items():
+                                mkey = "MAGNET"+str(magnetCounter)+".keyval."+key2
+                                if not (mkey in loadFile.attrs):
+                                    print ("Key '{}' found in baseSimSetup['MAGNET'][{}]['keyval'] "+\
+                                           "but not in the file.".format(mkey,magnetCounter))
+                                    print ("Please run with tryLoad=False to recompute.")
+                                    loadFile.close()
+                                    raise ValueError(("Found key {} in "+\
+                                                      "baseSimSetup['MAGNET'][{}]['keyval'] "+\
+                                                      "but not in the file").\
+                                                     format(mkey,magnetCounter))
+                                if not (loadFile.attrs[mkey] == val2):
+                                    print (("Value of key '{}' found in "+\
+                                            "baseSimSetup['MAGNET'][{}]['keyval']").\
+                                           format(mkey,magnetCounter))
+                                    print (" did not match what was found in the file.")
+                                    print ("Values: baseSimSetup={}, file={}".\
+                                           format(val2,loadFile.attrs[mkey]))
+                                    print ("Please run with tryLoad=False to recompute.")
+                                    loadFile.close()
+                                    raise ValueError(("Value of key {} did not match "+\
+                                                      "with baseSimSetup['MAGNET'][{}]['keyval'] "+\
+                                                      "and file").format(mkey,magnetCounter))
+                            #go on to the next key!
+                            continue
+
+                        mkey = "MAGNET"+str(magnetCounter)+"."+key
+                        if not (mkey in loadFile.attrs):
+                            print (("Key '{}' found in baseSimSetup['MAGNET'][{}] "+\
+                                    "but not in the file.").\
+                                   format(mkey,magnetCounter))
+                            print ("Please run with tryLoad=False to recompute.")
+                            loadFile.close()
+                            raise ValueError(("Found key {} in baseSimSetup['MAGNET'][{}] "+\
+                                              "but not in the file").format(mkey,magnetCounter))
+
+                        if not (loadFile.attrs[mkey] == val):
+                            print ("Value of key '{}' found in baseSimSetup['MAGNET'][{}]".\
+                                   format(mkey,magnetCounter))
+                            print (" did not match what was found in the file.")
+                            print ("Values: baseSimSetup={}, file={}".format(val,loadFile.attrs[mkey]))
+                            print ("Please run with tryLoad=False to recompute.")
+                            loadFile.close()
+                            raise ValueError(("Value of key {} did not match with "+\
+                                              "baseSimSetup['MAGNET'][{}] "+\
+                                              "and file").format(mkey,magnetCounter))
+
+                    #END loop over a magnet's items
+
+                    magnetCounter += 1
+                #END loop over magnets
+
+            # Check that all the keys in the loadFile are in the basesimsetup
             for key in loadFile.attrs:
                 if key == scanVar or key=='scanVarName' or key=='objectsFileName':
+                    continue
+                if key.startswith("MAGNET"):
+                    mkeyS = key.split(".")
+                    magnetCounter = int(mkeyS[0][6:])
+                    if len(mkeyS) > 2:
+                           assert mkeyS[1] == "keyval"
+                           if not mkeyS[2] in baseSimSetup["MAGNET"][magnetCounter]["keyval"].keys():
+                               print (("Key '{}' (sub-part '{}') found in file "+\
+                                       "but not in baseSimSetup['MAGNET'][{}]['keyval]'").\
+                                      format(key,mkeyS[2],magnetCounter))
+                               print ("Please run with tryLoad=False to recompute.")
+                               loadFile.close()
+                               raise ValueError(("Key {} found in file but not in "+\
+                                                 "baseSimSetup['MAGNET'][{}]['keyval']").\
+                                                format(key,magnetCounter))
+                    else:
+                        if not mkeyS[1] in baseSimSetup["MAGNET"][magnetCounter].keys():
+                           print (("Key '{}' (sub-part '{}') found in file "+\
+                                   "but not in baseSimSetup['MAGNET'][{}]").\
+                                  format(key,mkeyS[1],magnetCounter))
+                           print ("Please run with tryLoad=False to recompute.")
+                           loadFile.close()
+                           raise ValueError(("Key {} found in file but not in "+\
+                                             "baseSimSetup['MAGNET'][{}]").\
+                                            format(key,magnetCounter))
                     continue
                 if not key in baseSimSetup.keys():
                     print ("Key {} found in file but not in baseSimSetup.".format(key))
@@ -192,7 +313,6 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             print ("File not found. Computing...")
 
     ### Build the job queue ###
-
     def computeOnePoint(var,i,lock):
         with lock:
             print ("{} = {} ({}/{})".format(scanVar, var, i+1, len(scanVarRange)))
@@ -200,7 +320,26 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         #Run the simulation -- this MUST be done in parallel
         filenameROOT = 'output_'+scanVar+"="+str(var)
         simSetup = baseSimSetup.copy()
-        simSetup[scanVar]   = var
+        if "MAGNET" in baseSimSetup.keys():
+            # It needs to be a deep copy!
+            simSetup["MAGNET"] = []
+            for basemag in baseSimSetup["MAGNET"]:
+                simSetup["MAGNET"].append(basemag.copy())
+                if "keyval" in basemag:
+                    simSetup["MAGNET"][-1]["keyval"] = basemag['keyval'].copy()
+
+        if scanVar.startswith("MAGNET"):
+            scanVarMag = scanVar.split(".")
+            magnetCounter = int(scanVarMag[0][6:])
+            if len(scanVarMag) == 2:
+                simSetup["MAGNET"][magnetCounter][scanVarMag[1]] = var
+            elif len(scanVarMag) == 3:
+                assert scanVarMag[1] == 'keyval'
+                simSetup["MAGNET"][magnetCounter]['keyval'][scanVarMag[2]] = var
+            else:
+                raise ValueError("Expected len(scanVarMag) == 2 or 3")
+        else:
+            simSetup[scanVar]   = var
         simSetup["SEED"]    = SEED + i
         simSetup["OUTNAME"] = filenameROOT
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
@@ -299,8 +438,34 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         if key in saveFile.attrs:
             saveFile.close()
             raise RuntimeError("Attribute '{}' already written to file? Probably a bug!".format(key))
-        value = baseSimSetup[key]
-        saveFile.attrs[key] = value
+
+        if key == "MAGNET":
+            magnetCounter = 0
+            for mag in baseSimSetup["MAGNET"]:
+                for key2 in mag:
+                    if key2 == "keyval":
+                        for key3 in mag[key2].keys():
+                            mkey = "MAGNET"+str(magnetCounter)+".keyval."+key3
+                            if mkey in saveFile.attrs:
+                                saveFile.close()
+                                raise RuntimeError\
+                                    ("Attribute '{}' already written to file? Probably a bug!".\
+                                     format(mkey))
+                            value = mag[key2][key3]
+                            saveFile.attrs[mkey] = value
+                    else:
+                        mkey = "MAGNET"+str(magnetCounter)+"."+key2
+                        if mkey in saveFile.attrs:
+                            saveFile.close()
+                            raise RuntimeError\
+                                ("Attribute '{}' already written to file? Probably a bug!".\
+                                 format(mkey))
+                        value = mag[key2]
+                        saveFile.attrs[mkey] = value
+                magnetCounter += 1
+        else:
+            value = baseSimSetup[key]
+            saveFile.attrs[key] = value
 
     for det in miniScatterDriver.twissDets:
         for p in ('x','y'):
