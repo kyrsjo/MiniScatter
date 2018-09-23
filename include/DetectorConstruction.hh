@@ -110,9 +110,11 @@ private:
     G4VPhysicalVolume* physiDetector; //pointer to the physical detector
 
     std::vector <G4String> &magnetDefinitions;
+public:
+    // This one needs to be accessed by e.g. the rootFileWriter
     std::vector <MagnetBase*> magnets;
+private:
     std::vector <G4VPhysicalVolume*> magnetPVs;
-    //TODO: Actual magnet definition objects
 
 private:
     void DefineMaterials();

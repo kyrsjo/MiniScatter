@@ -9,6 +9,9 @@
 
 #include "G4PVPlacement.hh"
 
+#include "MyTargetSD.hh"
+#include "G4SDManager.hh"
+
 #include "G4TransportationManager.hh"
 #include "G4FieldManager.hh"
 #include "G4ChordFinder.hh"
@@ -17,7 +20,7 @@
 
 #include "G4PhysicalConstants.hh"
 
-MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstruction* detCon) {
+MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
 
     //Split by '::'
     std::vector<G4String> argList;
@@ -106,7 +109,8 @@ MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstructio
     // Build new Magnets
     MagnetBase* theMagnet = NULL;
     if (magnetType == "PLASMA1") {
-        theMagnet = new MagnetPLASMA1(magnetPos, doRelPos, magnetLength, magnetGradient, keyValPairs, detCon);
+        theMagnet = new MagnetPLASMA1(magnetPos, doRelPos, magnetLength, magnetGradient,
+                                      keyValPairs, detCon, magnetName);
     }
     else {
         G4cerr << "Uknown magnet type '" << magnetType << "'" << G4endl;
@@ -126,9 +130,21 @@ G4double MagnetBase::getZ0 () {
     }
 }
 
+void MagnetBase::AddSD(G4LogicalVolume* mainLV) {
+    // Adds a TargetSD to the main logical volume of the magnet.
+    // This records the outgoing position and energy deposit in the magnet.
+
+    // Get pointer to detector manager
+    G4SDManager* SDman = G4SDManager::GetSDMpointer();
+    magnetSD = new MyTargetSD(magnetName);
+    SDman->AddNewDetector(magnetSD);
+    mainLV->SetSensitiveDetector(magnetSD);
+}
+
 MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
-                             std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in) :
-    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in) {
+                             std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                             G4String magnetName_in) :
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in) {
 
     G4bool inputIsTotalAmps = false;
 
@@ -176,6 +192,7 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
     }
 
     G4cout << "Initialized a MagnetPLASMA1, parameters:" << G4endl;
+    G4cout << "\t magnetName         = " << magnetName << G4endl;
     G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
     G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
@@ -184,8 +201,7 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
     //if the current is given, compute and set the gradient; otherwise compute and set the current
 }
 
-G4LogicalVolume* MagnetPLASMA1::Construct(G4String magnetName) {
-    G4cout << "In MagnetPLASMA1::Construct("<<magnetName<<")" << G4endl;
+G4LogicalVolume* MagnetPLASMA1::Construct() {
 
     //Build the outer volume (TODO: Factorize this into a common function)
     G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
@@ -244,6 +260,8 @@ G4LogicalVolume* MagnetPLASMA1::Construct(G4String magnetName) {
                                                      0,
                                                      true);
 
+    AddSD(mainLV);
+
     return mainLV;
 }
 
@@ -280,7 +298,6 @@ void FieldBase::SetupTransform() {
         exit(1);
     }
     fGlobalToLocal = touchable->GetHistory()->GetTopTransform();
-
 }
 
 FieldPLASMA1::FieldPLASMA1(G4double current_in, G4double radius_in,

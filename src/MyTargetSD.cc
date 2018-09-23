@@ -14,10 +14,10 @@
 MyTargetSD::MyTargetSD(const G4String& name) :
     G4VSensitiveDetector(name) {
 
-    collectionName.insert("EdepCollection");
+    collectionName.insert(name+"_edep");
     fHitsCollectionID_edep = -1;
 
-    collectionName.insert("ExitposCollection");
+    collectionName.insert(name+"_exitpos");
     fHitsCollectionID_exitpos = -1;
 
 }

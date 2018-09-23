@@ -1,8 +1,6 @@
 #ifndef ROOTFILEWRITER_HH_
 #define ROOTFILEWRITERANALYSIS_HH_
 #include "G4Event.hh"
-#include "G4Run.hh"
-#include "DetectorConstruction.hh"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -107,6 +105,20 @@ private:
     TH2D* target_exit_phasespaceX_cutoff;
     TH2D* target_exit_phasespaceY_cutoff;
 
+    std::map<G4int,TH1D*> target_exit_Rpos;
+    std::map<G4int,TH1D*> target_exit_Rpos_cutoff;
+
+    // Magnet histograms
+    std::vector<TH1D*> magnet_edep;
+    std::vector<std::map<G4int,TH1D*>> magnet_exit_Rpos;
+    std::vector<std::map<G4int,TH1D*>> magnet_exit_Rpos_cutoff;
+    std::vector<TH2D*> magnet_exit_phasespaceX;
+    std::vector<TH2D*> magnet_exit_phasespaceY;
+    std::vector<TH2D*> magnet_exit_phasespaceX_cutoff;
+    std::vector<TH2D*> magnet_exit_phasespaceY_cutoff;
+    std::vector<std::map<G4int,TH1D*>> magnet_exit_energy;
+    std::vector<std::map<G4int,TH1D*>> magnet_exit_cutoff_energy;
+
     //Tracker histograms
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;
@@ -116,6 +128,9 @@ private:
     TH2D* tracker_phasespaceY;
     TH2D* tracker_phasespaceX_cutoff;
     TH2D* tracker_phasespaceY_cutoff;
+
+    std::map<G4int,TH1D*> tracker_Rpos;
+    std::map<G4int,TH1D*> tracker_Rpos_cutoff;
 
     //Initial distribution
     TH2D* init_phasespaceX;

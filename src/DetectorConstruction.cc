@@ -78,8 +78,10 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         TargetSizeX = WorldSizeX;
         TargetSizeY = WorldSizeY;
 
+        int i = 1;
         for (auto mds : magnetDefinitions) {
-            magnets.push_back( MagnetBase::MagnetFactory(mds, this) );
+            G4String magnetName = "magnet_" + std::to_string(i++);
+            magnets.push_back( MagnetBase::MagnetFactory(mds, this, magnetName) );
         }
 
     }
@@ -211,22 +213,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     // Get pointer to detector manager
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
-    G4VSensitiveDetector* targetSD = new MyTargetSD("TargetSD_target");
+    G4VSensitiveDetector* targetSD = new MyTargetSD("target");
     SDman->AddNewDetector(targetSD);
     logicTarget->SetSensitiveDetector(targetSD);
-    G4VSensitiveDetector* detectorSD = new MyTrackerSD("TrackerSD_tracker");
+    G4VSensitiveDetector* detectorSD = new MyTrackerSD("tracker");
     SDman->AddNewDetector(detectorSD);
     logicDetector->SetSensitiveDetector(detectorSD);
 
     // Build magnets
-    int i = 1;
     for (auto magnet : magnets) {
-        G4String           magnetName = "magnet_" + std::to_string(i);
-        G4LogicalVolume*   magnetLV   = magnet->Construct(magnetName);
+        G4LogicalVolume*   magnetLV   = magnet->Construct();
         G4VPhysicalVolume* magnetPV   = new G4PVPlacement(NULL,
                                                           G4ThreeVector(0.0,0.0,magnet->getZ0()),
                                                           magnetLV,
-                                                          magnetName + "_mainPV",
+                                                          magnet->magnetName + "_mainPV",
                                                           logicWorld,
                                                           false,
                                                           0,
