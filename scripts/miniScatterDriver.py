@@ -136,12 +136,15 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     twiss = {}
     for det in twissDets:
         twiss[det] = {}
-        for p in ("x","y"):
-            dataName = det + "_" + p + "_TWISS"
+        for pla in ("x","y"):
+            dataName = det + "_" + pla + "_TWISS"
             if not dataFile.GetListOfKeys().Contains(dataName):
                 raise KeyError("Object {} not found in file".format(dataName,filename))
             twissData = dataFile.Get(dataName)
-            twiss[det][p] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
+            twiss[det][pla] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
+            if len(twissData) > 3:
+                twiss[det][pla]['posAve'] = twissData[3]
+                twiss[det][pla]['angAve'] = twissData[4]
 
     numPart = {}
     for det in numPartDets:

@@ -44,7 +44,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         twiss[det] = {}
         for p in ('x','y'):
             twiss[det][p] = {}
-            for t in ('eps','beta','alpha','sigma'):
+            for t in ('eps','beta','alpha','sigma', 'posAve', 'angAve'):
                 twiss[det][p][t] = np.zeros_like(scanVarRange,dtype=float)
 
     numPart = {}
@@ -250,10 +250,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             for det in miniScatterDriver.twissDets:
                 for p in ('x','y'):
-                    for t in ('eps','beta','alpha','sigma'):
+                    for t in ('eps','beta','alpha','sigma', 'posAve','angAve'):
                         dataName = "twiss_"+det+"_"+p+"_"+t
                         if not dataName in loadFile:
-                            raise ValueError("Did not find array '{}' for twissDet={} in the loaded file.".\
+                            if (t=='posAve' or t=='angAve'):
+                                # New parameter, not present in all files
+                                continue
+                            raise ValueError(("Did not find array '{}' for"+\
+                                              " twissDet={} in the loaded file.").\
                                              format(dataName,det))
                         twiss[det][p][t] = np.asarray(loadFile[dataName])
 
@@ -366,8 +370,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
                 for det in miniScatterDriver.twissDets:
                     for p in ('x','y'):
-                        for t in ('eps','beta','alpha'):
+                        for t in twiss_singleSim[det][p].keys():
                             twiss[det][p][t][i] = twiss_singleSim[det][p][t]
+                        assert not ('sigma' in twiss_singleSim[det][p].keys())
                         twiss[det][p]['sigma'][i] = \
                             np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
                                      (gamma_rel*beta_rel)                                     )
@@ -469,7 +474,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     for det in miniScatterDriver.twissDets:
         for p in ('x','y'):
-            for t in ('eps','beta','alpha','sigma'):
+            for t in twiss[det][p].keys():
                 saveFile["twiss_"+det+"_"+p+"_"+t] = twiss[det][p][t]
 
     for det in miniScatterDriver.numPartDets:

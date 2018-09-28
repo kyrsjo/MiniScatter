@@ -36,6 +36,10 @@ void RootFileWriter::initializeRootFile(){
     PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
     this->beamEnergy = genAct->get_beam_energy();
 
+    //Count all particles that are Fill'ed for the stats used to compute the twiss parameters,
+    // even if they are outside the phasespacehist_posLim / phaspacehist_angLim.
+    TH2D::StatOverflows(true);
+
     if (not has_filename_out) {
         G4cerr << "Error: filename_out not set." << G4endl;
         exit(1);
@@ -114,18 +118,29 @@ void RootFileWriter::initializeRootFile(){
                                               "Target exit phase space (x)",
                                               1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+    target_exit_phasespaceX->GetXaxis()->SetTitle("Position x [mm]");
+    target_exit_phasespaceX->GetYaxis()->SetTitle("Angle dx/dz [rad]");
+
     target_exit_phasespaceY        = new TH2D("target_exit_y",
                                               "Target exit phase space (y)",
                                               1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+    target_exit_phasespaceY->GetXaxis()->SetTitle("Position y [mm]");
+    target_exit_phasespaceY->GetYaxis()->SetTitle("Angle dy/dz [rad]");
+
     target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
                                               "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
                                               1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+    target_exit_phasespaceX_cutoff->GetXaxis()->SetTitle("Position x [mm]");
+    target_exit_phasespaceX_cutoff->GetYaxis()->SetTitle("Angle dx/dz [rad]");
+
     target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
                                               "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
                                               1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+    target_exit_phasespaceY_cutoff->GetXaxis()->SetTitle("Position y [mm]");
+    target_exit_phasespaceY_cutoff->GetYaxis()->SetTitle("Angle dy/dz [rad]");
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
@@ -1179,10 +1194,12 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     G4cout << G4endl;
 
     // Write to root file
-    TVectorD twissVector (3);
+    TVectorD twissVector (5);
     twissVector[0] = epsN*1e3;
     twissVector[1] = beta*1e-3;
     twissVector[2] = alpha;
+    twissVector[3] = posAve;
+    twissVector[4] = angAve;
     twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
 }
 
