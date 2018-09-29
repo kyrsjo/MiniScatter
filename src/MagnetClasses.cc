@@ -121,15 +121,6 @@ MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstructio
     return theMagnet;
 }
 
-G4double MagnetBase::getZ0 () {
-    if (doRelPos) {
-        return detCon->getTargetThickness()/2.0 + zPos + length/2.0;
-    }
-    else {
-        return zPos;
-    }
-}
-
 void MagnetBase::AddSD(G4LogicalVolume* mainLV) {
     // Adds a TargetSD to the main logical volume of the magnet.
     // This records the outgoing position and energy deposit in the magnet.

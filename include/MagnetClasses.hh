@@ -16,7 +16,17 @@ public:
         zPos(zPos_in), doRelPos(doRelPos_in), length(length_in),gradient(gradient_in),
         keyValPairs(keyValPairs_in), detCon(detCon_in), magnetName(magnetName_in) {};
 
-    virtual G4double getZ0();
+    virtual G4double getZ0() {
+        //Get the global z position of the center of the magnet in G4 units.
+
+        if (doRelPos) {
+            return detCon->getTargetThickness()/2.0 + zPos + length/2.0;
+        }
+        else {
+            return zPos;
+        }
+    };
+
     virtual void PostInitialize() {
         if (field == NULL) {
             G4cerr << "Internal error: field==NULL!" << G4endl;
@@ -25,6 +35,8 @@ public:
         field->PostInitialize();
     }
 
+    G4double GetLength() const { return length; };
+    
 protected:
     G4double zPos;     // [G4 units]
     G4bool   doRelPos;

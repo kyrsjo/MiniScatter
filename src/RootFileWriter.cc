@@ -106,38 +106,38 @@ void RootFileWriter::initializeRootFile(){
     }
 
     // Target exit angle histogram
-    target_exitangle_hist        = new TH1D("exitangle",
+    target_exitangle_hist        = new TH1D("target_exit_angle",
                                             "Exit angle from tracker",
                                             5001, -90, 90);
-    target_exitangle_hist_cutoff = new TH1D("exitangle_cutoff",
+    target_exitangle_hist_cutoff = new TH1D("target_exit_angle_cutoff",
                                             "Exit angle from tracker (charged, energy > Ecut, r < Rcut)",
-                                            50001, -10, 10);
+                                            5001, -90, 90);
 
     // Target exit phasespace histograms
     target_exit_phasespaceX        = new TH2D("target_exit_x",
                                               "Target exit phase space (x)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceX->GetXaxis()->SetTitle("Position x [mm]");
     target_exit_phasespaceX->GetYaxis()->SetTitle("Angle dx/dz [rad]");
 
     target_exit_phasespaceY        = new TH2D("target_exit_y",
                                               "Target exit phase space (y)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceY->GetXaxis()->SetTitle("Position y [mm]");
     target_exit_phasespaceY->GetYaxis()->SetTitle("Angle dy/dz [rad]");
 
     target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
                                               "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceX_cutoff->GetXaxis()->SetTitle("Position x [mm]");
     target_exit_phasespaceX_cutoff->GetYaxis()->SetTitle("Angle dx/dz [rad]");
 
     target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
                                               "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                                               1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     target_exit_phasespaceY_cutoff->GetXaxis()->SetTitle("Position y [mm]");
     target_exit_phasespaceY_cutoff->GetYaxis()->SetTitle("Angle dy/dz [rad]");
@@ -159,39 +159,39 @@ void RootFileWriter::initializeRootFile(){
     tracker_phasespaceX   =
         new TH2D("tracker_x",
                  "Tracker phase space (x)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX->Sumw2();
     tracker_phasespaceY   =
         new TH2D("tracker_y",
                  "Tracker phase space (y)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY->Sumw2();
 
     tracker_phasespaceX_cutoff   =
         new TH2D("tracker_cutoff_x",
                  "Tracker phase space (x) (charged, energy > Ecut, r < Rcut)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX_cutoff->Sumw2();
     tracker_phasespaceY_cutoff   =
         new TH2D("tracker_cutoff_y",
                  "Tracker phase space (y) (charged, energy > Ecut, r < Rcut)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY_cutoff->Sumw2();
 
     init_phasespaceX   =
         new TH2D("init_x",
                  "Initial phase space (x)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceX->Sumw2();
     init_phasespaceY   =
         new TH2D("init_y",
                  "Initial phase space (y)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceY->Sumw2();
 
@@ -330,31 +330,41 @@ void RootFileWriter::initializeRootFile(){
             hist.second->GetXaxis()->SetTitle("R [mm]");
         }
 
-        magnet_exit_phasespaceX.push_back(
-            new TH2D("magnet_x",
-                     "Magnet phase space (x)",
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
-                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
-                                          );
-        magnet_exit_phasespaceY.push_back(
-            new TH2D("magnet_y",
-                     "Magnet phase space (y)",
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
-                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
-                                          );
+        magnet_exit_phasespaceX.push_back
+            ( new TH2D((magName+"_x").c_str(),
+                       (magName+" phase space (x)").c_str(),
+                       1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                       1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+              );
+        magnet_exit_phasespaceX.back()->GetXaxis()->SetTitle("X [mm]");
+        magnet_exit_phasespaceX.back()->GetYaxis()->SetTitle("X'");
 
-        magnet_exit_phasespaceX_cutoff.push_back(
-            new TH2D("magnet_cutoff_x",
-                     "Magnet phase space (x) (charged, energy > Ecut, r < Rcut)",
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
-                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
-                                                 );
-        magnet_exit_phasespaceY_cutoff.push_back(
-            new TH2D("magnet_cutoff_y",
-                     "Magnet phase space (y) (charged, energy > Ecut, r < Rcut)",
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim,
-                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
-                                                 );
+        magnet_exit_phasespaceY.push_back
+            ( new TH2D((magName+"_y").c_str(),
+                       (magName+" phase space (y)").c_str(),
+                       1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                       1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+              );
+        magnet_exit_phasespaceY.back()->GetXaxis()->SetTitle("Y [mm]");
+        magnet_exit_phasespaceY.back()->GetYaxis()->SetTitle("Y'");
+
+        magnet_exit_phasespaceX_cutoff.push_back
+            ( new TH2D((magName+"_cutoff_x").c_str(),
+                       (magName+" phase space (x) (charged, energy > Ecut, r < Rcut)").c_str(),
+                       1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                       1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+              );
+        magnet_exit_phasespaceX_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
+        magnet_exit_phasespaceX_cutoff.back()->GetYaxis()->SetTitle("X'");
+
+        magnet_exit_phasespaceY_cutoff.push_back
+            ( new TH2D((magName+"_cutoff_y").c_str(),
+                       (magName+" phase space (y) (charged, energy > Ecut, r < Rcut)").c_str(),
+                       1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                       1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
+              );
+        magnet_exit_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
+        magnet_exit_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y'");
 
         typeCounter[magName]             = particleTypesCounter();
         typeCounter[magName + "_cutoff"] = particleTypesCounter();
@@ -701,51 +711,69 @@ void RootFileWriter::doEvent(const G4Event* event){
                     const G4int          PDG         = (*magnetExitposHitsCollection)[i]->GetPDG();
                     const G4String&      type        = (*magnetExitposHitsCollection)[i]->GetType();
 
-                    //Particle type counting
-                    FillParticleTypes(typeCounter[magName], PDG, type);
-                    if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                        FillParticleTypes(typeCounter[magName + "_cutoff"], PDG, type);
-                    }
+                    if ( abs( hitPos.z() -
+                              (detCon->magnets[magIdx]->GetLength()/2.0 +
+                               detCon->magnets[magIdx]->getZ0()          )
+                              ) < 1e-7 ) {
+                        // We are on the downstream exit face.
+                        // Note: Coordinates in global coordinates.
 
-                    //Phase space
-                    magnet_exit_phasespaceX[magIdx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                    magnet_exit_phasespaceY[magIdx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        //Particle type counting
+                        FillParticleTypes(typeCounter[magName], PDG, type);
+                        if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                            FillParticleTypes(typeCounter[magName + "_cutoff"], PDG, type);
+                        }
 
-                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                        magnet_exit_phasespaceX_cutoff[magIdx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                        magnet_exit_phasespaceY_cutoff[magIdx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-                    }
+                        //Phase space
+                        magnet_exit_phasespaceX[magIdx]->
+                            Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        magnet_exit_phasespaceY[magIdx]->
+                            Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                    //R position
-                    if (magnet_exit_Rpos[magIdx].find(PDG) != magnet_exit_Rpos[magIdx].end()) {
-                        magnet_exit_Rpos[magIdx][PDG]->Fill(hitR/mm);
-                    }
-                    else {
-                        magnet_exit_Rpos[magIdx][0]->Fill(hitR/mm);
-                    }
-                    if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
-                        if (magnet_exit_Rpos_cutoff[magIdx].find(PDG) != magnet_exit_Rpos_cutoff[magIdx].end()) {
-                            magnet_exit_Rpos_cutoff[magIdx][PDG]->Fill(hitR/mm);
+                        if ( charge != 0 and
+                             energy/MeV > beamEnergy*beamEnergy_cutoff and
+                             hitR/mm < position_cutoffR
+                             ) {
+                            magnet_exit_phasespaceX_cutoff[magIdx]->
+                                Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                            magnet_exit_phasespaceY_cutoff[magIdx]->
+                                Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
+
+                        //R position
+                        if (magnet_exit_Rpos[magIdx].find(PDG) != magnet_exit_Rpos[magIdx].end()) {
+                            magnet_exit_Rpos[magIdx][PDG]->Fill(hitR/mm);
                         }
                         else {
-                            magnet_exit_Rpos_cutoff[magIdx][0]->Fill(hitR/mm);
+                            magnet_exit_Rpos[magIdx][0]->Fill(hitR/mm);
                         }
-                    }
+                        if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
+                            if (magnet_exit_Rpos_cutoff[magIdx].find(PDG) !=
+                                magnet_exit_Rpos_cutoff[magIdx].end()) {
+                                magnet_exit_Rpos_cutoff[magIdx][PDG]->Fill(hitR/mm);
+                            }
+                            else {
+                                magnet_exit_Rpos_cutoff[magIdx][0]->Fill(hitR/mm);
+                            }
+                        }
 
-                    //Energy
-                    if (magnet_exit_energy[magIdx].find(PDG) != magnet_exit_energy[magIdx].end()) {
-                        magnet_exit_energy[magIdx][PDG]->Fill(energy/MeV);
-                    }
-                    else {
-                        magnet_exit_energy[magIdx][0]->Fill(energy/MeV);
-                    }
-
-                    if (hitR/mm < position_cutoffR) {
-                        if (magnet_exit_cutoff_energy[magIdx].find(PDG) != magnet_exit_cutoff_energy[magIdx].end()) {
-                            magnet_exit_cutoff_energy[magIdx][PDG]->Fill(energy/MeV);
+                        //Energy
+                        if (magnet_exit_energy[magIdx].find(PDG) !=
+                            magnet_exit_energy[magIdx].end()) {
+                            magnet_exit_energy[magIdx][PDG]->Fill(energy/MeV);
                         }
                         else {
-                            magnet_exit_cutoff_energy[magIdx][0]->Fill(energy/MeV);
+                            magnet_exit_energy[magIdx][0]->Fill(energy/MeV);
+                        }
+
+                        if (hitR/mm < position_cutoffR) {
+                            if (magnet_exit_cutoff_energy[magIdx].find(PDG) !=
+                                magnet_exit_cutoff_energy[magIdx].end()) {
+                                magnet_exit_cutoff_energy[magIdx][PDG]->Fill(energy/MeV);
+                            }
+                            else {
+                                magnet_exit_cutoff_energy[magIdx][0]->Fill(energy/MeV);
+                            }
                         }
                     }
 
