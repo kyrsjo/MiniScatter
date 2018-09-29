@@ -1,0 +1,7 @@
+# Filters gamma lines out of the GUI drawings, to make them much more readable.
+# To use, run '/control/execute gammaFilter.mac' in the G4 console
+# before starting '/run/beamOn'.
+
+/vis/filtering/trajectories/create/particleFilter
+/vis/filtering/trajectories/particleFilter-0/add gamma
+/vis/filtering/trajectories/particleFilter-0/invert true

@@ -72,6 +72,7 @@ endif()
 set(MiniScatter_SCRIPTS
   vis.mac
   verbose.mac
+  gammaFilter.mac
   distScan.py
   beamParamScan.py
   miniScatterDriver.py
