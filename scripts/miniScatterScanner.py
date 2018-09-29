@@ -23,7 +23,7 @@ m_twiss = 0.511 #[MeV/c^2], assumed mass of the particles used for TWISS computa
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
                     detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None, \
-                    cleanROOT=True, getObjects=None):
+                    cleanROOT=True, getObjects=None, sameSeedValue=None):
     """
     This routine is built to scan arbitrary parameters with MiniScatter.
     It can cache the results in HDF5-files with long and difficult names, as well as call detailed analysis routines.
@@ -344,7 +344,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 raise ValueError("Expected len(scanVarMag) == 2 or 3")
         else:
             simSetup[scanVar]   = var
-        simSetup["SEED"]    = SEED + i
+        if sameSeedValue == None:
+            simSetup["SEED"]    = SEED + i
+        else:
+            assert type(sameSeedValue) == int
+            simSetup["SEED"]    = sameSeedValue
+            print("WARNING: Running all simulations with same seed = ", simSetup["SEED"])
         simSetup["OUTNAME"] = filenameROOT
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
 
@@ -431,7 +436,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         worker.start()
 
     jobQueue.join()
-    SEED = SEED+i #Prepare the SEED for the next run of simulations
+    if sameSeedValue != None:
+        SEED = SEED+i #Prepare the SEED for the next run of simulations
 
     print ("Simulation complete, saving data to h5 for later retrival.")
     #Write out the data
