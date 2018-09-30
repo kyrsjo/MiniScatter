@@ -713,6 +713,7 @@ void RootFileWriter::doEvent(const G4Event* event){
 
                     if ( abs( hitPos.z() -
                               (detCon->magnets[magIdx]->GetLength()/2.0 +
+                               detCon->magnets[magIdx]->GetLengthPad()/2.0 +
                                detCon->magnets[magIdx]->getZ0()          )
                               ) < 1e-7 ) {
                         // We are on the downstream exit face.

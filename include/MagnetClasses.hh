@@ -20,7 +20,7 @@ public:
         //Get the global z position of the center of the magnet in G4 units.
 
         if (doRelPos) {
-            return detCon->getTargetThickness()/2.0 + zPos + length/2.0;
+            return detCon->getTargetThickness()/2.0 + zPos + length/2.0 + lengthPad/2.0;
         }
         else {
             return zPos;
@@ -35,12 +35,14 @@ public:
         field->PostInitialize();
     }
 
-    G4double GetLength() const { return length; };
-    
+    G4double GetLength()    const { return length; };
+    G4double GetLengthPad() const { return lengthPad; };
+
 protected:
     G4double zPos;     // [G4 units]
     G4bool   doRelPos;
     G4double length;   // [G4units]
+    G4double lengthPad = 1e-7*mm; // [G4units]
     G4double gradient; // [T/m]
 
     std::map<G4String,G4String> keyValPairs;
@@ -66,7 +68,9 @@ public:
     virtual G4LogicalVolume* Construct();
 private:
     G4double plasmaTotalCurrent; // [A]
-    G4double capRadius;          // [G4 units]
+    G4double capRadius;          // [G4 lenght units]
+    G4double cryWidth;           // [G4 length units]
+    G4double cryHeight;          // [G4 length units]
 };
 
 #endif

@@ -137,9 +137,11 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
                              G4String magnetName_in) :
     MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in) {
 
+    // Default values
     G4bool inputIsTotalAmps = false;
-
     capRadius= 1.0*mm;
+    cryWidth = 10.0*mm;
+    cryHeight = 20.0*mm;
 
     for (auto it : keyValPairs) {
         if (it.first == "radius") {
@@ -167,6 +169,28 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
                 exit(1);
             }
         }
+        else if (it.first == "width") {
+            try {
+                cryWidth = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading crystal width" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "height") {
+            try {
+                cryHeight = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading crystal height" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
         else {
             G4cerr << "Capillary did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
@@ -174,6 +198,7 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
         }
     }
 
+    //if the current is given, compute and set the gradient; otherwise compute and set the current
     if (inputIsTotalAmps) {
         plasmaTotalCurrent = gradient;
         gradient = ( mu0*(plasmaTotalCurrent*ampere) / (twopi*capRadius*capRadius) ) *meter/tesla;
@@ -189,14 +214,20 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
     G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
     G4cout << "\t plasmaTotalcurrent = " << plasmaTotalCurrent << " [A]"   << G4endl;
     G4cout << "\t capRadius          = " << capRadius/mm       << " [mm]"  << G4endl;
-    //if the current is given, compute and set the gradient; otherwise compute and set the current
+    G4cout << "\t cryWidth           = " << cryWidth/mm        << " [mm]"  << G4endl;
+    G4cout << "\t cryHeight          = " << cryHeight/mm       << " [mm]"  << G4endl;
+
 }
 
 G4LogicalVolume* MagnetPLASMA1::Construct() {
 
     //Build the outer volume (TODO: Factorize this into a common function)
+    // Note: The mainBox size is padded by 0.1um in length in order to get some hits
+    // when it exits the crystal or gas
     G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
-                                detCon->getWorldSizeX()/2.0, detCon->getWorldSizeX()/2.0, length/2.0);
+                                  detCon->getWorldSizeX()/2.0,
+                                  detCon->getWorldSizeX()/2.0,
+                                  length/2.0+lengthPad/2.0);
     // search the material by its name
     G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
     if (not vacuumMaterial) {
@@ -205,11 +236,15 @@ G4LogicalVolume* MagnetPLASMA1::Construct() {
     }
     G4LogicalVolume* mainLV = new G4LogicalVolume(mainBox,vacuumMaterial, magnetName+"_mainLV");
 
-    //Field and gas box
+    //Field box (
     G4VSolid* fieldBox            = new G4Box(magnetName+"_fieldBoxS",
-                                              20.0*mm/2.0, 20.0*mm/2.0, length/2.0);
-    G4Material* gasMaterial       = vacuumMaterial; // TODO
-    G4LogicalVolume* fieldBoxLV   = new G4LogicalVolume(fieldBox,gasMaterial,magnetName+"_fieldBoxLV");
+                                              detCon->getWorldSizeX()/2.0,
+                                              detCon->getWorldSizeX()/2.0,
+                                              length/2.0);
+    G4Material* fieldBoxMaterial       = vacuumMaterial; // TODO
+    G4LogicalVolume* fieldBoxLV   = new G4LogicalVolume(fieldBox,
+                                                        fieldBoxMaterial,
+                                                        magnetName+"_fieldBoxLV");
     G4VPhysicalVolume* fieldBoxPV = new G4PVPlacement(NULL,
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       fieldBoxLV,
@@ -228,8 +263,27 @@ G4LogicalVolume* MagnetPLASMA1::Construct() {
     fieldBoxLV->SetFieldManager(fieldMgr,true);
 
     // The crystal
+    if (cryWidth > detCon->getWorldSizeX()) {
+        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
+               << " The crystal is wider than the world!"  << G4endl;
+        exit(1);
+    }
+    if (cryHeight > detCon->getWorldSizeX()) {
+        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
+               << " The crystal is wider than the world!"  << G4endl;
+        exit(1);
+    }
+    if (capRadius > cryWidth/2.0 or capRadius > cryHeight/2.0) {
+        G4cerr << "Error in MagnetPLASMA1::Constructy():" << G4endl
+               << " The capillary doesn't fit in the crystal!" << G4endl;
+        exit(1);
+    }
+
+    //TODO: Insert here a "gas box" that is exactly the same size as the crystal
+    // and made of gas material, but has no hole.
+
     G4VSolid* crystalBox      = new G4Box(magnetName+"_crystalBoxS",
-                                          10.0*mm/2.0, 20.0*mm/2.0, length/2.0);
+                                          cryWidth/2.0, cryHeight/2.0, length/2.0);
     G4VSolid* crystalCylinder = new G4Tubs(magnetName+"_crystalCylinderS",
                                            0.0, capRadius, length,
                                            0.0, 360.0*deg);
