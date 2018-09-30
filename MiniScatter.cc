@@ -596,7 +596,12 @@ void printHelp(G4double target_thick,
                    << "     radius:    Capillary radius (<double> [mm])" << G4endl
                    << "     totalAmps: Flag (<True/False>) to interpret the gradient parameter"
                    << " as the total current [A] instead of in [T/m]." << G4endl
-
+                   << "     width:     Capillay crystal width (<double> [mm])" << G4endl
+                   << "     height:    Capillay crystal height (<double> [mm])" << G4endl
+                   << "  'COLLIMATOR1':" << G4endl
+                   << "     radius:    Channel radius (<double> [mm])" << G4endl
+                   << "     width:     Absorber width (<double> [mm])" << G4endl
+                   << "     height:    Absorber height (<double> [mm])" << G4endl
                    << "Currently have the following magnet setups:" << G4endl;
             for (auto mag : magnetDefinitions) {
                 G4cout << mag << G4endl;

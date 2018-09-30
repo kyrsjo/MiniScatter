@@ -112,6 +112,10 @@ MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstructio
         theMagnet = new MagnetPLASMA1(magnetPos, doRelPos, magnetLength, magnetGradient,
                                       keyValPairs, detCon, magnetName);
     }
+    else if(magnetType == "COLLIMATOR1") {
+        theMagnet = new MagnetCOLLIMATOR1(magnetPos, doRelPos, magnetLength, magnetGradient,
+                                          keyValPairs, detCon, magnetName);
+    }
     else {
         G4cerr << "Uknown magnet type '" << magnetType << "'" << G4endl;
         exit(1);
@@ -192,7 +196,7 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
             }
         }
         else {
-            G4cerr << "Capillary did not understand key=value pair '"
+            G4cerr << "MagnetCAPILLARY1 did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
             exit(1);
         }
@@ -222,8 +226,8 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
 G4LogicalVolume* MagnetPLASMA1::Construct() {
 
     //Build the outer volume (TODO: Factorize this into a common function)
-    // Note: The mainBox size is padded by 0.1um in length in order to get some hits
-    // when it exits the crystal or gas
+    // Note: The mainBox size is padded by lengthPad in length in order to get some hits
+    // when the beam exits the crystal or gas and not directly from the envelope volume
     G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
                                   detCon->getWorldSizeX()/2.0,
                                   detCon->getWorldSizeX()/2.0,
@@ -274,7 +278,7 @@ G4LogicalVolume* MagnetPLASMA1::Construct() {
         exit(1);
     }
     if (capRadius > cryWidth/2.0 or capRadius > cryHeight/2.0) {
-        G4cerr << "Error in MagnetPLASMA1::Constructy():" << G4endl
+        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
                << " The capillary doesn't fit in the crystal!" << G4endl;
         exit(1);
     }
@@ -377,4 +381,140 @@ void FieldPLASMA1::GetFieldValue(const G4double point[4], G4double field[6]) con
     field[0] = B[0];
     field[1] = B[1];
     field[2] = B[2];
+}
+
+MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                                     std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                                     G4String magnetName_in) :
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in){
+
+    for (auto it : keyValPairs) {
+        if (it.first == "radius") {
+            try {
+                radius = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading collimator radius" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "width") {
+            try {
+                width = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading absorber width" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "height") {
+            try {
+                height = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading absorber height" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "material") {
+            absorberMaterialName = it.second;
+        }
+        else {
+            G4cerr << "MagnetCOLLIMATOR1 did not understand key=value pair '"
+                   << it.first << "'='" << it.second << "'." << G4endl;
+            exit(1);
+        }
+    }
+
+    if (gradient != 0.0) {
+        G4cerr << "Invalid gradient for COLLIMATOR1: Gradient must be 0.0, but was "
+               << gradient << "[T/m]" << G4endl;
+        exit(1);
+    }
+
+    G4cout << "Initialized a MagnetCOLLIMATOR1, parameters:" << G4endl;
+    G4cout << "\t magnetName         = " << magnetName << G4endl;
+    G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
+    G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
+    G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
+    G4cout << "\t radius             = " << radius/mm          << " [mm]"  << G4endl;
+    G4cout << "\t width              = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t height             = " << height/mm          << " [mm]"  << G4endl;
+}
+
+G4LogicalVolume* MagnetCOLLIMATOR1::Construct() {
+
+    //Build the outer volume (TODO: Factorize this into a common function)
+    // Note: The mainBox size is padded by lengthPad in length in order to get some hits
+    // when the beam exits the material and not directly from the envelope volume.
+    G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
+                                  detCon->getWorldSizeX()/2.0,
+                                  detCon->getWorldSizeX()/2.0,
+                                  length/2.0+lengthPad/2.0);
+    // search the material by its name
+    G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
+    if (not vacuumMaterial) {
+        G4cerr << "Internal error -- material G4_Galactic not found in MagnetCOLLIMATOR1::Construct()!" << G4endl;
+        exit(1);
+    }
+    G4LogicalVolume* mainLV = new G4LogicalVolume(mainBox,vacuumMaterial, magnetName+"_mainLV");
+
+    // The absorber
+    if (width > detCon->getWorldSizeX()) {
+        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
+               << " The absorber is wider than the world!"  << G4endl;
+        exit(1);
+    }
+    if (height > detCon->getWorldSizeX()) {
+        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
+               << " The absorber is wider than the world!"  << G4endl;
+        exit(1);
+    }
+    if (radius > width/2.0 or radius > height/2.0) {
+        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
+               << " The channel doesn't fit in the absorber!" << G4endl;
+        exit(1);
+    }
+
+
+    G4VSolid* absorberBox      = new G4Box(magnetName+"_absorberBoxS",
+                                           width/2.0, height/2.0, length/2.0);
+    G4VSolid* absorberCylinder = new G4Tubs(magnetName+"_absorberCylinderS",
+                                            0.0, radius, length,
+                                            0.0, 360.0*deg);
+    G4VSolid* absorberSolid    = new G4SubtractionSolid(magnetName+"_absorberS",
+                                                       absorberBox, absorberCylinder);
+
+    absorberMaterial = G4Material::GetMaterial(absorberMaterialName);
+    if (not absorberMaterial){
+        G4cerr << "Error when setting material '"
+               << absorberMaterialName << "' for MagnetCollimator '"
+               << magnetName << "' -- not found!" << G4endl;
+        G4MaterialTable* materialTable = G4Material::GetMaterialTable();
+        G4cerr << "Valid choices:" << G4endl;
+        for (auto mat : *materialTable) {
+            G4cerr << mat->GetName() << G4endl;
+        }
+        exit(1);
+    }
+
+    G4LogicalVolume*   absorberLV = new G4LogicalVolume(absorberSolid,absorberMaterial, magnetName+"_absorberLV");
+    G4VPhysicalVolume* absorberPV = new G4PVPlacement(NULL,
+                                                      G4ThreeVector(0.0,0.0,0.0),
+                                                      absorberLV,
+                                                      magnetName + "_absorberPV",
+                                                      mainLV,
+                                                      false,
+                                                      0,
+                                                      true);
+
+    AddSD(mainLV);
+
+    return mainLV;
 }

@@ -28,11 +28,10 @@ public:
     };
 
     virtual void PostInitialize() {
-        if (field == NULL) {
-            G4cerr << "Internal error: field==NULL!" << G4endl;
-            exit(1);
+        if (field != NULL) {
+            // There are "magnets" with no field
+            field->PostInitialize();
         }
-        field->PostInitialize();
     }
 
     G4double GetLength()    const { return length; };
@@ -68,9 +67,23 @@ public:
     virtual G4LogicalVolume* Construct();
 private:
     G4double plasmaTotalCurrent; // [A]
-    G4double capRadius;          // [G4 lenght units]
+    G4double capRadius;          // [G4 length units]
     G4double cryWidth;           // [G4 length units]
     G4double cryHeight;          // [G4 length units]
+};
+
+class MagnetCOLLIMATOR1 : public MagnetBase {
+public:
+    MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                      std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                      G4String magnetName_in);
+    virtual G4LogicalVolume* Construct();
+private:
+    G4String absorberMaterialName;
+    G4Material* absorberMaterial = NULL;
+    G4double width  = 10.0*mm;  //[G4 length units]
+    G4double height = 50*mm;    //[G4 length units]
+    G4double radius = 50*mm;    //[G4 length units]
 };
 
 #endif
