@@ -73,10 +73,9 @@ set(MiniScatter_SCRIPTS
   vis.mac
   verbose.mac
   gammaFilter.mac
-  distScan.py
-  beamParamScan.py
+  miniScatterScanner.py
   miniScatterDriver.py
-  PressureScan.ipynb
+  quicksilver.py
 )
 
 foreach(_script ${MiniScatter_SCRIPTS})
