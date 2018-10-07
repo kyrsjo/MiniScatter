@@ -20,7 +20,7 @@ public:
         //Get the global z position of the center of the magnet in G4 units.
 
         if (doRelPos) {
-            return detCon->getTargetThickness()/2.0 + zPos + length/2.0 + lengthPad/2.0;
+            return detCon->getTargetThickness()/2.0 + zPos + length/2.0;
         }
         else {
             return zPos;
@@ -35,13 +35,11 @@ public:
     }
 
     G4double GetLength()    const { return length; };
-    G4double GetLengthPad() const { return lengthPad; };
 
 protected:
     G4double zPos;     // [G4 units]
     G4bool   doRelPos;
     G4double length;   // [G4units]
-    G4double lengthPad = 1e-7*mm; // [G4units]
     G4double gradient; // [T/m]
 
     std::map<G4String,G4String> keyValPairs;
@@ -49,13 +47,20 @@ protected:
 
     FieldBase* field = NULL;
 
-    void AddSD(G4LogicalVolume* mainLV);
+    G4LogicalVolume* mainLV = NULL;
+    G4LogicalVolume* MakeNewMainLV(G4String name_postfix);
+
+    virtual void ConstructDetectorLV();
+    G4LogicalVolume* detectorLV = NULL;
     G4VSensitiveDetector* magnetSD = NULL;
 
 public:
     const G4String magnetName;
 
-    virtual G4LogicalVolume* Construct() = 0;
+    virtual void Construct() = 0;
+    G4LogicalVolume* GetMainLV() const;
+    G4LogicalVolume* GetDetectorLV() const;
+    void AddSD(); // Adds an SD to the detectorLV
 };
 
 class MagnetPLASMA1 : public MagnetBase {
@@ -64,7 +69,7 @@ public:
                   std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                   G4String magnetName_in);
 
-    virtual G4LogicalVolume* Construct();
+    virtual void Construct();
 private:
     G4double plasmaTotalCurrent; // [A]
     G4double capRadius;          // [G4 length units]
@@ -77,7 +82,7 @@ public:
     MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                       std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                       G4String magnetName_in);
-    virtual G4LogicalVolume* Construct();
+    virtual void Construct();
 private:
     G4String absorberMaterialName;
     G4Material* absorberMaterial = NULL;

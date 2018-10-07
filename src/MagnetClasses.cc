@@ -125,15 +125,68 @@ MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstructio
     return theMagnet;
 }
 
-void MagnetBase::AddSD(G4LogicalVolume* mainLV) {
-    // Adds a TargetSD to the main logical volume of the magnet.
+G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix){
+    // Builds an outer volume
+    // Note: The mainLV's physical volume(s) are created in the DetectorConstruction classes
+
+    G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
+    if (not vacuumMaterial) {
+        G4cerr << "Internal error -- material G4_Galactic not found in MagnetBase::MakeMainLV()!" << G4endl;
+        exit(1);
+    }
+
+
+    G4VSolid* mainBox = new G4Box(magnetName+"_"+name_postfix+"S",
+                                  detCon->getWorldSizeX()/2.0,
+                                  detCon->getWorldSizeX()/2.0,
+                                  length/2.0);
+
+    G4LogicalVolume* newMainLV = new G4LogicalVolume(mainBox,vacuumMaterial,
+                                                     magnetName+"_"+name_postfix+"LV");
+
+    return newMainLV;
+}
+
+G4LogicalVolume* MagnetBase::GetMainLV() const {
+    //Returns the mainLV.
+
+    if (this->mainLV != NULL) {
+        return this->mainLV;
+    }
+    else {
+        G4cout << "Error in MagnetClasses::GetMainLV(): MainLV has not been constructed!" << G4endl;
+        exit(1);
+    }
+}
+
+void MagnetBase::ConstructDetectorLV() {
+    if (this->detectorLV != NULL) {
+        G4cerr << "Error in MagnetBase::ConstructDetectorLV(): The detectorLV has already been constructed?" << G4endl;
+        exit(1);
+    }
+
+    this->detectorLV = MakeNewMainLV("detector");
+}
+void MagnetBase::AddSD(){
+    // Add the TargetSD to the virtual logical volume of the magnet.
     // This records the outgoing position and energy deposit in the magnet.
 
     // Get pointer to detector manager
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
     magnetSD = new MyTargetSD(magnetName);
     SDman->AddNewDetector(magnetSD);
-    mainLV->SetSensitiveDetector(magnetSD);
+    this->detectorLV->SetSensitiveDetector(magnetSD);
+}
+G4LogicalVolume* MagnetBase::GetDetectorLV() const {
+    //Returns the detectorLV.
+
+    if (this->detectorLV != NULL) {
+        return this->detectorLV;
+    }
+    else {
+        G4cout << "Error in MagnetClasses::GetDetectorLV(): DetectorLV has not been constructed!" << G4endl;
+        exit(1);
+    }
 }
 
 MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -223,24 +276,24 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
 
 }
 
-G4LogicalVolume* MagnetPLASMA1::Construct() {
+void MagnetPLASMA1::Construct() {
 
-    //Build the outer volume (TODO: Factorize this into a common function)
-    // Note: The mainBox size is padded by lengthPad in length in order to get some hits
-    // when the beam exits the crystal or gas and not directly from the envelope volume
-    G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
-                                  detCon->getWorldSizeX()/2.0,
-                                  detCon->getWorldSizeX()/2.0,
-                                  length/2.0+lengthPad/2.0);
-    // search the material by its name
+    if (this->mainLV != NULL) {
+        G4cerr << "Error in MagnetPLASMA1::Construct(): The mainLV has already been constructed?" << G4endl;
+        exit(1);
+    }
+
+    this->mainLV = MakeNewMainLV("main");
+
     G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
     if (not vacuumMaterial) {
         G4cerr << "Internal error -- material G4_Galactic not found in MagnetPLASMA1::Construct()!" << G4endl;
         exit(1);
     }
-    G4LogicalVolume* mainLV = new G4LogicalVolume(mainBox,vacuumMaterial, magnetName+"_mainLV");
 
-    //Field box (
+    //Field box
+    // TODO: Not really neccessary, use the mainLV directly
+    // (unless the goal is to make it smaller and contain the gas...)
     G4VSolid* fieldBox            = new G4Box(magnetName+"_fieldBoxS",
                                               detCon->getWorldSizeX()/2.0,
                                               detCon->getWorldSizeX()/2.0,
@@ -253,7 +306,7 @@ G4LogicalVolume* MagnetPLASMA1::Construct() {
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       fieldBoxLV,
                                                       magnetName + "_fieldBoxPV",
-                                                      mainLV,
+                                                      this->mainLV,
                                                       false,
                                                       0,
                                                       true);
@@ -309,10 +362,9 @@ G4LogicalVolume* MagnetPLASMA1::Construct() {
                                                      0,
                                                      true);
 
-    AddSD(mainLV);
-
-    return mainLV;
+    ConstructDetectorLV();
 }
+
 
 G4Navigator* FieldBase::fNavigator = NULL;
 
@@ -448,22 +500,13 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
     G4cout << "\t height             = " << height/mm          << " [mm]"  << G4endl;
 }
 
-G4LogicalVolume* MagnetCOLLIMATOR1::Construct() {
-
-    //Build the outer volume (TODO: Factorize this into a common function)
-    // Note: The mainBox size is padded by lengthPad in length in order to get some hits
-    // when the beam exits the material and not directly from the envelope volume.
-    G4VSolid* mainBox = new G4Box(magnetName+"_mainS",
-                                  detCon->getWorldSizeX()/2.0,
-                                  detCon->getWorldSizeX()/2.0,
-                                  length/2.0+lengthPad/2.0);
-    // search the material by its name
-    G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
-    if (not vacuumMaterial) {
-        G4cerr << "Internal error -- material G4_Galactic not found in MagnetCOLLIMATOR1::Construct()!" << G4endl;
+void MagnetCOLLIMATOR1::Construct() {
+    if (this->mainLV != NULL) {
+        G4cerr << "Error in MagnetCOLLIMATOR1::Construct(): The mainLV has already been constructed?" << G4endl;
         exit(1);
     }
-    G4LogicalVolume* mainLV = new G4LogicalVolume(mainBox,vacuumMaterial, magnetName+"_mainLV");
+
+    this->mainLV = MakeNewMainLV("main");
 
     // The absorber
     if (width > detCon->getWorldSizeX()) {
@@ -514,7 +557,5 @@ G4LogicalVolume* MagnetCOLLIMATOR1::Construct() {
                                                       0,
                                                       true);
 
-    AddSD(mainLV);
-
-    return mainLV;
+    ConstructDetectorLV();
 }

@@ -35,11 +35,13 @@
 #include "G4UImanager.hh"
 
 #include "DetectorConstruction.hh"
+#include "ParallelWorldConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
 
 #include "G4PhysListFactory.hh"
+#include "G4ParallelWorldPhysics.hh"
 
 #include "RootFileWriter.hh"
 
@@ -374,13 +376,6 @@ int main(int argc,char** argv) {
     G4Random::setTheSeed(rngSeed);
 
     // Set mandatory initialization classes
-    DetectorConstruction* detector = new DetectorConstruction(target_thick,
-                                                              target_material,
-                                                              detector_distance,
-                                                              detector_angle,
-                                                              detector_rotate,
-                                                              magnetDefinitions);
-    runManager->SetUserInitialization(detector);
 
     G4int verbose=0;
     G4PhysListFactory plFactory;
@@ -410,9 +405,23 @@ int main(int argc,char** argv) {
     //physlist->SetDefaultCutValue( 0.00001*mm);
     physlist->SetDefaultCutValue( 0.1*mm);
 
+    DetectorConstruction* physWorld = new DetectorConstruction(target_thick,
+                                                               target_material,
+                                                               detector_distance,
+                                                               detector_angle,
+                                                               detector_rotate,
+                                                               magnetDefinitions);
+
+    ParallelWorldConstruction* magnetSensorWorld =
+        new ParallelWorldConstruction("MagnetSensorWorld",physWorld);
+    physWorld->RegisterParallelWorld(magnetSensorWorld);
+    physlist->RegisterPhysics(new G4ParallelWorldPhysics("MagnetSensorWorld"));
+
+    runManager->SetUserInitialization(physWorld);
+
     // Set user action classes:
     //
-    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector,
+    PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(physWorld,
                                                                     beam_energy,
                                                                     beam_type,
                                                                     beam_offset,
@@ -430,7 +439,7 @@ int main(int argc,char** argv) {
     // Initialize G4 kernel
     runManager->Initialize();
 
-    detector->PostInitialize();
+    physWorld->PostInitialize();
 
     //Set root file output filename
     RootFileWriter::GetInstance()->setFilename(filename_out);

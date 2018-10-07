@@ -222,10 +222,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
     // Build magnets
     for (auto magnet : magnets) {
-        G4LogicalVolume*   magnetLV   = magnet->Construct();
+        // More or less repeated in ParallelWorldConstruction::Construct()
+        magnet->Construct();
         G4VPhysicalVolume* magnetPV   = new G4PVPlacement(NULL,
                                                           G4ThreeVector(0.0,0.0,magnet->getZ0()),
-                                                          magnetLV,
+                                                          magnet->GetMainLV(),
                                                           magnet->magnetName + "_mainPV",
                                                           logicWorld,
                                                           false,
@@ -518,6 +519,7 @@ G4double DetectorConstruction::GetTargetMaterialDensity() {
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::PostInitialize() {
+    // Setup the magnet fields.
     for (auto mag : magnets) {
         mag->PostInitialize();
     }
