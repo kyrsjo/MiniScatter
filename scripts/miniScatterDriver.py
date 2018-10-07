@@ -109,7 +109,7 @@ def runScatter(simSetup, quiet=False):
             mag_cmd += str(float(mag["gradient"]))
             for k,v in mag["keyval"].items():
                 mag_cmd += ":" + str(k)+"="+str(v)
-        cmd += ["--magnet", mag_cmd]
+            cmd += ["--magnet", mag_cmd]
 
     cmdline = ""
     for c in cmd:
