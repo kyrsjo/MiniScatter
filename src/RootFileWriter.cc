@@ -107,10 +107,10 @@ void RootFileWriter::initializeRootFile(){
 
     // Target exit angle histogram
     target_exitangle_hist        = new TH1D("target_exit_angle",
-                                            "Exit angle from tracker",
+                                            "Exit angle from target",
                                             5001, -90, 90);
     target_exitangle_hist_cutoff = new TH1D("target_exit_angle_cutoff",
-                                            "Exit angle from tracker (charged, energy > Ecut, r < Rcut)",
+                                            "Exit angle from target (charged, energy > Ecut, r < Rcut)",
                                             5001, -90, 90);
 
     // Target exit phasespace histograms
@@ -148,6 +148,38 @@ void RootFileWriter::initializeRootFile(){
 
     tracker_energy       = new TH1D("energy","Energy of all particles hitting the tracker",10000,0,beamEnergy);
     tracker_energy->GetXaxis()->SetTitle("Energy per particle [MeV]");
+
+    tracker_type_energy[11]  = new TH1D("tracker_energy_PDG11",
+                                      "Particle energy when hitting tracker (electrons)",
+                                      1000,0,beamEnergy);
+    tracker_type_energy[-11] = new TH1D("tracker_energy_PDG-11",
+                                      "Particle energy when hitting tracker (positrons)",
+                                      1000,0,beamEnergy);
+    tracker_type_energy[22]  = new TH1D("tracker_energy_PDG22",
+                                      "Particle energy when hitting tracker (photons)",
+                                      1000,0,beamEnergy);
+    tracker_type_energy[0]   = new TH1D("tracker_energy_PDGother",
+                                      "Particle energy when hitting tracker (other)",
+                                      1000,0,beamEnergy);
+    for (auto it : tracker_type_energy) {
+        it.second->GetXaxis()->SetTitle("Energy [MeV]");
+    }
+
+    tracker_type_cutoff_energy[11]  = new TH1D("tracker_cutoff_energy_PDG11",
+                                              "Particle energy when hitting tracker (electrons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    tracker_type_cutoff_energy[-11] = new TH1D("tracker_cutoff_energy_PDG-11",
+                                              "Particle energy when hitting tracker (positrons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    tracker_type_cutoff_energy[22]  = new TH1D("tracker_cutoff_energy_PDG22",
+                                              "Particle energy when hitting tracker (photons) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    tracker_type_cutoff_energy[0]   = new TH1D("tracker_cutoff_energy_PDGother",
+                                              "Particle energy when hitting tracker (other) (r < Rcut)",
+                                              1000,0,beamEnergy);
+    for (auto it : tracker_type_cutoff_energy) {
+        it.second->GetXaxis()->SetTitle("Energy [MeV]");
+    }
 
     tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
                1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
@@ -577,6 +609,22 @@ void RootFileWriter::doEvent(const G4Event* event){
 
                 //Overall histograms
                 tracker_energy->Fill(energy/MeV);
+
+                if (tracker_type_energy.find(PDG) != tracker_type_energy.end()) {
+                    tracker_type_energy[PDG]->Fill(energy/MeV);
+                }
+                else {
+                    tracker_type_energy[0]->Fill(energy/MeV);
+                }
+
+                if (hitR/mm < position_cutoffR) {
+                    if (tracker_type_cutoff_energy.find(PDG) != tracker_type_cutoff_energy.end()) {
+                        tracker_type_cutoff_energy[PDG]->Fill(energy/MeV);
+                    }
+                    else {
+                        tracker_type_cutoff_energy[0]->Fill(energy/MeV);
+                    }
+                }
 
                 //Hit position
                 tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
@@ -1046,10 +1094,14 @@ void RootFileWriter::finalizeRootFile() {
     // (Loops over particle types)
     for (auto it : target_exit_energy) {
         it.second->Write();
+        delete it.second;
     }
+    target_exit_energy.clear();
     for (auto it : target_exit_cutoff_energy) {
         it.second->Write();
+        delete it.second;
     }
+    target_exit_cutoff_energy.clear();
     for (auto it: target_exit_Rpos) {
         it.second->Write();
         delete it.second;
@@ -1060,6 +1112,17 @@ void RootFileWriter::finalizeRootFile() {
         delete it.second;
     }
     target_exit_Rpos_cutoff.clear();
+
+    for (auto it : tracker_type_energy) {
+        it.second->Write();
+        delete it.second;
+    }
+    tracker_type_energy.clear();
+    for (auto it : tracker_type_cutoff_energy) {
+        it.second->Write();
+        delete it.second;
+    }
+    tracker_type_cutoff_energy.clear();
 
     for (auto it: tracker_Rpos) {
         it.second->Write();
@@ -1143,16 +1206,6 @@ void RootFileWriter::finalizeRootFile() {
     delete targetEdep; targetEdep = NULL;
     delete targetEdep_NIEL; targetEdep_NIEL = NULL;
     delete targetEdep_IEL; targetEdep_IEL = NULL;
-
-    for (auto it : target_exit_energy) {
-        delete it.second;
-    }
-    target_exit_energy.clear();
-
-    for (auto it : target_exit_cutoff_energy) {
-        delete it.second;
-    }
-    target_exit_cutoff_energy.clear();
 
     delete target_exitangle_hist; target_exitangle_hist = NULL;
 

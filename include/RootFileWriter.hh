@@ -122,6 +122,8 @@ private:
     //Tracker histograms
     TH1D* tracker_numParticles;
     TH1D* tracker_energy;
+    std::map<G4int,TH1D*> tracker_type_energy;
+    std::map<G4int,TH1D*> tracker_type_cutoff_energy;
     TH2D* tracker_hitPos;
     TH2D* tracker_hitPos_cutoff;
     TH2D* tracker_phasespaceX;
