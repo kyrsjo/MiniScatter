@@ -56,6 +56,7 @@ public:
     static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
     G4Material*        vacuumMaterial = NULL;
+
     G4Material*        AlMaterial     = NULL;
     G4Material*        CMaterial      = NULL;
     G4Material*        CuMaterial     = NULL;
@@ -65,9 +66,9 @@ private:
     G4Material*        WMaterial      = NULL;
     G4Material*        UMaterial      = NULL;
 
-    G4Material*        MylarMaterial  = NULL;
-    G4Material*        KaptonMaterial = NULL;
-    //G4Material*        StainlessSteel;
+    G4Material*        MylarMaterial          = NULL;
+    G4Material*        KaptonMaterial         = NULL;
+    G4Material*        StainlessSteelMaterial = NULL;
 
     G4Material*        SapphireMaterial = NULL;
 
