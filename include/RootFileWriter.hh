@@ -56,6 +56,10 @@ public:
         this->filename_out = filename_out_arg;
         has_filename_out = true;
     };
+    void setFoldername(G4String foldername_out_arg) {
+        this->foldername_out = foldername_out_arg;
+    };
+
     void setQuickmode(G4bool quickmode_arg) {
         this->quickmode = quickmode_arg;
     };
@@ -168,7 +172,8 @@ private:
     //Output file naming
     G4String filename_out;
     G4bool has_filename_out;
-    static const G4String foldername_out;
+
+    G4String foldername_out = "plots";
 
     G4bool quickmode = false;
     G4bool miniFile = false;

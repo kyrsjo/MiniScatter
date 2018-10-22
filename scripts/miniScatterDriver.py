@@ -11,7 +11,7 @@ def runScatter(simSetup, quiet=False):
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "PHYS",\
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
-                       "COVAR", "SEED", "OUTNAME", "QUICKMODE", "MINIROOT",\
+                       "COVAR", "SEED", "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS"):
             if key.startswith("MAGNET"):
                 continue
@@ -80,6 +80,9 @@ def runScatter(simSetup, quiet=False):
 
     if "OUTNAME" in simSetup:
         cmd += ["-f", simSetup["OUTNAME"]]
+
+    if "OUTFOLDER" in simSetup:
+        cmd += ["-o", simSetup["OUTFOLDER"]]
 
     if "QUICKMODE" in simSetup:
         if simSetup["QUICKMODE"] == True:

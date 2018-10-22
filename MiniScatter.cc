@@ -74,6 +74,7 @@ void printHelp(G4double target_thick,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
+               G4String foldername_out,
                G4bool   quickmode,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
@@ -113,7 +114,8 @@ int main(int argc,char** argv) {
 
     G4bool   useGUI       = false;            // GUI on/off
     G4bool   quickmode    = false;            // Don't make slow plots
-    G4String filename_out = "output";         // Output filename
+    G4String filename_out   = "output";       // Output filename
+    G4String foldername_out = "plots";        // Output foldername
     G4bool   miniROOTfile = false;            // Write small root file
                                               // (only analysis output, no TTrees)
 
@@ -139,6 +141,7 @@ int main(int argc,char** argv) {
                                            {"zoffset",               required_argument, NULL, 'z' },
                                            {"covar",                 required_argument, NULL, 'c' },
                                            {"outname",               required_argument, NULL, 'f' },
+                                           {"outfolder",             required_argument, NULL, 'o' },
                                            {"seed",                  required_argument, NULL, 's' },
                                            {"help",                  no_argument,       NULL, 'h' },
                                            {"gui",                   no_argument,       NULL, 'g' },
@@ -150,7 +153,7 @@ int main(int argc,char** argv) {
                                            {0,0,0,0}
     };
 
-    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:s:hgqr", long_options, &getopt_idx)) != -1) {
+    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
@@ -165,6 +168,7 @@ int main(int argc,char** argv) {
                       doBacktrack,
                       rngSeed,
                       filename_out,
+                      foldername_out,
                       quickmode,
                       miniROOTfile,
                       cutoff_energyFraction,
@@ -291,6 +295,10 @@ int main(int argc,char** argv) {
             filename_out = G4String(optarg);
             break;
 
+        case 'o': //Output foldername
+            foldername_out = G4String(optarg);
+            break;
+
         case 'r': //Mini ROOT file
             miniROOTfile = true;
             break;
@@ -350,6 +358,7 @@ int main(int argc,char** argv) {
               doBacktrack,
               rngSeed,
               filename_out,
+              foldername_out,
               quickmode,
               miniROOTfile,
               cutoff_energyFraction,
@@ -443,6 +452,7 @@ int main(int argc,char** argv) {
 
     //Set root file output filename
     RootFileWriter::GetInstance()->setFilename(filename_out);
+    RootFileWriter::GetInstance()->setFoldername(foldername_out);
     RootFileWriter::GetInstance()->setQuickmode(quickmode);
     RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
@@ -522,6 +532,7 @@ void printHelp(G4double target_thick,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
+               G4String foldername_out,
                G4bool   quickmode,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
@@ -586,6 +597,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "-f <string> : Output filename,        default/current value = "
                    << filename_out << G4endl;
+
+            G4cout << "-o <string : Output folder,           default/current value = "
+                   << foldername_out << G4endl;
 
             G4cout << "--cutoffEnergyfraction : Minimum of beam energy to require for 'cutoff' plots, "
                    << "default/current value = " << cutoff_energyFraction << G4endl;

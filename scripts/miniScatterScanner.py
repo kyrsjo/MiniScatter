@@ -351,13 +351,20 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 raise ValueError("Expected len(scanVarMag) == 2 or 3")
         else:
             simSetup[scanVar]   = var
+
         if sameSeedValue == None:
             simSetup["SEED"]    = SEED + i
         else:
             assert type(sameSeedValue) == int
             simSetup["SEED"]    = sameSeedValue
             print("WARNING: Running all simulations with same seed = ", simSetup["SEED"])
+
         simSetup["OUTNAME"] = filenameROOT
+
+        assert not "OUTFOLDER" in simSetup
+        if tmpFolder is not None:
+            simSetup["OUTFOLDER"] = tmpFolder
+
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
 
         filenameROOTfile = None

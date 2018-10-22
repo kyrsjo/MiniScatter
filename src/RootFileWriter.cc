@@ -25,7 +25,6 @@
 
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = 0;
-const G4String  RootFileWriter::foldername_out = "plots";
 
 const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm;
 const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
@@ -45,6 +44,7 @@ void RootFileWriter::initializeRootFile(){
         exit(1);
     }
     G4String rootFileName = foldername_out + "/" + filename_out + ".root";
+    G4cout << "foldername = '" << foldername_out << "'" << G4endl;
 
     //Create folder if it does not exist
     if (not experimental::filesystem::exists(foldername_out.data())) {
@@ -53,6 +53,10 @@ void RootFileWriter::initializeRootFile(){
     }
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
+    if ( not histFile->IsOpen() ) {
+        G4cerr << "Opening TFile '" << rootFileName << "' failed; quitting." << G4endl;
+        exit(1);
+    }
 
     eventCounter = 0;
 
