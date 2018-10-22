@@ -23,7 +23,7 @@ m_twiss = 0.511 #[MeV/c^2], assumed mass of the particles used for TWISS computa
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
                     detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None, \
-                    cleanROOT=True, getObjects=None, sameSeedValue=None):
+                    cleanROOT=True, getObjects=None, sameSeedValue=None, tmpFolder=None):
     """
     This routine is built to scan arbitrary parameters with MiniScatter.
     It can cache the results in HDF5-files with long and difficult names, as well as call detailed analysis routines.
@@ -234,8 +234,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     raise ValueError("Key {} found in file but not in baseSimSetup".format(key))
 
             scanVarRange_loaded = np.asarray(loadFile.attrs[scanVar])
+            scanVarRange_safe = scanVarRange
+            if type(scanVarRange[0]) == str:
+                #Python3, it's unicode. HDF5 dislikes unicode arrays
+                scanVarRange_safe = []
+                for scanVarRange_iter in scanVarRange:
+                    scanVarRange_safe.append( scanVarRange_iter.encode('ascii') )
+
             if len(scanVarRange) != len(scanVarRange_loaded) or \
-               not np.all(np.equal(scanVarRange, scanVarRange_loaded)):
+               not np.all(np.equal(scanVarRange_safe, scanVarRange_loaded)):
                 print ("Scan variable ranges did not match, run with tryLoad=False to recompute.")
                 print ("Now :", scanVarRange)
                 print ("File:", scanVarRange_loaded)
@@ -353,7 +360,13 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         simSetup["OUTNAME"] = filenameROOT
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
 
-        filenameROOTfile = "plots/"+filenameROOT+".root"
+        filenameROOTfile = None
+        if tmpFolder is None:
+            runFolder = os.path.dirname(os.path.realpath(__file__))
+            filenameROOTfile = os.path.join(runFolder,"plots",filenameROOT+".root")
+        else:
+            filenameROOTfile = os.path.join(tmpFolder,filenameROOT+".root")
+
         badSim=False
 
         ## Extract the data
@@ -444,7 +457,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     saveFile = h5py.File(loadFileName,mode="w")
 
     saveFile.attrs["scanVarName"] = scanVar
-    saveFile.attrs[scanVar]       = scanVarRange
+    if type(scanVarRange[0]) == str:
+        #Python3, it's unicode. HDF5 dislikes unicode arrays
+        scanVarRange_ascii = []
+        for scanVarRange_iter in scanVarRange:
+            scanVarRange_ascii.append( scanVarRange_iter.encode('ascii') )
+        saveFile.attrs[scanVar] = scanVarRange_ascii
+    else:
+        saveFile.attrs[scanVar] = scanVarRange
     for key in baseSimSetup.keys():
         if key in saveFile.attrs:
             saveFile.close()

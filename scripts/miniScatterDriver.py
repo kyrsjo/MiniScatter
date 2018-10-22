@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import os
 import ROOT
 import ROOT.TFile, ROOT.TVector
 
@@ -114,9 +115,13 @@ def runScatter(simSetup, quiet=False):
     cmdline = ""
     for c in cmd:
         cmdline += c + " "
+
+    runFolder = os.path.dirname(os.path.realpath(__file__))
     if not quiet:
         print ("Running command line: '" + cmdline[:-1] + "'")
-    runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE)
+        print ("RunFolder = '"+ runFolder +"'")
+
+    runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE, cwd=runFolder)
     #print (runResults)
     if not quiet:
         print ("Done!")
