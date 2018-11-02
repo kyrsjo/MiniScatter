@@ -77,21 +77,26 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     if scanVar in baseSimSetup:
         print ("Please do not put scanVar in the baseSimSetup!")
         raise ValueError("Found scanVar in the baseSimSetup")
+
     if scanVarMagnet != None:
         assert "MAGNET" in baseSimSetup
-        magnetCounter = 0
-        for mag in baseSimSetup["MAGNET"]:
-            if len(scanVarMagnet) == 2 and scanVarMagnet[1] in mag:
-                print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]".\
-                       format(magnetCounter))
-                raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]".\
-                                 format(magnetCounter))
-            elif len(scanVarMagnet) == 3 and scanVarManget[2] in mag["keyval"]:
-                    print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
-                           format(magnetCounter))
-                    raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
-                                     format(magnetCounter))
-            magnetCounter += 1
+
+        if not len(scanVarMagnet[0]) > 6:
+            raise ValueError("When parsing scanvar MAGNETi.arg; expected"+\
+                             " an integer i (from 0 to len(baseSimSetup['MAGNET']) indicating which magnet.")
+        whichMagnet   = int(scanVarMagnet[0][6:])
+
+        if len(scanVarMagnet) == 2 and scanVarMagnet[1] in baseSimSetup["MAGNET"][whichMagnet]:
+            print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]".\
+                   format(whichMagnet))
+            raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]".\
+                             format(whichMagnet))
+
+        elif len(scanVarMagnet) == 3 and scanVarManget[2] in baseSimSetup["MAGNET"][whichMagnet]["keyval"]:
+            print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
+                   format(whichMagnet))
+            raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
+                             format(whichMagnet))
 
     #Loading a pre-ran simulation?
     loadFileName = "SaveSim_{}_{}.h5".format(scanVar,COMMENT)
