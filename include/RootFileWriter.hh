@@ -74,6 +74,9 @@ public:
         this->position_cutoffR = cutR;
     }
 
+    void setNumEvents(G4int numEvents_in) {
+        this->numEvents = numEvents_in;
+    }
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -188,7 +191,10 @@ private:
     static const G4double phasespacehist_posLim;
     static const G4double phasespacehist_angLim;
 
-    Int_t eventCounter; // Used for EventID-ing
+    Int_t eventCounter; // Used for EventID-ing and metadata
+    Int_t numEvents;    // Used for comparing to eventCounter with metadata;
+                        // only reflects the -n <int> command line flag
+                        // so it may be 0 if this was not set.
 
     void PrintTwissParameters(TH2D* phaseSpaceHist);
     void PrintParticleTypes(particleTypesCounter& pt, G4String name);

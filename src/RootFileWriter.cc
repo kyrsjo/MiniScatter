@@ -936,6 +936,19 @@ void RootFileWriter::finalizeRootFile() {
            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
     G4cout << G4endl;
 
+    //General metadata
+    // Ugly hack: Use a double to store an int,
+    // since there are no streamable int arrays without making a dict.
+    G4cout << "** Metadata **" << G4endl;
+    G4cout << "eventCounter = " << eventCounter << G4endl;
+    G4cout << "numEvents    = " << numEvents    << G4endl;
+
+    TVectorD metadataVector (2);
+    metadataVector[0] = double(eventCounter);
+    metadataVector[1] = double(numEvents);
+    metadataVector.Write("metadata");
+    G4cout << G4endl;
+
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
     PrintTwissParameters(init_phasespaceY);

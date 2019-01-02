@@ -457,6 +457,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
+    RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
 
 #ifdef G4VIS_USE
     // Initialize visualization
