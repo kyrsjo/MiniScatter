@@ -5,6 +5,8 @@
 #include "TTree.h"
 #include "TBranch.h"
 
+#include "TRandom1.h"
+
 #include "MyEdepHit.hh"
 #include "MyTrackerHit.hh"
 
@@ -60,6 +62,8 @@ void RootFileWriter::initializeRootFile(){
 
     eventCounter = 0;
 
+    RNG = new TRandom1(); //TODO: Seed it!
+
     // TTrees for external analysis
     targetExit = new TTree("TargetExit","TargetExit tree");
     targetExit->Branch("TargetExitBranch", &targetExitBuffer,
@@ -77,6 +81,27 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
+    if(edep_dens_dz != 0.0) {
+        G4cout << "NBINS_DZ for target_edep_dens = " << (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz) << G4endl;
+        target_edep_dens = new TH3D("target_edep_dens",
+                                    "Target energy deposition density [MeV/bin]",
+                                    100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                    100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                    (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz),
+                                         0.0, detCon->getTargetThickness()/mm
+                                    );
+        target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
+        target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
+        target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+        target_edep_dens_binVolume = target_edep_dens->GetXaxis()->GetBinWidth(1) *
+                                     target_edep_dens->GetYaxis()->GetBinWidth(1) *
+                                     target_edep_dens->GetZaxis()->GetBinWidth(1);
+    }
+    else {
+        target_edep_dens = NULL;
+    }
+
+    // Target tracking info
     target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
                                       "Particle energy when exiting target (electrons)",
                                       1000,0,beamEnergy);
@@ -460,14 +485,29 @@ void RootFileWriter::doEvent(const G4Event* event){
         targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
         if (targetEdepHitsCollection != NULL) {
             G4int nEntries = targetEdepHitsCollection->entries();
-            G4double edep      = 0.0;
-            G4double edep_NIEL = 0.0;
-            G4double edep_IEL  = 0.0;
+            G4double edep      = 0.0; // G4 units, normalized before Fill()
+            G4double edep_NIEL = 0.0; // G4 units, normalized before Fill()
+            G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
             for (G4int i = 0; i < nEntries; i++){
-                edep      += (*targetEdepHitsCollection)[i]->GetDepositedEnergy();
-                edep_NIEL += (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
-                edep_IEL  += (*targetEdepHitsCollection)[i]->GetDepositedEnergy() -
-                             (*targetEdepHitsCollection)[i]->GetDepositedEnergy_NIEL();
+                MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
+
+                edep      += edepHit->GetDepositedEnergy();
+                edep_NIEL += edepHit->GetDepositedEnergy_NIEL();
+                edep_IEL  += edepHit->GetDepositedEnergy() - edepHit->GetDepositedEnergy_NIEL();
+
+                //Randomly spread the energy deposits over the step
+                if (target_edep_dens != NULL) {
+                    G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
+                    G4double edepStepLen = edepStep.mag();
+                    int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
+                    for (int j = 0; j < numSamples; j++){
+                        G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
+                        target_edep_dens->Fill(posSample.x()/mm,
+                                               posSample.y()/mm,
+                                               (posSample.z()+detCon->getTargetThickness()/2.0)/mm,
+                                               edepHit->GetDepositedEnergy()/numSamples/MeV);
+                    }
+                }
             }
             targetEdep->Fill(edep/MeV);
             targetEdep_NIEL->Fill(edep_NIEL/keV);
@@ -1064,7 +1104,7 @@ void RootFileWriter::finalizeRootFile() {
         */
 
         G4String plot_filename = foldername_out + "/" + filename_out + "_angles.png";
-        c1->SaveAs(plot_filename);
+        //c1->SaveAs(plot_filename);
         c1->Write();
 
         // Write the ROOT file.
@@ -1099,6 +1139,12 @@ void RootFileWriter::finalizeRootFile() {
         }
         for (auto it : magnet_exit_phasespaceY_cutoff) {
             it->Write();
+        }
+
+        // Write the 3D histograms to the root file (slower)
+        G4cout << "Writing 3D histograms..." << G4endl;
+        if (target_edep_dens != NULL) {
+            target_edep_dens->Write();
         }
     }
 
@@ -1237,6 +1283,8 @@ void RootFileWriter::finalizeRootFile() {
 
     delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
     delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
+
+    delete target_edep_dens; target_edep_dens = NULL;
 
     delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
 

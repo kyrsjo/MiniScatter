@@ -38,7 +38,7 @@ public:
     inline const G4String& GetType() const {return particleType;}
 private:
 
-    G4ThreeVector trackPosition;
+    G4ThreeVector trackPosition; //Global coordinates [G4 units]
     G4ThreeVector trackMomentum;
 
     G4double trackEnergy;

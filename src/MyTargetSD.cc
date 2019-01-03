@@ -46,9 +46,10 @@ void MyTargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
 
     //Always do the energy deposit
-    MyEdepHit* aHit_edep = new MyEdepHit();
-    aHit_edep->SetDepositedEnergy(aStep->GetTotalEnergyDeposit());
-    aHit_edep->SetDepositedEnergy_NIEL(aStep->GetNonIonizingEnergyDeposit());
+    MyEdepHit* aHit_edep = new MyEdepHit(aStep->GetTotalEnergyDeposit(),
+                                         aStep->GetNonIonizingEnergyDeposit(),
+                                         aStep->GetPreStepPoint()->GetPosition(),
+                                         aStep->GetPostStepPoint()->GetPosition());
     fHitsCollection_edep->insert(aHit_edep);
 
     //Only use outgoing tracks

@@ -1,36 +1,3 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-// $Id: exampleN03.cc,v 1.39 2010/12/01 05:56:17 allison Exp $
-// GEANT4 tag $Name: geant4-09-04 $
-//
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 
@@ -79,6 +46,7 @@ void printHelp(G4double target_thick,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
+               G4double edep_dens_dz,
                std::vector<G4String> &magnetDefinitions);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -121,8 +89,10 @@ int main(int argc,char** argv) {
 
     G4int    rngSeed      = 123;              // RNG seed
 
-    G4double cutoff_energyFraction = 0.95;
-    G4double cutoff_radius         = 1.0; //[mm]
+    G4double cutoff_energyFraction = 0.95;    // [fraction]
+    G4double cutoff_radius         = 1.0;     // [mm]
+
+    G4double edep_dens_dz          = 0.0;     // Z bin width for energy deposit histograms [mm]
 
     std::vector<G4String> magnetDefinitions;
 
@@ -149,6 +119,7 @@ int main(int argc,char** argv) {
                                            {"miniroot",              no_argument,       NULL, 'r' },
                                            {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
+                                           {"edepDZ",                required_argument, NULL, 1002 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {0,0,0,0}
     };
@@ -173,6 +144,7 @@ int main(int argc,char** argv) {
                       miniROOTfile,
                       cutoff_energyFraction,
                       cutoff_radius,
+                      edep_dens_dz,
                       magnetDefinitions);
             exit(1);
             break;
@@ -327,6 +299,10 @@ int main(int argc,char** argv) {
             cutoff_radius = std::stod(string(optarg));
             break;
 
+        case 1002: // Z bin width for energy deposit histograms [mm]
+            edep_dens_dz = std::stod(string(optarg));
+            break;
+
         case 1100: //Magnet definition
             magnetDefinitions.push_back(string(optarg));
             break;
@@ -363,6 +339,7 @@ int main(int argc,char** argv) {
               miniROOTfile,
               cutoff_energyFraction,
               cutoff_radius,
+              edep_dens_dz,
               magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
@@ -457,6 +434,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
+    RootFileWriter::GetInstance()->setEdepDensDZ(edep_dens_dz);
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
 
 #ifdef G4VIS_USE
@@ -538,6 +516,7 @@ void printHelp(G4double target_thick,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
+               G4double edep_dens_dz,
                std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
@@ -607,6 +586,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
                    << "default/current value = " << cutoff_radius << " [mm]" << G4endl;
+
+            G4cout << "--edepDZ               : Z bin width for energy deposit histograms " 
+                   << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
                    << " Create a magnet of the given type at the given position. " << G4endl

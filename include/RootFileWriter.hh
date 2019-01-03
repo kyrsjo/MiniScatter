@@ -6,7 +6,10 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include <map>
+
+class TRandom;
 
 // Use a simple struct for writing to ROOT file,
 // since this requires no dictionary to read.
@@ -77,6 +80,10 @@ public:
     void setNumEvents(G4int numEvents_in) {
         this->numEvents = numEvents_in;
     }
+
+    void setEdepDensDZ(G4double edep_dens_dz_in) {
+        this->edep_dens_dz = edep_dens_dz_in;
+    }
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -114,6 +121,9 @@ private:
 
     std::map<G4int,TH1D*> target_exit_Rpos;
     std::map<G4int,TH1D*> target_exit_Rpos_cutoff;
+
+    TH3D*    target_edep_dens;
+    G4double target_edep_dens_binVolume;
 
     // Magnet histograms
     std::vector<TH1D*> magnet_edep;
@@ -190,6 +200,12 @@ private:
 
     static const G4double phasespacehist_posLim;
     static const G4double phasespacehist_angLim;
+
+    //Delta z for the energy deposition density TH3Ds [mm, 0 => Disable]
+    G4double edep_dens_dz = 0.0;
+
+    // RNG for sampling over the step
+    TRandom* RNG;
 
     Int_t eventCounter; // Used for EventID-ing and metadata
     Int_t numEvents;    // Used for comparing to eventCounter with metadata;
