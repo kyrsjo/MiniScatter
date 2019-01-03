@@ -258,6 +258,7 @@ void DetectorConstruction::DefineMaterials() {
     MylarMaterial          = man->FindOrBuildMaterial("G4_MYLAR");
     KaptonMaterial         = man->FindOrBuildMaterial("G4_KAPTON");
     StainlessSteelMaterial = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
+    WaterMaterial          = man->FindOrBuildMaterial("G4_WATER");
 
     vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
 
