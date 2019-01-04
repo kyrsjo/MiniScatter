@@ -3,6 +3,7 @@
 #include "G4Event.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
+#include "G4IonTable.hh"
 #include "Randomize.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
@@ -33,14 +34,6 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
-    G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-                     particle = particleTable->FindParticle(beam_type);
-    if (particle == NULL) {
-        G4cerr << "Error - particle named '" << beam_type << "'not found" << G4endl;
-        //particleTable->DumpTable();
-        exit(1);
-    }
-    particleGun->SetParticleDefinition(particle);
 
     if (beam_zpos == 0.0) {
         beam_zpos = - ( Detector->getTargetThickness() / 2.0 +
@@ -217,6 +210,32 @@ G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPo
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
     if (anEvent->GetEventID() == 0) {
+        G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+        G4IonTable* ionTable = G4IonTable::GetIonTable();
+        G4String ION = "ion";
+        if (beam_type.compare(0, ION.length(), ION) == 0) {
+            // Format: 'ion::Z,A'
+            str_size ionZpos = beam_type.index("::")+2;
+            str_size ionApos = beam_type.index(",")+1;
+            if (ionZpos >= beam_type.length() or ionApos >= beam_type.length()) {
+                G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
+                exit(1);
+            }
+            G4int ionZ = std::stoi(beam_type(ionZpos,ionApos-ionZpos));
+            G4int ionA = std::stoi(beam_type(ionApos,beam_type.length()));
+            G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
+            particle = ionTable->GetIon(ionZ,ionA);
+        }
+        else {
+            particle = particleTable->FindParticle(beam_type);
+        }
+        if (particle == NULL) {
+            G4cerr << "Error - particle named '" << beam_type << "'not found" << G4endl;
+            //particleTable->DumpTable();
+            exit(1);
+        }
+        particleGun->SetParticleDefinition(particle);
+
         G4cout << G4endl;
         G4cout << "Injecting beam at z0 = " << beam_zpos/mm << " [mm]" << G4endl;
         G4cout << "Distance to target   = " << (-beam_zpos - Detector->getTargetThickness()/2.0)/mm << "[mm]" << G4endl;

@@ -572,7 +572,10 @@ void printHelp(G4double target_thick,
                    << beam_energy << G4endl;
 
             G4cout << "-b <string> : Particle type,          default/current value = "
-                   << beam_type << G4endl;
+                   << beam_type << G4endl
+                   << " This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
+                   << " typcial ones are 'e-' and 'proton'." << G4endl
+                   << " Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl;
 
             G4cout << "-x <double> : Beam offset (x) [mm],   default/current value = "
                    << beam_offset << G4endl;
