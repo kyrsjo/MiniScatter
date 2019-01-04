@@ -903,6 +903,10 @@ void RootFileWriter::doEvent(const G4Event* event){
 }
 void RootFileWriter::finalizeRootFile() {
 
+    //Needed for some of the processing
+    G4RunManager*           run  = G4RunManager::GetRunManager();
+    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+
     //Print out the particle types on all detector planes
     for (auto it : typeCounter) {
         PrintParticleTypes(it.second, it.first);
@@ -980,12 +984,15 @@ void RootFileWriter::finalizeRootFile() {
     // Ugly hack: Use a double to store an int,
     // since there are no streamable int arrays without making a dict.
     G4cout << "** Metadata **" << G4endl;
-    G4cout << "eventCounter = " << eventCounter << G4endl;
-    G4cout << "numEvents    = " << numEvents    << G4endl;
+    G4cout << "eventCounter  = " << eventCounter << G4endl;
+    G4cout << "numEvents     = " << numEvents    << G4endl;
+    G4cout << "targetDensity = " << detCon->GetTargetMaterialDensity()*cm3/g
+                                 << " [g/cm^3]" << G4endl;
 
-    TVectorD metadataVector (2);
+    TVectorD metadataVector (3);
     metadataVector[0] = double(eventCounter);
     metadataVector[1] = double(numEvents);
+    metadataVector[2] = detCon->GetTargetMaterialDensity()*cm3/g;
     metadataVector.Write("metadata");
     G4cout << G4endl;
 
@@ -1033,9 +1040,7 @@ void RootFileWriter::finalizeRootFile() {
 
         G4cout << G4endl
                << "Computing analytical scattering..." << G4endl;
-        G4RunManager*           run    = G4RunManager::GetRunManager();
 
-        DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
         G4double targetThickness = detCon->getTargetThickness(); //Geant units
         G4cout << "targetThickness = " << targetThickness/mm << " [mm]" << G4endl;
         G4int targetZ = detCon->GetTargetMaterialZ();
