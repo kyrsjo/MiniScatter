@@ -51,7 +51,7 @@ void RootFileWriter::initializeRootFile(){
     //Create folder if it does not exist
     if (not experimental::filesystem::exists(foldername_out.data())) {
         G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
-        experimental::filesystem::create_directory(foldername_out.data());
+        experimental::filesystem::create_directories(foldername_out.data());
     }
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
