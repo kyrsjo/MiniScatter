@@ -22,6 +22,7 @@ public:
                          G4double DetectorDistance_in,
                          G4double DetectorAngle_in,
                          G4bool   DetectorRotated_in,
+                         G4double WorldSize_in,
                          std::vector <G4String> &magnetDefinitions_in);
     ~DetectorConstruction(){};
 

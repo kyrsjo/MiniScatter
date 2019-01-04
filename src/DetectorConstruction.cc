@@ -37,6 +37,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4double DetectorDistance_in,
                                            G4double DetectorAngle_in,
                                            G4bool   DetectorRotated_in,
+                                           G4double WorldSize_in,
                                            std::vector <G4String> &magnetDefinitions_in) :
     solidWorld(0),logicWorld(0),physiWorld(0),
     solidTarget(0),logicTarget(0),physiTarget(0),
@@ -56,7 +57,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     // in case of no rotation
     G4double WorldSizeZ_minimum = (DetectorDistance + DetectorThickness + WorldSizeZ_buffer)*2.0;
 
-    if (not DetectorRotated) { // No detector angle, make a simple 200x200cm world
+    if (not DetectorRotated) { // No detector angle, make a simple world
 
         WorldSizeZ = WorldSizeZ_minimum;
 
@@ -69,8 +70,14 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                << "distance target end to detector start = "
                << DetectorTargetDistance/mm << " [mm]" << G4endl;
 
-        WorldSizeX = 5*cm;
-        WorldSizeY = 5*cm;
+        if (WorldSize_in == 0.0) {
+            WorldSizeX = 5*cm;
+            WorldSizeY = 5*cm;
+        }
+        else {
+            WorldSizeX = WorldSize_in*mm;
+            WorldSizeY = WorldSize_in*mm;
+        }
 
         DetectorSizeX = WorldSizeX;
         DetectorSizeY = WorldSizeY;
@@ -115,6 +122,15 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
         WorldSizeX = dx*2.0;
         WorldSizeY = DetectorSizeY;
+        if (WorldSize_in != 0.0) {
+            if (WorldSize_in*mm < WorldSizeX or WorldSize_in*mm < WorldSizeY) {
+                G4cerr << "Error: Manually spesified WorldSize must be larger than "
+                       << WorldSizeX/mm << " and " << WorldSizeY/mm << " [mm]" << G4endl;
+                exit(1);
+            }
+            WorldSizeX = WorldSize_in*mm;
+            WorldSizeY = WorldSize_in*mm;
+        }
 
         WorldSizeZ = 2*(TargetThickness/2+2*dz);
         if (WorldSizeZ < WorldSizeZ_minimum) {

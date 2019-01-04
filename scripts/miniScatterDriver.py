@@ -9,7 +9,7 @@ def runScatter(simSetup, quiet=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
 
     for key in simSetup.keys():
-        if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "PHYS",\
+        if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "WORLDSIZE", "PHYS",\
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "COVAR", "SEED", "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS"):
@@ -35,6 +35,9 @@ def runScatter(simSetup, quiet=False):
 
     if "ANG" in simSetup:
         cmd += ["-a", str(simSetup["ANG"])]
+
+    if "WORLDSIZE" in simSetup:
+        cmd += ['-w', str(simSetup["WORLDSIZE"])]
 
     if "PHYS" in simSetup:
         cmd += ["-p", simSetup["PHYS"]]
@@ -119,7 +122,7 @@ def runScatter(simSetup, quiet=False):
     for c in cmd:
         cmdline += c + " "
 
-    runFolder = os.path.dirname(os.path.realpath(__file__))
+    runFolder = os.path.dirname(os.path.abspath(__file__))
     if not quiet:
         print ("Running command line: '" + cmdline[:-1] + "'")
         print ("RunFolder = '"+ runFolder +"'")

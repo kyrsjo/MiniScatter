@@ -33,6 +33,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double world_size,
                G4String physListName,
                G4double beam_energy,
                G4String beam_type,
@@ -62,19 +63,21 @@ int main(int argc,char** argv) {
     int getopt_char;
     int getopt_idx;
 
-    G4double target_thick    = 1.0;           //Target thickness  [mm]
-    G4String target_material = "G4_Al";       //Name of target material to use
+    G4double target_thick        = 1.0;       // Target thickness  [mm]
+    G4String target_material     = "G4_Al";   // Name of target material to use
 
-    G4double detector_distance   = 50.0;     //Detector distance at x=y=0  [mm]
-    G4double detector_angle      = 0.0;       //Detectector angle around y-axis
-    G4double detector_rotate     = false;
+    G4double detector_distance   = 50.0;      // Detector distance at x=y=0  [mm]
+    G4double detector_angle      = 0.0;       // Detectector angle around y-axis [deg]
+    G4bool   detector_rotate     = false;
 
-    G4double beam_energy = 200;      // Beam energy [MeV]
-    G4String beam_type   = "e-";     // Beam particle type
-    G4double beam_offset = 0.0;      // Beam offset (x) [mm]
-    G4double beam_zpos   = 0.0;      // Beam offset (z) [mm]
-    G4bool   doBacktrack = false;    // Backtrack to the z-position?
-    G4String covarianceString = "";  // Beam covariance matrix parameters
+    G4double world_size          = 0.0;       // World size X/Y [mm]
+
+    G4double beam_energy = 200;               // Beam energy [MeV]
+    G4String beam_type   = "e-";              // Beam particle type
+    G4double beam_offset = 0.0;               // Beam offset (x) [mm]
+    G4double beam_zpos   = 0.0;               // Beam offset (z) [mm]
+    G4bool   doBacktrack = false;             // Backtrack to the z-position?
+    G4String covarianceString = "";           // Beam covariance matrix parameters
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
 
@@ -101,6 +104,7 @@ int main(int argc,char** argv) {
                                            {"mat",                   required_argument, NULL, 'm' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
+                                           {"worldsize",             required_argument, NULL, 'w' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
                                            {"phys",                  required_argument, NULL, 'p' },
@@ -124,13 +128,14 @@ int main(int argc,char** argv) {
                                            {0,0,0,0}
     };
 
-    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
+    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
                       target_material,
                       detector_distance,
                       detector_angle,
+                      world_size,
                       physListName,
                       beam_energy,
                       beam_type,
@@ -188,6 +193,18 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             detector_rotate = true;
+            break;
+
+        case 'w': //World size
+            try {
+                world_size = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading world size" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 'p': //Named physics list
@@ -326,6 +343,7 @@ int main(int argc,char** argv) {
               target_material,
               detector_distance,
               detector_angle,
+              world_size,
               physListName,
               beam_energy,
               beam_type,
@@ -396,6 +414,7 @@ int main(int argc,char** argv) {
                                                                detector_distance,
                                                                detector_angle,
                                                                detector_rotate,
+                                                               world_size,
                                                                magnetDefinitions);
 
     ParallelWorldConstruction* magnetSensorWorld =
@@ -503,6 +522,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double world_size,
                G4String physListName,
                G4double beam_energy,
                G4String beam_type,
@@ -538,6 +558,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "-a <double> : Detector angle [deg],   default/current value = "
                    << detector_angle << G4endl;
+
+            G4cout << "-w <double> : World size X/Y [mm],    default/current value = "
+                   << world_size << G4endl;
 
             G4cout << "-p <string> : Physics list name,      default/current       = '"
                    << physListName << G4endl;
