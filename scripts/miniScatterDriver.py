@@ -12,7 +12,7 @@ def runScatter(simSetup, quiet=False):
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "WORLDSIZE", "PHYS",\
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "COVAR", "SEED", "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
-                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS"):
+                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ"):
             if key.startswith("MAGNET"):
                 continue
             raise KeyError("Did not expect key {} in the simSetup".format(key))
@@ -105,6 +105,9 @@ def runScatter(simSetup, quiet=False):
     if "CUTOFF_RADIUS" in simSetup:
         cmd += ["--cutoffRadius", str(simSetup["CUTOFF_RADIUS"])]
 
+    if "EDEP_DZ" in simSetup:
+        cmd += ["--edepDZ", str(simSetup["EDEP_DZ"])]
+
     if "MAGNET" in simSetup:
         for mag in simSetup["MAGNET"]:
             mag_cmd = ""
@@ -180,7 +183,11 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
                 raise KeyError("Object {} not found in file {}".format(objName,filename))
             #Clone the object -- the name can be changed later, but make it unique
             objects[objName] = dataFile.Get(objName).Clone(objName+"-localClone")
-            objects[objName].SetDirectory(0) # make it independent of the datafile TFile
+             # make it independent of the datafile TFile (histograms only)
+            try:
+                objects[objName].SetDirectory(0)
+            except AttributeError:
+                pass
 
     if getRaw:
         return (twiss, numPart, objects, dataFile)
