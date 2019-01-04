@@ -5,8 +5,13 @@
 #include "G4ParticleDefinition.hh"
 #include "globals.hh"
 
+//System of units defines variables like "s" and "m" in the global scope,
+// which are then shadowed inside functions in the header. Let's ignore it.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #include "TMatrixDfwd.h"
 #include "TDecompChol.h"
+#pragma GCC diagnostic pop
 
 #include "TRandom.h"
 

@@ -57,6 +57,8 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 add_executable(MiniScatter MiniScatter.cc ${sources} ${headers})
 target_link_libraries(MiniScatter "-lstdc++fs") #Will become standard in C++17
 
+target_compile_options(MiniScatter PRIVATE "-Wno-overloaded-virtual")
+
 #message(${ROOT_FOUND})
 if(ROOT_FOUND)
   target_link_libraries(MiniScatter ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})
@@ -79,10 +81,15 @@ set(MiniScatter_SCRIPTS
 )
 
 foreach(_script ${MiniScatter_SCRIPTS})
-  configure_file(
+#  configure_file(
+#    ${PROJECT_SOURCE_DIR}/scripts/${_script}
+#    ${PROJECT_BINARY_DIR}/${_script}
+#    COPYONLY
+#    )
+  execute_process( COMMAND
+    ${CMAKE_COMMAND} -E create_symlink
     ${PROJECT_SOURCE_DIR}/scripts/${_script}
     ${PROJECT_BINARY_DIR}/${_script}
-    COPYONLY
     )
 endforeach()
 

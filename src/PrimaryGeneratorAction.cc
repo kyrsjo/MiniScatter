@@ -12,17 +12,7 @@
 #include <cmath>
 #include <string>
 
-//System of units defines variables like "s" in the global scope,
-// which are then shadowed inside functions in the header. Let's ignore it.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#include "TMatrixD.h"
-#include "TVectorD.h"
-#pragma GCC diagnostic pop
 #include "TRandom1.h"
-
-//#include "CLHEP/Random/RandGauss.h"
-//#include "/Applications/geant4.9.6.p02/source/externals/clhep/include/CLHEP/Random/RandLandau.h" //(include this before method definition)
 
 // -----------------------------------------------------------------------------------------
 
