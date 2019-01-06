@@ -82,20 +82,26 @@ void RootFileWriter::initializeRootFile(){
     targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
     if(edep_dens_dz != 0.0) {
-        G4cout << "NBINS_DZ for target_edep_dens = " << (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz) << G4endl;
+        G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
+        
+        G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
         target_edep_dens = new TH3D("target_edep_dens",
                                     "Target energy deposition density [MeV/bin]",
                                     100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                                     100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                    (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz),
-                                         0.0, detCon->getTargetThickness()/mm
+                                    target_edep_nbins_dz, 0.0, detCon->getTargetThickness()/mm
                                     );
         target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
         target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
         target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
-        target_edep_dens_binVolume = target_edep_dens->GetXaxis()->GetBinWidth(1) *
-                                     target_edep_dens->GetYaxis()->GetBinWidth(1) *
-                                     target_edep_dens->GetZaxis()->GetBinWidth(1);
+
+        target_edep_rdens = new TH2D("target_edep_rdens",
+                                     "Target radial energy deposition density [MeV/bin]",
+                                     target_edep_nbins_dz, 0.0,detCon->getTargetThickness()/mm,
+                                     100, 0.0, phasespacehist_posLim/mm
+                                     );
+        target_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
+        target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
     }
     else {
         target_edep_dens = NULL;
@@ -502,10 +508,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                     int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
                     for (int j = 0; j < numSamples; j++){
                         G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
+                        G4double sample_z = posSample.z() + detCon->getTargetThickness()/2.0;
                         target_edep_dens->Fill(posSample.x()/mm,
                                                posSample.y()/mm,
-                                               (posSample.z()+detCon->getTargetThickness()/2.0)/mm,
+                                               sample_z/mm,
                                                edepHit->GetDepositedEnergy()/numSamples/MeV);
+                        
+                        G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
+                        target_edep_rdens->Fill(sample_z/mm, sample_r/mm, edepHit->GetDepositedEnergy()/numSamples/MeV);
                     }
                 }
             }
@@ -1151,6 +1161,9 @@ void RootFileWriter::finalizeRootFile() {
         if (target_edep_dens != NULL) {
             target_edep_dens->Write();
         }
+        if (target_edep_rdens != NULL) {
+            target_edep_rdens->Write();
+        }
     }
 
     G4cout << "Writing 1D histograms..." << G4endl;
@@ -1289,7 +1302,12 @@ void RootFileWriter::finalizeRootFile() {
     delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
     delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
 
-    delete target_edep_dens; target_edep_dens = NULL;
+    if (target_edep_dens != NULL) {
+        delete target_edep_dens; target_edep_dens = NULL;
+    }
+    if (target_edep_rdens != NULL) { 
+        delete target_edep_rdens; target_edep_rdens = NULL;
+    }
 
     delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
 

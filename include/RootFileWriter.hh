@@ -122,8 +122,8 @@ private:
     std::map<G4int,TH1D*> target_exit_Rpos;
     std::map<G4int,TH1D*> target_exit_Rpos_cutoff;
 
-    TH3D*    target_edep_dens;
-    G4double target_edep_dens_binVolume;
+    TH3D* target_edep_dens;
+    TH2D* target_edep_rdens;
 
     // Magnet histograms
     std::vector<TH1D*> magnet_edep;
