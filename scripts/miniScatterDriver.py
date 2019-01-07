@@ -198,3 +198,35 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     else:
         dataFile.Close()
         return(twiss, numPart, objects)
+
+def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryload=True):
+    """
+    Checks if the ROOT file given by the parameters in simsetup exists;
+    if it does then load.
+
+    If it does not exist, run the simulation then load.
+
+    This is quite practical for e.g. Jupyter, since when using it re-running a notebook
+    will quickly load already computed data without having to comment out
+    the call to runScatter().
+    """
+
+    ROOTfilename = 'output.root'
+    if "OUTNAME" in simSetup:
+        ROOTfilename = simSetup["OUTNAME"]+".root"
+    if "OUTFOLDER" in simSetup:
+        ROOTfilename = os.path.join(simSetup["OUTFOLDER"],ROOTfilename)
+    else:
+        runFolder = os.path.dirname(os.path.abspath(__file__))
+        ROOTfilename = os.path.join(runFolder,"plots",ROOTfilename)
+
+    if not os.path.exists(ROOTfilename):
+        print("Did not find any pre-computed data at '"+ROOTfilename+"', computing now.")
+        runScatter(simSetup,quiet)
+    elif tryload==False:
+        print("TryLoad is False, computing now.")
+        runScatter(simSetup,quiet)
+    else:
+        print("Found a file at '"+ROOTfilename+"', loading!")
+
+    return getData(ROOTfilename, quiet, getRaw, getObjects)
