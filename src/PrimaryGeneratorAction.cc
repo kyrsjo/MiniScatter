@@ -281,9 +281,10 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         }
     }
     else if (Rcut != 0.0) {
-        RNG->Circle(x,y,Rcut);
-        x *= mm;
-        y *= mm;
+        G4double r = RNG->Uniform();
+        G4double t = RNG->Uniform(2*M_PI);
+        x = sqrt(r)*cos(t)*Rcut*mm;
+        y = sqrt(r)*sin(t)*Rcut*mm;
 
         xp = 0.0;
         yp = 0.0;
