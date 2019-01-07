@@ -262,6 +262,11 @@ void RootFileWriter::initializeRootFile(){
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceY->Sumw2();
+    init_phasespaceXY   =
+        new TH2D("init_xy",
+                 "Initial phase space (x,y)",
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
 
     // Target R position
     G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
@@ -766,6 +771,7 @@ void RootFileWriter::doEvent(const G4Event* event){
     // Initial particle distribution
     init_phasespaceX->Fill(genAct->x/mm,genAct->xp/rad);
     init_phasespaceY->Fill(genAct->y/mm,genAct->yp/rad);
+    init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
 
     //**Data from Magnets, which use a TargetSD**
     size_t magIdx = -1;
@@ -1131,6 +1137,7 @@ void RootFileWriter::finalizeRootFile() {
         G4cout << "Writing 2D histograms..." << G4endl;
         init_phasespaceX->Write();
         init_phasespaceY->Write();
+        init_phasespaceXY->Write();
 
         target_exit_phasespaceX->Write();
         target_exit_phasespaceY->Write();
@@ -1284,6 +1291,7 @@ void RootFileWriter::finalizeRootFile() {
 
     delete init_phasespaceX; init_phasespaceX = NULL;
     delete init_phasespaceY; init_phasespaceY = NULL;
+    delete init_phasespaceXY; init_phasespaceXY = NULL;
 
     delete targetEdep; targetEdep = NULL;
     delete targetEdep_NIEL; targetEdep_NIEL = NULL;

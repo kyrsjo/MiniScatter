@@ -154,6 +154,7 @@ private:
     //Initial distribution
     TH2D* init_phasespaceX;
     TH2D* init_phasespaceY;
+    TH2D* init_phasespaceXY;
 
     // End-of-run statistics
 
