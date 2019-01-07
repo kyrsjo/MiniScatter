@@ -83,7 +83,7 @@ void RootFileWriter::initializeRootFile(){
 
     if(edep_dens_dz != 0.0) {
         G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
-        
+
         G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
         target_edep_dens = new TH3D("target_edep_dens",
                                     "Target energy deposition density [MeV/bin]",
@@ -104,7 +104,8 @@ void RootFileWriter::initializeRootFile(){
         target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
     }
     else {
-        target_edep_dens = NULL;
+        target_edep_dens  = NULL;
+        target_edep_rdens = NULL;
     }
 
     // Target tracking info
@@ -513,7 +514,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                                                posSample.y()/mm,
                                                sample_z/mm,
                                                edepHit->GetDepositedEnergy()/numSamples/MeV);
-                        
+
                         G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
                         target_edep_rdens->Fill(sample_z/mm, sample_r/mm, edepHit->GetDepositedEnergy()/numSamples/MeV);
                     }
@@ -1305,7 +1306,7 @@ void RootFileWriter::finalizeRootFile() {
     if (target_edep_dens != NULL) {
         delete target_edep_dens; target_edep_dens = NULL;
     }
-    if (target_edep_rdens != NULL) { 
+    if (target_edep_rdens != NULL) {
         delete target_edep_rdens; target_edep_rdens = NULL;
     }
 
