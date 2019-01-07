@@ -39,6 +39,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4double beam_rCut,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
@@ -78,6 +79,7 @@ int main(int argc,char** argv) {
     G4double beam_zpos   = 0.0;               // Beam offset (z) [mm]
     G4bool   doBacktrack = false;             // Backtrack to the z-position?
     G4String covarianceString = "";           // Beam covariance matrix parameters
+    G4double beam_rCut = 0.0;                 // Beam distribution radial cutoff
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
 
@@ -114,6 +116,7 @@ int main(int argc,char** argv) {
                                            {"xoffset",               required_argument, NULL, 'x' },
                                            {"zoffset",               required_argument, NULL, 'z' },
                                            {"covar",                 required_argument, NULL, 'c' },
+                                           {"beamRcut",              required_argument, NULL, 1200},
                                            {"outname",               required_argument, NULL, 'f' },
                                            {"outfolder",             required_argument, NULL, 'o' },
                                            {"seed",                  required_argument, NULL, 's' },
@@ -141,6 +144,7 @@ int main(int argc,char** argv) {
                       beam_type,
                       beam_offset,
                       beam_zpos,
+                      beam_rCut,
                       doBacktrack,
                       rngSeed,
                       filename_out,
@@ -276,8 +280,20 @@ int main(int argc,char** argv) {
             break;
 
         case 'c': //Beam covariance matrix from Twiss parameters
-            //"-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
+            //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
+            break;
+
+        case 1200: //Beam radial cutoff [mm]
+            try {
+                beam_rCut = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading beam_rCut" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 'f': //Output filename
@@ -309,15 +325,39 @@ int main(int argc,char** argv) {
             break;
 
         case 1000: // Cutoff energy fraction
-            cutoff_energyFraction = std::stod(string(optarg));
+            try {
+                cutoff_energyFraction = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading cutoff_energyFraction" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 1001: // Cutoff radius [mm]
-            cutoff_radius = std::stod(string(optarg));
+            try {
+                cutoff_radius = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading cutoff_radius" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 1002: // Z bin width for energy deposit histograms [mm]
-            edep_dens_dz = std::stod(string(optarg));
+            try {
+                edep_dens_dz = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading edep_dens_dz" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 1100: //Magnet definition
@@ -325,7 +365,8 @@ int main(int argc,char** argv) {
             break;
 
         default: // WTF?
-            G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' when parsing command line arguments." << G4endl;
+            G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' ("<< getopt_char<<")"
+                   << " when parsing command line arguments." << G4endl;
             exit(1);
         }
     }
@@ -349,6 +390,7 @@ int main(int argc,char** argv) {
               beam_type,
               beam_offset,
               beam_zpos,
+              beam_rCut,
               doBacktrack,
               rngSeed,
               filename_out,
@@ -432,7 +474,8 @@ int main(int argc,char** argv) {
                                                                     beam_offset,
                                                                     beam_zpos,
                                                                     doBacktrack,
-                                                                    covarianceString);
+                                                                    covarianceString,
+                                                                    beam_rCut);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -528,6 +571,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4double beam_rCut,
                G4bool   doBacktrack,
                G4int    rngSeed,
                G4String filename_out,
@@ -585,10 +629,16 @@ void printHelp(G4double target_thick,
                    << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl
                    << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
                    << " If a '*' is prepended, the distribution is to be generated at z=0," << G4endl
-                   << " then backtracked to the given z value (which may be 0.0)" << G4endl
-                   << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
+                   << " then backtracked to the given z value (which may be 0.0)" << G4endl;
+            
+            G4cout << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
                    << " Set realistic beam distribution (on target surface); " << G4endl
                    << " if optional part given then x,y are treated separately" << G4endl;
+
+            G4cout << "--beamRcut <double> : Radial cutoff for the beam distribution." << G4endl
+                   << " If given alone, generate a circular uniform distribution." << G4endl
+                   << " If given together with -c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
+                   << " Default/current value = " << beam_rCut << G4endl;
 
             G4cout << "-s <int>    : Set the initial seed,   default/current value = "
                    << rngSeed << G4endl;

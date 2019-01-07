@@ -23,14 +23,16 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4double beam_offset_in,
                                                G4double beam_zpos_in,
                                                G4bool   doBacktrack_in,
-                                               G4String covarianceString_in) :
+                                               G4String covarianceString_in,
+                                               G4double Rcut_in ) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
     beam_offset(beam_offset_in),
     beam_zpos(beam_zpos_in),
     doBacktrack(doBacktrack_in),
-    covarianceString(covarianceString_in) {
+    covarianceString(covarianceString_in),
+    Rcut(Rcut_in) {
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
@@ -238,21 +240,53 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         if (covarianceString != "") {
             hasCovariance = true;
             setupCovariance();
-
+        }
+        if (covarianceString != "" or Rcut != 0.0) {
             RNG = new TRandom1();
         }
     }
 
     if (hasCovariance) {
-        G4double xn  = RNG->Gaus(0,1);
-        G4double xpn = RNG->Gaus(0,1);;
-        x  = (xn*covarX_L[0][0] + xpn*covarX_L[0][1])*m + beam_offset*mm;
-        xp = (xn*covarX_L[1][0] + xpn*covarX_L[1][1])*rad;
+        int loopCounter = 0;
+        while(true) {
+            G4double xn  = RNG->Gaus(0,1);
+            G4double xpn = RNG->Gaus(0,1);;
+            x  = (xn*covarX_L[0][0] + xpn*covarX_L[0][1])*m + beam_offset*mm;
+            xp = (xn*covarX_L[1][0] + xpn*covarX_L[1][1])*rad;
 
-        G4double yn  = RNG->Gaus(0,1);
-        G4double ypn = RNG->Gaus(0,1);
-        y  = (yn*covarY_L[0][0] + ypn*covarY_L[0][1])*m;
-        yp = (yn*covarY_L[1][0] + ypn*covarY_L[1][1])*rad;
+            G4double yn  = RNG->Gaus(0,1);
+            G4double ypn = RNG->Gaus(0,1);
+            y  = (yn*covarY_L[0][0] + ypn*covarY_L[0][1])*m;
+            yp = (yn*covarY_L[1][0] + ypn*covarY_L[1][1])*rad;
+
+            if (Rcut == 0.0) break;
+            else {
+                G4double init_r = sqrt(x*x + y*y)/mm;
+                if (init_r <= Rcut) break;
+
+                // No hit; do the anti-hang check.
+                loopCounter++;
+                if (loopCounter == 10000) {
+                    G4cerr << "Warning in PrimaryGeneratorAction::GeneratePrimaries():" << G4endl
+                           << " Number of iterations for the Rcut = " << Rcut/mm << " [mm]"
+                           << " has reached 10k." << G4endl;
+                }
+                else if (loopCounter > 1000000) {
+                    G4cerr << "Error in PrimaryGeneratorAction::GeneratePrimaries():" << G4endl
+                           << " Number of iterations for the Rcut = " << Rcut/mm << " [mm]"
+                           << " has reached 1M. Aborting." << G4endl;
+                    exit(1);
+                }
+            }
+        }
+    }
+    else if (Rcut != 0.0) {
+        RNG->Circle(x,y,Rcut);
+        x *= mm;
+        y *= mm;
+
+        xp = 0.0;
+        yp = 0.0;
     }
     else {
         x  = beam_offset*mm;

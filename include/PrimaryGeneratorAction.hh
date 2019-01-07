@@ -30,12 +30,13 @@ public:
                            G4double beam_offset_in,
                            G4double beam_zpos_in,
                            G4bool   doBacktrack_in,
-                           G4String covarianceString_in);
+                           G4String covarianceString_in,
+                           G4double Rcut_in );
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
-    G4double get_beam_energy() const { return beam_energy; };
-    G4double get_beam_particlemass() const { return particle->GetPDGMass(); };
+    G4double get_beam_energy()         const { return beam_energy; };
+    G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
 private:
     G4ParticleGun*           particleGun;  //pointer a to G4  class
@@ -74,6 +75,9 @@ private:
     // so a transpose is neccessary.
     TMatrixD covarX_L;
     TMatrixD covarY_L;
+
+    //Setup for circular uniform distribution / Rcut
+    G4double Rcut;
 
     TRandom* RNG;
 

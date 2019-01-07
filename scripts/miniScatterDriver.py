@@ -11,7 +11,8 @@ def runScatter(simSetup, quiet=False):
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "WORLDSIZE", "PHYS",\
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
-                       "COVAR", "SEED", "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
+                       "COVAR", "BEAM_RCUT", "SEED", \
+                       "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ"):
             if key.startswith("MAGNET"):
                 continue
@@ -77,6 +78,9 @@ def runScatter(simSetup, quiet=False):
                     + str(simSetup["COVAR"][3]) + ":" + str(simSetup["COVAR"][4]) + ":" + str(simSetup["COVAR"][5])]
         else:
             raise ValueError("Expected len(COVAR) == 3 or 6")
+
+    if "BEAM_RCUT" in simSetup:
+        cmd += ["--beamRcut", str(simSetup["BEAM_RCUT"])]
 
     if "SEED" in simSetup:
         cmd += ["-s", str(simSetup["SEED"])]
