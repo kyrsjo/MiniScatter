@@ -58,12 +58,6 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
         }
     }
 
-    if (covarianceString != "") {
-        hasCovariance = true;
-        setupCovariance();
-
-        RNG = new TRandom1();
-    }
 }
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
@@ -240,6 +234,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         G4cout << "Injecting beam at z0 = " << beam_zpos/mm << " [mm]" << G4endl;
         G4cout << "Distance to target   = " << (-beam_zpos - Detector->getTargetThickness()/2.0)/mm << "[mm]" << G4endl;
         G4cout << G4endl;
+
+        if (covarianceString != "") {
+            hasCovariance = true;
+            setupCovariance();
+
+            RNG = new TRandom1();
+        }
     }
 
     if (hasCovariance) {
