@@ -49,7 +49,9 @@ endif()
 # NB: headers are included so they will show up in IDEs
 #
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
+list(FILTER sources EXCLUDE REGEX \\.sys\\.v)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
+list(FILTER sources EXCLUDE REGEX \\.sys\\.v)
 
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries

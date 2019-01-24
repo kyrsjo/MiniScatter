@@ -9,3 +9,5 @@ cmake_install.cmake
 install_manifest.txt
 __pycache__
 *.h5
+
+.sys.v*
