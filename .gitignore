@@ -11,3 +11,5 @@ __pycache__
 *.h5
 
 .sys.v*
+
+.ipynb_checkpoints
