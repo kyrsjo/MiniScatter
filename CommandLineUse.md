@@ -2,7 +2,7 @@
 
 The basic user interface of MiniScatter is through the command line.
 This allows the user to specify the simulation parameters such as target thickness, target material, and incident beam properties as command line flags.
-An altertative is to use the [Python interface](PyInterface.m), this interface is a wrapper which behind the scences is calling MiniScatter through the command line interface.
+An altertative is to use the [Python interface](PyInterface.md), this interface is a wrapper which behind the scences is calling MiniScatter through the command line interface.
 It is therefore useful to have some understanding of the command line interface even if one intends to use the Python interface.
 
 ## Quick example

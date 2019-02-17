@@ -4,10 +4,8 @@
 
 export LCGENV_PATH=/cvmfs/sft.cern.ch/lcg/releases
 
-#Put all the commands in a script to be ran,
-# since running this breaks the Python lcgenv is running on...
-rm setupLCG_runme.sh
-
+#Put all the commands in a script `setupLCG.sh` which is then ran,
+# since running the commands breaks the Python2 environment which LCGenv is running on
 /cvmfs/sft.cern.ch/lcg/releases/LCG_94python3/lcgenv/1.3.6/x86_64-centos7-gcc7-opt/lcgenv -p LCG_94python3 x86_64-centos7-gcc7-opt gcc     >  setupLCG_runme.sh
 
 /cvmfs/sft.cern.ch/lcg/releases/LCG_94python3/lcgenv/1.3.6/x86_64-centos7-gcc7-opt/lcgenv -p LCG_94python3 x86_64-centos7-gcc7-opt CMake   >> setupLCG_runme.sh
