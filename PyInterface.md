@@ -3,7 +3,7 @@
 As a layer on top of the (command line interface)[CommandLineUse.md], a Python interface has been provided.
 This allows to run MiniScatter (once or in scans), and to extract data from these runs.
 
-The Python libraries are contained in the the `scripts` folder, in the files [scripts/miniScatterDriver.py](miniScatterDriver.py) and [scripts/miniScatterScanner.py](miniScatterScanner.py).
+The Python libraries are contained in the the `scripts` folder, in the files [miniScatterDriver.py](scripts/miniScatterDriver.py) and [miniScatterScanner.py](scripts/miniScatterScanner.py).
 When building MiniScatter, these libraries gets symlinked into the build folder.
 This is done by symlink instead of file copy, so that one does not loose changes the script if modifying the "wrong" copy of the same source code.
 
@@ -26,7 +26,7 @@ import miniScatterScanner
 After this, MiniScatter can be ran.
 
 ## The driver module
-This module, found in [scripts/miniScatterDriver.py](miniScatterDriver.py), is used for running the simulation and for loading the `.root` file data.
+This module, found in [miniScatterDriver.py](scripts/miniScatterDriver.py), is used for running the simulation and for loading the `.root` file data.
 Three functions are provided:
 
 ### `runScatter(simSetup,quiet=True)`
@@ -66,7 +66,7 @@ If it is not there, it calls `runScatter` and then `getData`.
 The return data is the same as what is passed from `getData`.
 
 ## The scanner module
-This module, found in [scripts/miniScatterScanner.py](miniScatterScanner.py), is used for repeatedly running the simulation with different parameters.
+This module, found in [miniScatterScanner.py](scripts/miniScatterScanner.py), is used for repeatedly running the simulation with different parameters.
 If available, it can take advantage of multi-core parallelism, scheduling a number of jobs to run in parallel until the list of parameters is exhausted.
 Furthermore, similarly to `getData_tryLoad` a caching mechanism is included, which means that on re-run the pre-computed simulation data can be loaded from file.
 
