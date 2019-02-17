@@ -1,7 +1,5 @@
 # MiniScatter
 
-Kyrre Sjobak, October 23rd 2018
-
 MiniScatter is a straight-forward program for simulating what happens a particle beam after passing through a target of some material and thickness, taking the effect of magnetic fields into account.
 It is based on Geant4 [1], and simulation output is handled via ROOT [2].
 The geometry is created based on user input, built up from a range of built-in and configurable elements.
@@ -10,8 +8,13 @@ No config files are used; the program is configured by the command line used to 
 In addition to MiniScatter itself, a set of Python libraries for interacting with MiniScatter are also provided.
 This makes it very convenient to use MiniScatter for running scans and extracting the output.
 Furthermore, the scan library provides behind-the-scenes saving of results, meaning that if you have previously ran a simulation and then restart the Jupyter notebook, running the same python call again will instantly return the same results as when running the simulation in the first round.
+This is implemented using ROOT and HDF5.
 
 ## Installing MiniScatter
+
+*Note: If you have access to CERN computing resources, you can run MiniScatter through SWAN or LxPlus instead of installing MiniScatter on your local machine.
+This is useful for testing, teaching, etc. however the performance is most likely slower.
+For more information, see [SWAN](SWAN.md).*
 
 To install MiniScatter, you must first install Geant4 and ROOT.
 
@@ -33,6 +36,8 @@ Finally, run `make` again.
 
 ## Running MiniScatter from the command line
 
+[More information](CommandLineUse.md)
+
 The simplest way to use MiniScatter is to launch simulations from the command line.
 Furthermore, the `-h` option will show you a list of available options and their default values, and `-g` will open the standard Geant4 GUI which is useful to check what the geometry looks like and how typical events look like.
 In addition to the "minus-options", Geant4 macros can also be used; as an example the included macro `verbose.mac` makes Geant4 print extra information about the particle tracks and the interactions as the simulation progresses.
@@ -41,6 +46,8 @@ These macros can be ran by specifying them at the end of the command line, for e
 Note that some options, like `--magnet` which creates a magnet or collimator with a given set of parameters, can be specified more than once.
 
 ## Running MiniScatter via Python
+
+[More information](PyInterface.md)
 
 Two Python libraries for running MiniScatter are provided:
  * `miniScatterDriver.py`  : Runs a single miniScatter simulation, or extracts and returns the results from a .root file written by MiniScatter.
@@ -53,8 +60,14 @@ Two Python libraries for running MiniScatter are provided:
 
 For examples of using the Python interface as well as running the code via Jupyter examples, please see in the folder `examples`.
 
+## References
+
 [1] : https://geant4.web.cern.ch/
+
 [2] : https://root.cern.ch/
+
 [3] : http://geant4-userdoc.web.cern.ch/geant4-userdoc/UsersGuides/InstallationGuide/html/
+
 [4] : http://jupyter.org/
+
 [5] : https://cmake.org/
