@@ -6,7 +6,7 @@ MiniScatter can be ran on CERN's SWAN system [1], which provides a ready-to-go L
 In order to use this, you need a CERN account.
 If you do not have that, you can still install and run MiniScatter on your local machine.
 
-Furthermore:
+Furthermore, you need:
  * Access to CERNbox / EOS
  * Access to SWAN
 
@@ -18,6 +18,7 @@ from Windows a 3rd party program such as Putty [2] is required.
 Once connected to lxplus7, download and compile MiniScatter as follows:
  * Change folder to your CERNBOX:
    `cd /eos/user/first_letter_in_username/username/`
+   (remember to use your actual username and the first letter in the username in this command)
  * Clone the GIT repository:
    `git clone https://github.com/kyrsjo/MiniScatter.git`<sup>1</sup>
  * Enter the MiniScatter folder:
@@ -44,7 +45,8 @@ For more information, see [Command Line Use](CommandLineUse.md).
 ## Using MiniScatter with SWAN
 Assuming that you have compiled MiniScatter in CERNBOX as described above and the compilation was sucessfull, you are now ready to use MiniScatter through it's Python interface.
 
- * Spin up a SWAN WM. In the configuration, make sure to select a software stack and platform which matches the one used in `setupLCG.sh` when compiling; currently this is:
+ * Spin up a SWAN virtual machine.
+   In the configuration dialog, make sure to select a software stack and platform which matches the one used in `setupLCG.sh` when compiling; currently this is:
    - Software stack = `94 Python3`
    - Platform = `x86_64_centos7-gcc7-opt`
    - Environment script = `geant4.sh`
@@ -70,9 +72,11 @@ For further information, see the documentation on the [Python Interface](PyInter
 ## References
 
 [1] https://swan.cern.ch
+
 [2] https://www.putty.org/
 
 ## Footnotes
 
 1: You can of course also clone MiniScatter from a fork or using the SSH url, if you are logged into GitHub on LxPlus7.
+
 2: But remember to `source setupLCG.sh`!
