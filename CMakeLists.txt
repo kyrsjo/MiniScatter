@@ -79,6 +79,7 @@ set(MiniScatter_SCRIPTS
   gammaFilter.mac
   miniScatterScanner.py
   miniScatterDriver.py
+  miniScatterPlots.py
   quicksilver.py
 )
 

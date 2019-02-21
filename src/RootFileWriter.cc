@@ -98,7 +98,7 @@ void RootFileWriter::initializeRootFile(){
         target_edep_rdens = new TH2D("target_edep_rdens",
                                      "Target radial energy deposition density [MeV/bin]",
                                      target_edep_nbins_dz, 0.0,detCon->getTargetThickness()/mm,
-                                     100, 0.0, phasespacehist_posLim/mm
+                                     1000, 0.0, 2*phasespacehist_posLim / mm
                                      );
         target_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
         target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
@@ -525,6 +525,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     }
                 }
             }
+
             targetEdep->Fill(edep/MeV);
             targetEdep_NIEL->Fill(edep_NIEL/keV);
             targetEdep_IEL->Fill(edep_IEL/MeV);
