@@ -53,6 +53,28 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     DetectorRotated = DetectorRotated_in;
     DetectorAngle = DetectorAngle_in*pi/180.0;
 
+    if (TargetThickness == 0.0) {
+        if (DetectorRotated) {
+            G4cerr << "TargetThickness=0 doesn't work together with rotated detector" << G4endl;
+            exit(1);
+        }
+
+        if (magnetDefinitions.size() == 0) {
+            G4cerr << "Error: Magnet definitions must be used if TargetThickness=0." << G4endl;
+            exit(1);
+        }
+
+        HasTarget = false;
+    }
+    else if (TargetThickness < 0.0) {
+        G4cerr << "Error in DetectorConstruction::DetectorConstruction():" << G4endl
+               << "TargetThickness = " << TargetThickness << " < 0.0; this is not allowed." << G4endl;
+        exit(1);
+    }
+    else {
+        HasTarget = true;
+    }
+    
     //Set the z-size of the world volume to fit the detector + buffer,
     // in case of no rotation
     G4double WorldSizeZ_minimum = (DetectorDistance + DetectorThickness + WorldSizeZ_buffer)*2.0;
@@ -148,10 +170,13 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
     // materials
     DefineMaterials(); // The standard ones
-
-    if (TargetMaterial_in.contains("::")) {
+    if (TargetThickness == 0.0) {
+        // No target, only magnets!
+        TargetMaterial = NULL;
+    }
+    else if (TargetMaterial_in.contains("::")) {
         // Gas target
-        DefineGas(TargetMaterial_in);
+        TargetMaterial = DefineGas(TargetMaterial_in);
     }
     else {
         // Solid target
@@ -186,17 +211,23 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                    true);           //Check for overlaps
 
     //constructing the target
-    solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
-    logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
-    physiTarget = new G4PVPlacement(NULL,                        //no rotation
-                                    G4ThreeVector(0.0,0.0,0.0),  //its position
-                                    logicTarget,                 //its logical volume
-                                    "TargetPV",                  //its name
-                                    logicWorld,                  //its mother
-                                    false,                       //pMany not used
-                                    0,                           //copy number
-                                    true);                       //Check for overlaps
-
+    if (TargetThickness > 0.0) {
+        solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
+        logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
+        physiTarget = new G4PVPlacement(NULL,                        //no rotation
+                                        G4ThreeVector(0.0,0.0,0.0),  //its position
+                                        logicTarget,                 //its logical volume
+                                        "TargetPV",                  //its name
+                                        logicWorld,                  //its mother
+                                        false,                       //pMany not used
+                                        0,                           //copy number
+                                        true);                       //Check for overlaps
+    }
+    else {
+        solidTarget = NULL;
+        logicTarget = NULL;
+        physiTarget = NULL;
+    }
     //The "detector"
     solidDetector = new G4Box("DetectorS", DetectorSizeX/2,DetectorSizeY/2,DetectorThickness/2);
     logicDetector = new G4LogicalVolume(solidDetector, DetectorMaterial, "DetectorLV");
@@ -229,9 +260,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     // Get pointer to detector manager
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
-    G4VSensitiveDetector* targetSD = new MyTargetSD("target");
-    SDman->AddNewDetector(targetSD);
-    logicTarget->SetSensitiveDetector(targetSD);
+    if (logicTarget != NULL) {
+        G4VSensitiveDetector* targetSD = new MyTargetSD("target");
+        SDman->AddNewDetector(targetSD);
+        logicTarget->SetSensitiveDetector(targetSD);
+    }
     G4VSensitiveDetector* detectorSD = new MyTrackerSD("tracker");
     SDman->AddNewDetector(detectorSD);
     logicDetector->SetSensitiveDetector(detectorSD);
@@ -287,27 +320,27 @@ void DetectorConstruction::DefineMaterials() {
 
 //------------------------------------------------------------------------------
 
-void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
+G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     G4cout << G4endl;
 
-    if (not TargetMaterial_in.contains("::")) {
+    if (not gasMaterialName.contains("::")) {
         G4cerr << "Error in DetectorConstruction::DefineGas() -- no '::' was found"
-               << "in material name = '" << TargetMaterial_in << "'"
+               << "in material name = '" << gasMaterialName << "'"
                << G4endl;
         exit(1);
     }
 
-    str_size colonPos = TargetMaterial_in.index("::");
+    str_size colonPos = gasMaterialName.index("::");
     str_size pressurePos = colonPos+2;
 
-    if (pressurePos >= TargetMaterial_in.length()) {
+    if (pressurePos >= gasMaterialName.length()) {
         G4cerr << "Error in DetectorConstruction::DefineGas() -- no pressure was found"
-               << " after '::' in material name = '" << TargetMaterial_in << "'"
+               << " after '::' in material name = '" << gasMaterialName << "'"
                << G4endl;
         exit(1);
     }
-    G4String material_in = TargetMaterial_in(0, colonPos);
-    G4String pressure_in = TargetMaterial_in(pressurePos, TargetMaterial_in.length()); // Bug, 2nd argument is length not position
+    G4String material_in = gasMaterialName(0, colonPos);
+    G4String pressure_in = gasMaterialName(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
 
     G4double pressure = 0.0;
     try {
@@ -439,20 +472,22 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
            << " [K], density = " << densityAr / g * meter3 << " [g/m3]"
            << G4endl;
 
+    G4Material* returnMaterial = NULL;
+
     if (material_in == "H_2") {
-        TargetMaterial = this->gasH_2;
+        returnMaterial = this->gasH_2;
     }
     else if (material_in == "He") {
-        TargetMaterial = this->gasHe;
+        returnMaterial = this->gasHe;
     }
     else if (material_in == "N_2") {
-        TargetMaterial = this->gasN_2;
+        returnMaterial = this->gasN_2;
     }
     else if (material_in == "Ne") {
-        TargetMaterial = this->gasNe;
+        returnMaterial = this->gasNe;
     }
     else if (material_in == "Ar") {
-        TargetMaterial = this->gasAr;
+        returnMaterial = this->gasAr;
     }
     else {
         G4cerr << "Error in DetectorConstruction::DefineGas()" << G4endl;
@@ -461,12 +496,20 @@ void DetectorConstruction::DefineGas(G4String TargetMaterial_in) {
     }
 
     G4cout << G4endl;
+
+    return returnMaterial;
 }
 
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
     // search the material by its name
+    if(!GetHasTarget() || TargetThickness == 0.0){
+        G4cerr << "Error in DetectorConstruction::SetTargetMaterial():" << G4endl
+               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
+        exit(1);
+    }
+
     G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
     if (pttoMaterial) TargetMaterial = pttoMaterial;
     else {
@@ -485,6 +528,12 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
 
 G4int DetectorConstruction::GetTargetMaterialZ() {
     //Return the nuclear charge of the most common species in the target
+
+    if (!GetHasTarget() || TargetMaterial == NULL){
+        G4cerr << "Error in DetectorConstruction::GetTargetMaterialZ():" << G4endl
+               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
+        exit(1);
+    }
 
     const size_t numElements             = TargetMaterial->GetNumberOfElements();
     const G4ElementVector* elementVector = TargetMaterial->GetElementVector();
@@ -505,6 +554,12 @@ G4int DetectorConstruction::GetTargetMaterialZ() {
 
 G4double DetectorConstruction::GetTargetMaterialA() {
     //Return the average mass number of the most common species in the target
+
+    if (!GetHasTarget() || TargetMaterial == NULL){
+        G4cerr << "Error in DetectorConstruction::GetTargetMAterialZ():" << G4endl
+               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
+        exit(1);
+    }
 
     const size_t numElements             = TargetMaterial->GetNumberOfElements();
     const G4ElementVector* elementVector = TargetMaterial->GetElementVector();
@@ -531,6 +586,11 @@ G4double DetectorConstruction::GetTargetMaterialA() {
 //------------------------------------------------------------------------------
 
 G4double DetectorConstruction::GetTargetMaterialDensity() {
+    if (!GetHasTarget() || TargetMaterial == NULL){
+        G4cerr << "Error in DetectorConstruction::GetTargetMAterialZ():" << G4endl
+               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
+        exit(1);
+    }
     return TargetMaterial->GetDensity();
 }
 

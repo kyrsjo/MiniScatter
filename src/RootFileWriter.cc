@@ -65,118 +65,122 @@ void RootFileWriter::initializeRootFile(){
     RNG = new TRandom1(); //TODO: Seed it!
 
     // TTrees for external analysis
-    targetExit = new TTree("TargetExit","TargetExit tree");
-    targetExit->Branch("TargetExitBranch", &targetExitBuffer,
-                       "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+    if (detCon->GetHasTarget()) {
+        targetExit = new TTree("TargetExit","TargetExit tree");
+        targetExit->Branch("TargetExitBranch", &targetExitBuffer,
+                           "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+    }
 
     trackerHits = new TTree("TrackerHits","TrackerHits tree");
     trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
                         "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
 
     // Target energy deposition
-    targetEdep = new TH1D("targetEdep","targetEdep",1000,0,beamEnergy);
-    targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
-    targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
-    targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
-    targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
-    targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
+    if (detCon->GetHasTarget()) {
+        targetEdep = new TH1D("targetEdep","targetEdep",1000,0,beamEnergy);
+        targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
+        targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
+        targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
+        targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
+        targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
-    if(edep_dens_dz != 0.0) {
-        G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
+        if(edep_dens_dz != 0.0) {
+            G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
 
-        G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
-        target_edep_dens = new TH3D("target_edep_dens",
-                                    "Target energy deposition density [MeV/bin]",
-                                    100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                    100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                    target_edep_nbins_dz, 0.0, detCon->getTargetThickness()/mm
-                                    );
-        target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
-        target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
-        target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+            G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
+            target_edep_dens = new TH3D("target_edep_dens",
+                                        "Target energy deposition density [MeV/bin]",
+                                        100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                        100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                        target_edep_nbins_dz, 0.0, detCon->getTargetThickness()/mm
+                                        );
+            target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
+            target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
+            target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
 
-        target_edep_rdens = new TH2D("target_edep_rdens",
-                                     "Target radial energy deposition density [MeV/bin]",
-                                     target_edep_nbins_dz, 0.0,detCon->getTargetThickness()/mm,
-                                     1000, 0.0, 2*phasespacehist_posLim / mm
-                                     );
-        target_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
-        target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
+            target_edep_rdens = new TH2D("target_edep_rdens",
+                                        "Target radial energy deposition density [MeV/bin]",
+                                        target_edep_nbins_dz, 0.0,detCon->getTargetThickness()/mm,
+                                        1000, 0.0, 2*phasespacehist_posLim / mm
+                                        );
+            target_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
+            target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
+        }
+        else {
+            target_edep_dens  = NULL;
+            target_edep_rdens = NULL;
+        }
+
+        // Target tracking info
+        target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
+                                        "Particle energy when exiting target (electrons)",
+                                        1000,0,beamEnergy);
+        target_exit_energy[-11] = new TH1D("target_exit_energy_PDG-11",
+                                        "Particle energy when exiting target (positrons)",
+                                        1000,0,beamEnergy);
+        target_exit_energy[22]  = new TH1D("target_exit_energy_PDG22",
+                                        "Particle energy when exiting target (photons)",
+                                        1000,0,beamEnergy);
+        target_exit_energy[0]   = new TH1D("target_exit_energy_PDGother",
+                                        "Particle energy when exiting target (other)",
+                                        1000,0,beamEnergy);
+        for (auto it : target_exit_energy) {
+            it.second->GetXaxis()->SetTitle("Energy [MeV]");
+        }
+
+        target_exit_cutoff_energy[11]  = new TH1D("target_exit_cutoff_energy_PDG11",
+                                                "Particle energy when exiting target (electrons) (r < Rcut)",
+                                                1000,0,beamEnergy);
+        target_exit_cutoff_energy[-11] = new TH1D("target_exit_cutoff_energy_PDG-11",
+                                                "Particle energy when exiting target (positrons) (r < Rcut)",
+                                                1000,0,beamEnergy);
+        target_exit_cutoff_energy[22]  = new TH1D("target_exit_cutoff_energy_PDG22",
+                                                "Particle energy when exiting target (photons) (r < Rcut)",
+                                                1000,0,beamEnergy);
+        target_exit_cutoff_energy[0]   = new TH1D("target_exit_cutoff_energy_PDGother",
+                                                "Particle energy when exiting target (other) (r < Rcut)",
+                                                1000,0,beamEnergy);
+        for (auto it : target_exit_cutoff_energy) {
+            it.second->GetXaxis()->SetTitle("Energy [MeV]");
+        }
+
+        // Target exit angle histogram
+        target_exitangle_hist        = new TH1D("target_exit_angle",
+                                                "Exit angle from target",
+                                                5001, -90, 90);
+        target_exitangle_hist_cutoff = new TH1D("target_exit_angle_cutoff",
+                                                "Exit angle from target (charged, energy > Ecut, r < Rcut)",
+                                                5001, -90, 90);
+
+        // Target exit phasespace histograms
+        target_exit_phasespaceX        = new TH2D("target_exit_x",
+                                                "Target exit phase space (x)",
+                                                1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        target_exit_phasespaceX->GetXaxis()->SetTitle("Position x [mm]");
+        target_exit_phasespaceX->GetYaxis()->SetTitle("Angle dx/dz [rad]");
+
+        target_exit_phasespaceY        = new TH2D("target_exit_y",
+                                                "Target exit phase space (y)",
+                                                1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        target_exit_phasespaceY->GetXaxis()->SetTitle("Position y [mm]");
+        target_exit_phasespaceY->GetYaxis()->SetTitle("Angle dy/dz [rad]");
+
+        target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
+                                                "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
+                                                1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        target_exit_phasespaceX_cutoff->GetXaxis()->SetTitle("Position x [mm]");
+        target_exit_phasespaceX_cutoff->GetYaxis()->SetTitle("Angle dx/dz [rad]");
+
+        target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
+                                                "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
+                                                1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        target_exit_phasespaceY_cutoff->GetXaxis()->SetTitle("Position y [mm]");
+        target_exit_phasespaceY_cutoff->GetYaxis()->SetTitle("Angle dy/dz [rad]");
     }
-    else {
-        target_edep_dens  = NULL;
-        target_edep_rdens = NULL;
-    }
-
-    // Target tracking info
-    target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
-                                      "Particle energy when exiting target (electrons)",
-                                      1000,0,beamEnergy);
-    target_exit_energy[-11] = new TH1D("target_exit_energy_PDG-11",
-                                      "Particle energy when exiting target (positrons)",
-                                      1000,0,beamEnergy);
-    target_exit_energy[22]  = new TH1D("target_exit_energy_PDG22",
-                                      "Particle energy when exiting target (photons)",
-                                      1000,0,beamEnergy);
-    target_exit_energy[0]   = new TH1D("target_exit_energy_PDGother",
-                                      "Particle energy when exiting target (other)",
-                                      1000,0,beamEnergy);
-    for (auto it : target_exit_energy) {
-        it.second->GetXaxis()->SetTitle("Energy [MeV]");
-    }
-
-    target_exit_cutoff_energy[11]  = new TH1D("target_exit_cutoff_energy_PDG11",
-                                              "Particle energy when exiting target (electrons) (r < Rcut)",
-                                              1000,0,beamEnergy);
-    target_exit_cutoff_energy[-11] = new TH1D("target_exit_cutoff_energy_PDG-11",
-                                              "Particle energy when exiting target (positrons) (r < Rcut)",
-                                              1000,0,beamEnergy);
-    target_exit_cutoff_energy[22]  = new TH1D("target_exit_cutoff_energy_PDG22",
-                                              "Particle energy when exiting target (photons) (r < Rcut)",
-                                              1000,0,beamEnergy);
-    target_exit_cutoff_energy[0]   = new TH1D("target_exit_cutoff_energy_PDGother",
-                                              "Particle energy when exiting target (other) (r < Rcut)",
-                                              1000,0,beamEnergy);
-    for (auto it : target_exit_cutoff_energy) {
-        it.second->GetXaxis()->SetTitle("Energy [MeV]");
-    }
-
-    // Target exit angle histogram
-    target_exitangle_hist        = new TH1D("target_exit_angle",
-                                            "Exit angle from target",
-                                            5001, -90, 90);
-    target_exitangle_hist_cutoff = new TH1D("target_exit_angle_cutoff",
-                                            "Exit angle from target (charged, energy > Ecut, r < Rcut)",
-                                            5001, -90, 90);
-
-    // Target exit phasespace histograms
-    target_exit_phasespaceX        = new TH2D("target_exit_x",
-                                              "Target exit phase space (x)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    target_exit_phasespaceX->GetXaxis()->SetTitle("Position x [mm]");
-    target_exit_phasespaceX->GetYaxis()->SetTitle("Angle dx/dz [rad]");
-
-    target_exit_phasespaceY        = new TH2D("target_exit_y",
-                                              "Target exit phase space (y)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    target_exit_phasespaceY->GetXaxis()->SetTitle("Position y [mm]");
-    target_exit_phasespaceY->GetYaxis()->SetTitle("Angle dy/dz [rad]");
-
-    target_exit_phasespaceX_cutoff = new TH2D("target_exit_cutoff_x",
-                                              "Target exit phase space (x) (charged, energy > Ecut, r < Rcut)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    target_exit_phasespaceX_cutoff->GetXaxis()->SetTitle("Position x [mm]");
-    target_exit_phasespaceX_cutoff->GetYaxis()->SetTitle("Angle dx/dz [rad]");
-
-    target_exit_phasespaceY_cutoff = new TH2D("target_exit_cutoff_y",
-                                              "Target exit phase space (y) (charged, energy > Ecut, r < Rcut)",
-                                              1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                              1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    target_exit_phasespaceY_cutoff->GetXaxis()->SetTitle("Position y [mm]");
-    target_exit_phasespaceY_cutoff->GetYaxis()->SetTitle("Angle dy/dz [rad]");
 
     // Tracker histograms
     tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
@@ -219,10 +223,10 @@ void RootFileWriter::initializeRootFile(){
 
     tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
                1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
-               1000, detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
+               1000,-detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
     tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > Ecut)",
                1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
-               1000, detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
+               1000,-detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
 
     tracker_phasespaceX   =
         new TH2D("tracker_x",
@@ -268,37 +272,41 @@ void RootFileWriter::initializeRootFile(){
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
 
-    // Target R position
+    // Limit for radial histograms
     G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
-    target_exit_Rpos[11]  = new TH1D("target_exit_rpos_PDG11",
-                                     "target exit rpos (electrons)",
-                                     1000,0,minR);
-    target_exit_Rpos[-11] = new TH1D("target_exit_rpos_PDG-11",
-                                     "target exit rpos (positrons)",
-                                     1000,0,minR);
-    target_exit_Rpos[22]  = new TH1D("target_exit_rpos_PDG22",
-                                     "target exit rpos (photons)",
-                                     1000,0,minR);
-    target_exit_Rpos[0]   = new TH1D("target_exit_rpos_PDGother",
-                                     "target exit rpos (other)",
-                                     1000,0,minR);
-    for (auto hist : target_exit_Rpos) {
-        hist.second->GetXaxis()->SetTitle("R [mm]");
-    }
-    target_exit_Rpos_cutoff[11]  = new TH1D("target_exit_rpos_cutoff_PDG11",
-                                            "target exit rpos (electrons, energy > E_cut)",
-                                            1000,0,minR);
-    target_exit_Rpos_cutoff[-11] = new TH1D("target_exit_rpos_cutoff_PDG-11",
-                                            "target exit rpos (positrons, energy > E_cut)",
-                                            1000,0,minR);
-    target_exit_Rpos_cutoff[22]  = new TH1D("target_exit_rpos_cutoff_PDG22",
-                                            "target exit rpos (photons, energy > E_cut)",
-                                            1000,0,minR);
-    target_exit_Rpos_cutoff[0]   = new TH1D("target_exit_rpos_cutoff_PDGother",
-                                            "target exit rpos (other, energy > E_cut)",
-                                            1000,0,minR);
-    for (auto hist : target_exit_Rpos_cutoff) {
-        hist.second->GetXaxis()->SetTitle("R [mm]");
+
+    // Target R position
+    if (detCon->GetHasTarget()) {
+        target_exit_Rpos[11]  = new TH1D("target_exit_rpos_PDG11",
+                                        "target exit rpos (electrons)",
+                                        1000,0,minR);
+        target_exit_Rpos[-11] = new TH1D("target_exit_rpos_PDG-11",
+                                        "target exit rpos (positrons)",
+                                        1000,0,minR);
+        target_exit_Rpos[22]  = new TH1D("target_exit_rpos_PDG22",
+                                        "target exit rpos (photons)",
+                                        1000,0,minR);
+        target_exit_Rpos[0]   = new TH1D("target_exit_rpos_PDGother",
+                                        "target exit rpos (other)",
+                                        1000,0,minR);
+        for (auto hist : target_exit_Rpos) {
+            hist.second->GetXaxis()->SetTitle("R [mm]");
+        }
+        target_exit_Rpos_cutoff[11]  = new TH1D("target_exit_rpos_cutoff_PDG11",
+                                                "target exit rpos (electrons, energy > E_cut)",
+                                                1000,0,minR);
+        target_exit_Rpos_cutoff[-11] = new TH1D("target_exit_rpos_cutoff_PDG-11",
+                                                "target exit rpos (positrons, energy > E_cut)",
+                                                1000,0,minR);
+        target_exit_Rpos_cutoff[22]  = new TH1D("target_exit_rpos_cutoff_PDG22",
+                                                "target exit rpos (photons, energy > E_cut)",
+                                                1000,0,minR);
+        target_exit_Rpos_cutoff[0]   = new TH1D("target_exit_rpos_cutoff_PDGother",
+                                                "target exit rpos (other, energy > E_cut)",
+                                                1000,0,minR);
+        for (auto hist : target_exit_Rpos_cutoff) {
+            hist.second->GetXaxis()->SetTitle("R [mm]");
+        }
     }
 
     // Tracker R position
@@ -334,8 +342,10 @@ void RootFileWriter::initializeRootFile(){
     }
 
     //For counting the types of particles hitting the detectors (for magnets it is defined elsewhere)
-    typeCounter["tracker"]       = particleTypesCounter();
-    typeCounter["tracker_cutoff"] = particleTypesCounter();
+    if (detCon->GetHasTarget()){
+        typeCounter["tracker"]       = particleTypesCounter();
+        typeCounter["tracker_cutoff"] = particleTypesCounter();
+    }
     typeCounter["target"]        = particleTypesCounter();
     typeCounter["target_cutoff"] = particleTypesCounter();
 
@@ -353,12 +363,14 @@ void RootFileWriter::initializeRootFile(){
     numParticles_cutoff = 0;
 
     //Compute RMS of target exit angle
-    target_exitangle              = 0.0;
-    target_exitangle2             = 0.0;
-    target_exitangle_numparticles = 0;
-    target_exitangle_cutoff              = 0.0;
-    target_exitangle2_cutoff             = 0.0;
-    target_exitangle_cutoff_numparticles = 0;
+    if (detCon->GetHasTarget()) {
+        target_exitangle              = 0.0;
+        target_exitangle2             = 0.0;
+        target_exitangle_numparticles = 0;
+        target_exitangle_cutoff              = 0.0;
+        target_exitangle2_cutoff             = 0.0;
+        target_exitangle_cutoff_numparticles = 0;
+    }
 
     // Magnet histograms
     for (auto mag : detCon->magnets) {
@@ -491,163 +503,165 @@ void RootFileWriter::doEvent(const G4Event* event){
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
     //**Data from TargetSD**
-    G4int myTargetEdep_CollID = SDman->GetCollectionID("target_edep");
-    if (myTargetEdep_CollID>=0){
-        MyEdepHitsCollection* targetEdepHitsCollection = NULL;
-        targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
-        if (targetEdepHitsCollection != NULL) {
-            G4int nEntries = targetEdepHitsCollection->entries();
-            G4double edep      = 0.0; // G4 units, normalized before Fill()
-            G4double edep_NIEL = 0.0; // G4 units, normalized before Fill()
-            G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
-            for (G4int i = 0; i < nEntries; i++){
-                MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
+    if (detCon->GetHasTarget()) {
+        G4int myTargetEdep_CollID = SDman->GetCollectionID("target_edep");
+        if (myTargetEdep_CollID>=0){
+            MyEdepHitsCollection* targetEdepHitsCollection = NULL;
+            targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
+            if (targetEdepHitsCollection != NULL) {
+                G4int nEntries = targetEdepHitsCollection->entries();
+                G4double edep      = 0.0; // G4 units, normalized before Fill()
+                G4double edep_NIEL = 0.0; // G4 units, normalized before Fill()
+                G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
+                for (G4int i = 0; i < nEntries; i++){
+                    MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
 
-                edep      += edepHit->GetDepositedEnergy();
-                edep_NIEL += edepHit->GetDepositedEnergy_NIEL();
-                edep_IEL  += edepHit->GetDepositedEnergy() - edepHit->GetDepositedEnergy_NIEL();
+                    edep      += edepHit->GetDepositedEnergy();
+                    edep_NIEL += edepHit->GetDepositedEnergy_NIEL();
+                    edep_IEL  += edepHit->GetDepositedEnergy() - edepHit->GetDepositedEnergy_NIEL();
 
-                //Randomly spread the energy deposits over the step
-                if (target_edep_dens != NULL) {
-                    G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
-                    G4double edepStepLen = edepStep.mag();
-                    int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
-                    for (int j = 0; j < numSamples; j++){
-                        G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
-                        G4double sample_z = posSample.z() + detCon->getTargetThickness()/2.0;
-                        target_edep_dens->Fill(posSample.x()/mm,
-                                               posSample.y()/mm,
-                                               sample_z/mm,
-                                               edepHit->GetDepositedEnergy()/numSamples/MeV);
+                    //Randomly spread the energy deposits over the step
+                    if (target_edep_dens != NULL) {
+                        G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
+                        G4double edepStepLen = edepStep.mag();
+                        int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
+                        for (int j = 0; j < numSamples; j++){
+                            G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
+                            G4double sample_z = posSample.z() + detCon->getTargetThickness()/2.0;
+                            target_edep_dens->Fill(posSample.x()/mm,
+                                                posSample.y()/mm,
+                                                sample_z/mm,
+                                                edepHit->GetDepositedEnergy()/numSamples/MeV);
 
-                        G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
-                        target_edep_rdens->Fill(sample_z/mm, sample_r/mm, edepHit->GetDepositedEnergy()/numSamples/MeV);
+                            G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
+                            target_edep_rdens->Fill(sample_z/mm, sample_r/mm, edepHit->GetDepositedEnergy()/numSamples/MeV);
+                        }
                     }
                 }
-            }
 
-            targetEdep->Fill(edep/MeV);
-            targetEdep_NIEL->Fill(edep_NIEL/keV);
-            targetEdep_IEL->Fill(edep_IEL/MeV);
+                targetEdep->Fill(edep/MeV);
+                targetEdep_NIEL->Fill(edep_NIEL/keV);
+                targetEdep_IEL->Fill(edep_IEL/MeV);
+            }
+            else {
+                G4cout << "targetEdepHitsCollection was NULL!"<<G4endl;
+            }
         }
         else {
-            G4cout << "targetEdepHitsCollection was NULL!"<<G4endl;
+            G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
         }
-    }
-    else {
-        G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
-    }
 
-    G4int myTargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
-    if (myTargetExitpos_CollID>=0) {
-        MyTrackerHitsCollection* targetExitposHitsCollection = NULL;
-        targetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTargetExitpos_CollID));
-        if (targetExitposHitsCollection != NULL) {
-            G4int nEntries = targetExitposHitsCollection->entries();
+        G4int myTargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
+        if (myTargetExitpos_CollID>=0) {
+            MyTrackerHitsCollection* targetExitposHitsCollection = NULL;
+            targetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTargetExitpos_CollID));
+            if (targetExitposHitsCollection != NULL) {
+                G4int nEntries = targetExitposHitsCollection->entries();
 
-            for (G4int i = 0; i < nEntries; i++) {
-                //Get the data from the event
-                const G4double       energy      = (*targetExitposHitsCollection)[i]->GetTrackEnergy();
-                const G4int          charge      = (*targetExitposHitsCollection)[i]->GetCharge();
-                const G4ThreeVector& momentum    = (*targetExitposHitsCollection)[i]->GetMomentum();
-                const G4double       exitangle   = atan(momentum.x()/momentum.z())/deg;
-                const G4ThreeVector& hitPos      = (*targetExitposHitsCollection)[i]->GetPosition();
-                const G4double       hitR        = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
-                const G4int          PDG         = (*targetExitposHitsCollection)[i]->GetPDG();
-                const G4String&      type        = (*targetExitposHitsCollection)[i]->GetType();
+                for (G4int i = 0; i < nEntries; i++) {
+                    //Get the data from the event
+                    const G4double       energy      = (*targetExitposHitsCollection)[i]->GetTrackEnergy();
+                    const G4int          charge      = (*targetExitposHitsCollection)[i]->GetCharge();
+                    const G4ThreeVector& momentum    = (*targetExitposHitsCollection)[i]->GetMomentum();
+                    const G4double       exitangle   = atan(momentum.x()/momentum.z())/deg;
+                    const G4ThreeVector& hitPos      = (*targetExitposHitsCollection)[i]->GetPosition();
+                    const G4double       hitR        = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
+                    const G4int          PDG         = (*targetExitposHitsCollection)[i]->GetPDG();
+                    const G4String&      type        = (*targetExitposHitsCollection)[i]->GetType();
 
-                //Particle type counting
-                FillParticleTypes(typeCounter["target"], PDG, type);
-                if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    FillParticleTypes(typeCounter["target_cutoff"], PDG, type);
-                }
+                    //Particle type counting
+                    FillParticleTypes(typeCounter["target"], PDG, type);
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        FillParticleTypes(typeCounter["target_cutoff"], PDG, type);
+                    }
 
-                //Exit angle
-                target_exitangle_hist->Fill(exitangle);
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    target_exitangle_hist_cutoff->Fill(exitangle);
-                }
+                    //Exit angle
+                    target_exitangle_hist->Fill(exitangle);
+                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        target_exitangle_hist_cutoff->Fill(exitangle);
+                    }
 
-                target_exitangle              += exitangle;
-                target_exitangle2             += exitangle*exitangle;
-                target_exitangle_numparticles += 1;
+                    target_exitangle              += exitangle;
+                    target_exitangle2             += exitangle*exitangle;
+                    target_exitangle_numparticles += 1;
 
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff  and hitR/mm < position_cutoffR) {
-                    target_exitangle_cutoff              += exitangle;
-                    target_exitangle2_cutoff             += exitangle*exitangle;
-                    target_exitangle_cutoff_numparticles += 1;
-                }
+                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff  and hitR/mm < position_cutoffR) {
+                        target_exitangle_cutoff              += exitangle;
+                        target_exitangle2_cutoff             += exitangle*exitangle;
+                        target_exitangle_cutoff_numparticles += 1;
+                    }
 
-                //Phase space
-                target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                    //Phase space
+                    target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                    target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                    target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-                }
+                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                    }
 
-                //Energy
-                if (target_exit_energy.find(PDG) != target_exit_energy.end()) {
-                    target_exit_energy[PDG]->Fill(energy/MeV);
-                }
-                else {
-                    target_exit_energy[0]->Fill(energy/MeV);
-                }
-
-                if (hitR/mm < position_cutoffR) {
-                    if (target_exit_cutoff_energy.find(PDG) != target_exit_cutoff_energy.end()) {
-                        target_exit_cutoff_energy[PDG]->Fill(energy/MeV);
+                    //Energy
+                    if (target_exit_energy.find(PDG) != target_exit_energy.end()) {
+                        target_exit_energy[PDG]->Fill(energy/MeV);
                     }
                     else {
-                        target_exit_cutoff_energy[0]->Fill(energy/MeV);
+                        target_exit_energy[0]->Fill(energy/MeV);
                     }
-                }
 
-                //R position
-                if (target_exit_Rpos.find(PDG) != target_exit_Rpos.end()) {
-                    target_exit_Rpos[PDG]->Fill(hitR/mm);
-                }
-                else {
-                    target_exit_Rpos[0]->Fill(hitR/mm);
-                }
-                if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
-                    if (target_exit_Rpos_cutoff.find(PDG) != target_exit_Rpos_cutoff.end()) {
-                        target_exit_Rpos_cutoff[PDG]->Fill(hitR/mm);
+                    if (hitR/mm < position_cutoffR) {
+                        if (target_exit_cutoff_energy.find(PDG) != target_exit_cutoff_energy.end()) {
+                            target_exit_cutoff_energy[PDG]->Fill(energy/MeV);
+                        }
+                        else {
+                            target_exit_cutoff_energy[0]->Fill(energy/MeV);
+                        }
+                    }
+
+                    //R position
+                    if (target_exit_Rpos.find(PDG) != target_exit_Rpos.end()) {
+                        target_exit_Rpos[PDG]->Fill(hitR/mm);
                     }
                     else {
-                        target_exit_Rpos_cutoff[0]->Fill(hitR/mm);
+                        target_exit_Rpos[0]->Fill(hitR/mm);
+                    }
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
+                        if (target_exit_Rpos_cutoff.find(PDG) != target_exit_Rpos_cutoff.end()) {
+                            target_exit_Rpos_cutoff[PDG]->Fill(hitR/mm);
+                        }
+                        else {
+                            target_exit_Rpos_cutoff[0]->Fill(hitR/mm);
+                        }
+                    }
+
+                    //Fill the TTree
+                    if (not miniFile) {
+                        targetExitBuffer.x = hitPos.x()/mm;
+                        targetExitBuffer.y = hitPos.x()/mm;
+                        targetExitBuffer.z = hitPos.z()/mm;
+
+                        targetExitBuffer.px = momentum.x()/MeV;
+                        targetExitBuffer.py = momentum.y()/MeV;
+                        targetExitBuffer.pz = momentum.z()/MeV;
+
+                        targetExitBuffer.E = energy / MeV;
+
+                        targetExitBuffer.PDG = PDG;
+                        targetExitBuffer.charge = charge;
+
+                        targetExitBuffer.eventID = eventCounter;
+
+                        targetExit->Fill();
                     }
                 }
 
-                //Fill the TTree
-                if (not miniFile) {
-                    targetExitBuffer.x = hitPos.x()/mm;
-                    targetExitBuffer.y = hitPos.x()/mm;
-                    targetExitBuffer.z = hitPos.z()/mm;
-
-                    targetExitBuffer.px = momentum.x()/MeV;
-                    targetExitBuffer.py = momentum.y()/MeV;
-                    targetExitBuffer.pz = momentum.z()/MeV;
-
-                    targetExitBuffer.E = energy / MeV;
-
-                    targetExitBuffer.PDG = PDG;
-                    targetExitBuffer.charge = charge;
-
-                    targetExitBuffer.eventID = eventCounter;
-
-                    targetExit->Fill();
-                }
             }
-
+            else {
+                G4cout << "targetExitposHitsCollection was NULL!"<<G4endl;
+            }
         }
         else {
-            G4cout << "targetExitposHitsCollection was NULL!"<<G4endl;
+            G4cout << "myTargetExitpos_CollID was " << myTargetExitpos_CollID << " < 0!"<<G4endl;
         }
-    }
-    else {
-        G4cout << "myTargetExitpos_CollID was " << myTargetExitpos_CollID << " < 0!"<<G4endl;
     }
 
     //**Data from detectorTrackerSD**
@@ -932,7 +946,7 @@ void RootFileWriter::finalizeRootFile() {
 
     // ** Below cutoff **
 
-    //Average position and RMS
+    //Tracker average position and RMS
     double xave  = tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles);
     double yave  = tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles);
     double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles)) ) /
@@ -941,14 +955,18 @@ void RootFileWriter::finalizeRootFile() {
     double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles)) ) /
         (((double)typeCounter["tracker"].numParticles)-1.0);
     yrms = sqrt(yrms);
+
     //Exitangle
-    G4double exitangle_avg = target_exitangle /
-        ((double)target_exitangle_numparticles);
-    G4double exitangle_rms = ( target_exitangle2 -
-                               (target_exitangle*target_exitangle /
-                                ((double)target_exitangle_numparticles)) ) /
-        ((double)target_exitangle_numparticles - 1.0 ) ;
-    exitangle_rms = sqrt(exitangle_rms);
+    G4double exitangle_avg=NAN;
+    G4double exitangle_rms=NAN;
+    if(detCon->GetHasTarget()) {
+        exitangle_avg = target_exitangle / ((double)target_exitangle_numparticles);
+        exitangle_rms = ( target_exitangle2 -
+                            (target_exitangle*target_exitangle /
+                            ((double)target_exitangle_numparticles)) ) /
+                        ( (double)target_exitangle_numparticles - 1.0 ) ;
+        exitangle_rms = sqrt(exitangle_rms);
+    }
 
     G4cout << G4endl
            << "All particles (n=" << typeCounter["tracker"].numParticles << "):" << G4endl;
@@ -956,9 +974,11 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << "Average x = " << xave << " [mm], RMS = " << xrms << " [mm]" << G4endl
            << "Average y = " << yave << " [mm], RMS = " << yrms << " [mm]" << G4endl;
 
-    G4cout << G4endl
-           << "Exit angle average (x) = " << exitangle_avg << " [deg]" << G4endl
-           << "Exit angle RMS (x)     = " << exitangle_rms << " [deg]" << G4endl;
+    if (detCon->GetHasTarget()) {
+        G4cout << G4endl
+                << "Exit angle average (x) = " << exitangle_avg << " [deg]" << G4endl
+                << "Exit angle RMS (x)     = " << exitangle_rms << " [deg]" << G4endl;
+    }
 
     // ** Above cutoff **
 
@@ -977,13 +997,17 @@ void RootFileWriter::finalizeRootFile() {
     yrms_cutoff = sqrt(yrms_cutoff);
 
     //Exitangle
-    G4double exitangle_avg_cutoff = target_exitangle_cutoff /
-        ((double)target_exitangle_cutoff_numparticles);
-    G4double exitangle_rms_cutoff = ( target_exitangle2_cutoff -
-                                      (target_exitangle_cutoff*target_exitangle_cutoff /
-                                       ((double)target_exitangle_cutoff_numparticles)) ) /
-        ((double)target_exitangle_cutoff_numparticles - 1.0 ) ;
-    exitangle_rms_cutoff = sqrt(exitangle_rms_cutoff);
+    G4double exitangle_avg_cutoff = NAN;
+    G4double exitangle_rms_cutoff = NAN;
+    if(detCon->GetHasTarget()) {
+        exitangle_avg_cutoff = target_exitangle_cutoff /
+            ( (double)target_exitangle_cutoff_numparticles );
+        exitangle_rms_cutoff =  ( target_exitangle2_cutoff -
+                                    (target_exitangle_cutoff*target_exitangle_cutoff /
+                                    ((double)target_exitangle_cutoff_numparticles)) ) /
+                                ( (double)target_exitangle_cutoff_numparticles - 1.0 ) ;
+        exitangle_rms_cutoff = sqrt(exitangle_rms_cutoff);
+    }
 
     G4cout << G4endl
            << "Above cutoff (charged, energy > "
@@ -993,10 +1017,12 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << "Average x = " << xave_cutoff << " [mm], RMS = " << xrms_cutoff << " [mm]" << G4endl
            << "Average y = " << yave_cutoff << " [mm], RMS = " << yrms_cutoff << " [mm]" << G4endl;
 
-    G4cout << G4endl
-           << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
-           << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
-    G4cout << G4endl;
+    if (detCon->GetHasTarget()) {
+        G4cout << G4endl
+            << "Exit angle average (x) = " << exitangle_avg_cutoff << " [deg]" << G4endl
+            << "Exit angle RMS (x)     = " << exitangle_rms_cutoff << " [deg]" << G4endl;
+        G4cout << G4endl;
+    }
 
     //General metadata
     // Ugly hack: Use a double to store an int,
@@ -1004,23 +1030,36 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << "** Metadata **" << G4endl;
     G4cout << "eventCounter  = " << eventCounter << G4endl;
     G4cout << "numEvents     = " << numEvents    << G4endl;
-    G4cout << "targetDensity = " << detCon->GetTargetMaterialDensity()*cm3/g
-                                 << " [g/cm^3]" << G4endl;
+    if (detCon->GetHasTarget()) {
+        G4cout << "targetDensity = " << detCon->GetTargetMaterialDensity()*cm3/g
+                                     << " [g/cm^3]" << G4endl;
+    }
+    else {
+        G4cout << "targetDensity = " << 0.0
+                                     << " [g/cm^3]" << G4endl;
+    }
 
     TVectorD metadataVector (3);
     metadataVector[0] = double(eventCounter);
     metadataVector[1] = double(numEvents);
-    metadataVector[2] = detCon->GetTargetMaterialDensity()*cm3/g;
+    if (detCon->GetHasTarget()) {
+        metadataVector[2] = detCon->GetTargetMaterialDensity()*cm3/g;
+    }
+    else {
+        metadataVector[2] = 0.0;
+    }
     metadataVector.Write("metadata");
     G4cout << G4endl;
 
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
     PrintTwissParameters(init_phasespaceY);
-    PrintTwissParameters(target_exit_phasespaceX);
-    PrintTwissParameters(target_exit_phasespaceY);
-    PrintTwissParameters(target_exit_phasespaceX_cutoff);
-    PrintTwissParameters(target_exit_phasespaceY_cutoff);
+    if (detCon->GetHasTarget()) {
+        PrintTwissParameters(target_exit_phasespaceX);
+        PrintTwissParameters(target_exit_phasespaceY);
+        PrintTwissParameters(target_exit_phasespaceX_cutoff);
+        PrintTwissParameters(target_exit_phasespaceY_cutoff);
+    }
     for (size_t magIdx = 0; magIdx < magnet_exit_phasespaceX.size(); magIdx++) {
         PrintTwissParameters(magnet_exit_phasespaceX[magIdx]);
         PrintTwissParameters(magnet_exit_phasespaceY[magIdx]);
@@ -1032,7 +1071,7 @@ void RootFileWriter::finalizeRootFile() {
     PrintTwissParameters(tracker_phasespaceX_cutoff);
     PrintTwissParameters(tracker_phasespaceY_cutoff);
 
-    if (not quickmode) {
+    if (not quickmode and detCon->GetHasTarget()) {
         // Compute the analytical multiple scattering angle distribution
         // Formulas from various sources:
         //
@@ -1133,18 +1172,30 @@ void RootFileWriter::finalizeRootFile() {
         // Write the ROOT file.
         exitangle_analytic->Write();
         delete exitangle_analytic; exitangle_analytic = NULL;
+    }
 
+
+    if (not quickmode) {
         //Write the 2D histograms to the ROOT file (slow)
         G4cout << "Writing 2D histograms..." << G4endl;
         init_phasespaceX->Write();
         init_phasespaceY->Write();
         init_phasespaceXY->Write();
 
-        target_exit_phasespaceX->Write();
-        target_exit_phasespaceY->Write();
+        if (detCon->GetHasTarget()) {
+            target_exit_phasespaceX->Write();
+            target_exit_phasespaceY->Write();
 
-        target_exit_phasespaceX_cutoff->Write();
-        target_exit_phasespaceY_cutoff->Write();
+            target_exit_phasespaceX_cutoff->Write();
+            target_exit_phasespaceY_cutoff->Write();
+
+            if (target_edep_rdens != NULL) {
+                target_edep_rdens->Write();
+            }
+        }
+
+        tracker_hitPos->Write();
+        tracker_hitPos_cutoff->Write();
 
         tracker_phasespaceX->Write();
         tracker_phasespaceY->Write();
@@ -1167,41 +1218,43 @@ void RootFileWriter::finalizeRootFile() {
 
         // Write the 3D histograms to the root file (slower)
         G4cout << "Writing 3D histograms..." << G4endl;
-        if (target_edep_dens != NULL) {
-            target_edep_dens->Write();
+        if (detCon->GetHasTarget()) {
+            if (target_edep_dens != NULL) {
+                target_edep_dens->Write();
+            }
         }
-        if (target_edep_rdens != NULL) {
-            target_edep_rdens->Write();
-        }
+
     }
 
     G4cout << "Writing 1D histograms..." << G4endl;
 
-    targetEdep->Write();
-    targetEdep_NIEL->Write();
-    targetEdep_IEL->Write();
+    if (detCon->GetHasTarget()) {
+        targetEdep->Write();
+        targetEdep_NIEL->Write();
+        targetEdep_IEL->Write();
 
-    // (Loops over particle types)
-    for (auto it : target_exit_energy) {
-        it.second->Write();
-        delete it.second;
+        // (Loops over particle types)
+        for (auto it : target_exit_energy) {
+            it.second->Write();
+            delete it.second;
+        }
+        target_exit_energy.clear();
+        for (auto it : target_exit_cutoff_energy) {
+            it.second->Write();
+            delete it.second;
+        }
+        target_exit_cutoff_energy.clear();
+        for (auto it: target_exit_Rpos) {
+            it.second->Write();
+            delete it.second;
+        }
+        target_exit_Rpos.clear();
+        for (auto it: target_exit_Rpos_cutoff) {
+            it.second->Write();
+            delete it.second;
+        }
+        target_exit_Rpos_cutoff.clear();
     }
-    target_exit_energy.clear();
-    for (auto it : target_exit_cutoff_energy) {
-        it.second->Write();
-        delete it.second;
-    }
-    target_exit_cutoff_energy.clear();
-    for (auto it: target_exit_Rpos) {
-        it.second->Write();
-        delete it.second;
-    }
-    target_exit_Rpos.clear();
-    for (auto it: target_exit_Rpos_cutoff) {
-        it.second->Write();
-        delete it.second;
-    }
-    target_exit_Rpos_cutoff.clear();
 
     for (auto it : tracker_type_energy) {
         it.second->Write();
@@ -1225,7 +1278,9 @@ void RootFileWriter::finalizeRootFile() {
     }
     tracker_Rpos_cutoff.clear();
 
-    target_exitangle_hist->Write();
+    if (detCon->GetHasTarget()) {
+        target_exitangle_hist->Write();
+    }
 
     // Clear magnet 2D hists
     for (auto it : magnet_exit_phasespaceX) {
@@ -1294,17 +1349,19 @@ void RootFileWriter::finalizeRootFile() {
     delete init_phasespaceY; init_phasespaceY = NULL;
     delete init_phasespaceXY; init_phasespaceXY = NULL;
 
-    delete targetEdep; targetEdep = NULL;
-    delete targetEdep_NIEL; targetEdep_NIEL = NULL;
-    delete targetEdep_IEL; targetEdep_IEL = NULL;
+    if (detCon->GetHasTarget()) {
+        delete targetEdep; targetEdep = NULL;
+        delete targetEdep_NIEL; targetEdep_NIEL = NULL;
+        delete targetEdep_IEL; targetEdep_IEL = NULL;
 
-    delete target_exitangle_hist; target_exitangle_hist = NULL;
+        delete target_exitangle_hist; target_exitangle_hist = NULL;
 
-    delete target_exit_phasespaceX; target_exit_phasespaceX = NULL;
-    delete target_exit_phasespaceY; target_exit_phasespaceY = NULL;
+        delete target_exit_phasespaceX; target_exit_phasespaceX = NULL;
+        delete target_exit_phasespaceY; target_exit_phasespaceY = NULL;
 
-    delete target_exit_phasespaceX_cutoff; target_exit_phasespaceX_cutoff = NULL;
-    delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
+        delete target_exit_phasespaceX_cutoff; target_exit_phasespaceX_cutoff = NULL;
+        delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
+    }
 
     delete tracker_phasespaceX; tracker_phasespaceX = NULL;
     delete tracker_phasespaceY; tracker_phasespaceY = NULL;
@@ -1312,14 +1369,16 @@ void RootFileWriter::finalizeRootFile() {
     delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
     delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
 
-    if (target_edep_dens != NULL) {
-        delete target_edep_dens; target_edep_dens = NULL;
-    }
-    if (target_edep_rdens != NULL) {
-        delete target_edep_rdens; target_edep_rdens = NULL;
-    }
+    if (detCon->GetHasTarget()) {
+        if (target_edep_dens != NULL) {
+            delete target_edep_dens; target_edep_dens = NULL;
+        }
+        if (target_edep_rdens != NULL) {
+            delete target_edep_rdens; target_edep_rdens = NULL;
+        }
 
-    delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+        delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
+    }
 
     delete tracker_numParticles; tracker_numParticles = NULL;
     delete tracker_energy; tracker_energy = NULL;
@@ -1373,12 +1432,15 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     G4cout << G4endl;
 
     // Write to root file
-    TVectorD twissVector (5);
+    TVectorD twissVector (8);
     twissVector[0] = epsN*1e3;
     twissVector[1] = beta*1e-3;
     twissVector[2] = alpha;
     twissVector[3] = posAve;
     twissVector[4] = angAve;
+    twissVector[5] = posVar;
+    twissVector[6] = angVar;
+    twissVector[7] = coVar;
     twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
 }
 

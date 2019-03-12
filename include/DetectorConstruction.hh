@@ -26,10 +26,12 @@ public:
                          std::vector <G4String> &magnetDefinitions_in);
     ~DetectorConstruction(){};
 
-public:
+private:
     void SetTargetMaterial (G4String);
     //  void SetDetectorMaterial (G4String);
+public:
 
+    G4bool   GetHasTarget() {return HasTarget;};
     G4int    GetTargetMaterialZ();
     G4double GetTargetMaterialA();
     G4double GetTargetMaterialDensity();
@@ -88,6 +90,7 @@ private:
     G4double           TargetSizeY;
     G4double           TargetThickness;
 
+    G4bool             HasTarget      = false;
     G4Material*        TargetMaterial = NULL;
 
     G4double           DetectorSizeX;
@@ -121,7 +124,7 @@ private:
 
 private:
     void DefineMaterials();
-    void DefineGas(G4String TargetMaterial_in);
+    G4Material* DefineGas(G4String TargetMaterial_in);
 };
 
 //--------------------------------------------------------------------------------

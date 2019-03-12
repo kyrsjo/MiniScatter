@@ -16,9 +16,7 @@ import os
 SEED = 1
 
 #Used for particle-type countings, what to return
-PDG_keep    = (11,-11,22,2212,2112,'other');
-
-m_twiss = 0.511 #[MeV/c^2], assumed mass of the particles used for TWISS computation, assume electrons.
+PDG_keep    = (11,-11,22,2212,2112,'other')
 
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
@@ -44,7 +42,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         twiss[det] = {}
         for p in ('x','y'):
             twiss[det][p] = {}
-            for t in ('eps','beta','alpha','sigma', 'posAve', 'angAve'):
+            for t in ('eps','beta','alpha', 'posAve','angAve', 'posVar','angVar','coVar'):
                 twiss[det][p][t] = np.zeros_like(scanVarRange,dtype=float)
 
     numPart = {}
@@ -92,7 +90,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]".\
                              format(whichMagnet))
 
-        elif len(scanVarMagnet) == 3 and scanVarManget[2] in baseSimSetup["MAGNET"][whichMagnet]["keyval"]:
+        elif len(scanVarMagnet) == 3 and scanVarMagnet[2] in baseSimSetup["MAGNET"][whichMagnet]["keyval"]:
             print ("Please do not put scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
                    format(whichMagnet))
             raise ValueError("Found scanVar in the baseSimSetup['MAGNET'][{}]['keyval']".\
@@ -154,8 +152,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                             for key2,val2 in val.items():
                                 mkey = "MAGNET"+str(magnetCounter)+".keyval."+key2
                                 if not (mkey in loadFile.attrs):
-                                    print ("Key '{}' found in baseSimSetup['MAGNET'][{}]['keyval'] "+\
-                                           "but not in the file.".format(mkey,magnetCounter))
+                                    print (("Key '{}' found in baseSimSetup['MAGNET'][{}]['keyval'] "+\
+                                           "but not in the file.").format(mkey,magnetCounter))
                                     print ("Please run with tryLoad=False to recompute.")
                                     loadFile.close()
                                     raise ValueError(("Found key {} in "+\
@@ -262,14 +260,11 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             for det in miniScatterDriver.twissDets:
                 for p in ('x','y'):
-                    for t in ('eps','beta','alpha','sigma', 'posAve','angAve'):
+                    for t in ('eps','beta','alpha', 'posAve','angAve', 'posVar','angVar','coVar'):
                         dataName = "twiss_"+det+"_"+p+"_"+t
                         if not dataName in loadFile:
-                            if (t=='posAve' or t=='angAve'):
-                                # New parameter, not present in all files
-                                continue
-                            raise ValueError(("Did not find array '{}' for"+\
-                                              " twissDet={} in the loaded file.").\
+                            raise KeyError(("Did not find array '{}' for"+\
+                                            " twissDet={} in the loaded file.").\
                                              format(dataName,det))
                         twiss[det][p][t] = np.asarray(loadFile[dataName])
 
@@ -374,7 +369,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
         filenameROOTfile = None
         if tmpFolder is None:
-            runFolder = os.path.dirname(os.path.realpath(__file__))
+            runFolder = os.path.dirname(os.path.abspath(__file__))
             filenameROOTfile = os.path.join(runFolder,"plots",filenameROOT+".root")
         else:
             filenameROOTfile = os.path.join(tmpFolder,filenameROOT+".root")
@@ -396,16 +391,10 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             #Fill the emittance arrays
             if not badSim:
-                gamma_rel = simSetup["ENERGY"]/m_twiss
-                beta_rel  = np.sqrt(gamma_rel**2 - 1.0) / gamma_rel;
-                for det in miniScatterDriver.twissDets:
+                for det in twiss_singleSim.keys():
                     for p in ('x','y'):
                         for t in twiss_singleSim[det][p].keys():
                             twiss[det][p][t][i] = twiss_singleSim[det][p][t]
-                        assert not ('sigma' in twiss_singleSim[det][p].keys())
-                        twiss[det][p]['sigma'][i] = \
-                            np.sqrt( twiss[det][p]['eps'][i] * twiss[det][p]['beta'][i]*1e6/  \
-                                     (gamma_rel*beta_rel)                                     )
 
                 #Fill the NumPart array
                 for detDictKey in numPart_singleSim.keys():

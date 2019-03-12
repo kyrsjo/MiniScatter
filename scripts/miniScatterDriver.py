@@ -151,21 +151,43 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     """
     dataFile = ROOT.TFile(filename,'READ')
 
+    if not dataFile.GetListOfKeys().Contains("target_exit_x_TWISS"):
+        print ("No target twiss data in this file!")
+        _twissDets = []
+        for det in twissDets:
+            if not det.startswith("target"):
+                _twissDets.append(det)
+        _twissDets = tuple(_twissDets)
+
+        _numPartDets = []
+        for det in numPartDets:
+            if not det.startswith("target"):
+                _numPartDets.append(det)
+        _numPartDets = tuple(_numPartDets)
+    else:
+        _twissDets   = twissDets
+        _numPartDets = numPartDets
+
     twiss = {}
-    for det in twissDets:
+    for det in _twissDets:
         twiss[det] = {}
         for pla in ("x","y"):
             dataName = det + "_" + pla + "_TWISS"
             if not dataFile.GetListOfKeys().Contains(dataName):
-                raise KeyError("Object {} not found in file".format(dataName,filename))
+                raise KeyError("Object {} not found in file {}".format(dataName,filename))
             twissData = dataFile.Get(dataName)
             twiss[det][pla] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
             if len(twissData) > 3:
                 twiss[det][pla]['posAve'] = twissData[3]
                 twiss[det][pla]['angAve'] = twissData[4]
+            if len(twissData) > 4:
+                twiss[det][pla]['posVar'] = twissData[5]
+                twiss[det][pla]['angVar'] = twissData[6]
+                twiss[det][pla]['coVar']  = twissData[7]
 
+    print(_numPartDets)
     numPart = {}
-    for det in numPartDets:
+    for det in _numPartDets:
         numPart[det] = {}
         if not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_PDG") or \
            not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_numpart"):

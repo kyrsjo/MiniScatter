@@ -51,7 +51,7 @@ private:
     G4ParticleDefinition* particle; // Particle type
 
     // Setup for covariance
-    G4bool hasCovariance;
+    G4bool hasCovariance = false;
     void setupCovariance();
     G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
 
@@ -77,7 +77,7 @@ private:
     TMatrixD covarY_L;
 
     //Setup for circular uniform distribution / Rcut
-    G4double Rcut;
+    G4double Rcut; // [mm]
 
     TRandom* RNG;
 

@@ -64,7 +64,7 @@ int main(int argc,char** argv) {
     int getopt_char;
     int getopt_idx;
 
-    G4double target_thick        = 1.0;       // Target thickness  [mm]
+    G4double target_thick        = 1.0;       // Target thickness [mm]; 0.0 for no target slab (only magnets)
     G4String target_material     = "G4_Al";   // Name of target material to use
 
     G4double detector_distance   = 50.0;      // Detector distance at x=y=0  [mm]
@@ -587,7 +587,8 @@ void printHelp(G4double target_thick,
                    << "Usage/options:" << G4endl;
 
             G4cout << "-t <double> : Target thickness [mm],  default/current value = "
-                   << target_thick << G4endl;
+                   << target_thick << G4endl
+                   << " Set thickness to 0.0 for no target (only magnets)";
 
             G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
