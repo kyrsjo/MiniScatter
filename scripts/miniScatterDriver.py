@@ -152,7 +152,8 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     dataFile = ROOT.TFile(filename,'READ')
 
     if not dataFile.GetListOfKeys().Contains("target_exit_x_TWISS"):
-        print ("No target twiss data in this file!")
+        if not quiet:
+            print ("No target twiss data in this file!")
         _twissDets = []
         for det in twissDets:
             if not det.startswith("target"):
@@ -185,7 +186,6 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
                 twiss[det][pla]['angVar'] = twissData[6]
                 twiss[det][pla]['coVar']  = twissData[7]
 
-    print(_numPartDets)
     numPart = {}
     for det in _numPartDets:
         numPart[det] = {}

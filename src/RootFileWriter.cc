@@ -225,8 +225,8 @@ void RootFileWriter::initializeRootFile(){
                1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
                1000,-detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
     tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > Ecut)",
-               1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
-               1000,-detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
+               1000,-position_cutoffR, position_cutoffR,
+               1000,-position_cutoffR, position_cutoffR);
 
     tracker_phasespaceX   =
         new TH2D("tracker_x",
