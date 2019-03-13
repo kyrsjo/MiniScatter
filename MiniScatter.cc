@@ -670,27 +670,33 @@ void printHelp(G4double target_thick,
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
                    << " Create a magnet of the given type at the given position. " << G4endl
-                   << " If a '*' is prepended the position (<double> [mm]), the position is the start of the active element "
-                   << "relative to the end of the target; otherwize it is the z-position of the middle of the element." << G4endl
+                   << " If a '*' is prepended the position (<double> [mm]), the position is the " << G4endl
+                   << "   start of the active element relative to the end of the target;" << G4endl
+                   << "   otherwise it is the z-position of the middle of the element." << G4endl
                    << " The gradient (<double> [T/m]) is the focusing gradient of the device." << G4endl
                    << " The length <double> [mm] is the total length of the volumes used by the device." << G4endl
                    << " The type-specific arguments are given as key=value pairs." << G4endl
                    << " Accepted types and their arguments:" << G4endl
                    << "  'PLASMA1':" << G4endl
                    << "     radius:    Capillary radius (<double> [mm])" << G4endl
-                   << "     totalAmps: Flag (<True/False>) to interpret the gradient parameter"
-                   << " as the total current [A] instead of in [T/m]." << G4endl
+                   << "     totalAmps: Flag (<True/False>) to interpret the gradient parameter" << G4endl
+                   << "                as the total current [A] instead of in [T/m]." << G4endl
                    << "     width:     Capillay crystal width (<double> [mm])" << G4endl
                    << "     height:    Capillay crystal height (<double> [mm])" << G4endl
-                   << "     xOffset:   Center offset in X (<double> [mm]) " << G4endl
-                   << "     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
                    << "  'COLLIMATOR1':" << G4endl
                    << "     radius:    Channel radius (<double> [mm])" << G4endl
                    << "     width:     Absorber width (<double> [mm])" << G4endl
                    << "     height:    Absorber height (<double> [mm])" << G4endl
+                   << " Common key=val pairs:" << G4endl
                    << "     xOffset:   Center offset in X (<double> [mm]) " << G4endl
                    << "     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
-                   << "Currently have the following magnet setups:" << G4endl;
+                   << "     xRot:      Rotation around horizontal axis (<double> [mm])" << G4endl
+                   << "     yRot:      Rotation around vertical axis (<double> [mm])" << G4endl
+                   << "   Note that the offset is applied first," << G4endl
+                   << "     then the object is rotated around the offset point." << G4endl
+                   << "     The xRot is applied before the yRot." << G4endl;
+
+            G4cout << "Currently have the following magnet setups:" << G4endl;
             for (auto mag : magnetDefinitions) {
                 G4cout << mag << G4endl;
             }

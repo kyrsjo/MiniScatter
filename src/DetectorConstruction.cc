@@ -273,16 +273,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     for (auto magnet : magnets) {
         // More or less repeated in ParallelWorldConstruction::Construct()
         magnet->Construct();
-        G4VPhysicalVolume* magnetPV   = new G4PVPlacement(NULL,
-                                                          G4ThreeVector(magnet->GetXOffset(),
-                                                                        magnet->GetYOffset(),
-                                                                        magnet->getZ0()      ),
+
+        G4VPhysicalVolume* magnetPV   = new G4PVPlacement(magnet->GetMainPV_transform(),
                                                           magnet->GetMainLV(),
                                                           magnet->magnetName + "_mainPV",
                                                           logicWorld,
                                                           false,
                                                           0,
                                                           true);
+
         magnetPVs.push_back(magnetPV);
     }
 

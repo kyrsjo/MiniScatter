@@ -44,8 +44,12 @@ protected:
     G4double length;   // [G4units]
     G4double gradient; // [T/m]
 
-    G4double xOffset; // [G4 length units]
-    G4double yOffset; // [G4 length units]
+    G4double xOffset = 0.0; // [G4 length units]
+    G4double yOffset = 0.0; // [G4 length units]
+
+    //Rotations are applied after moving, around the new position
+    G4double xRot = 0.0; // Rotation around horizontal axis [G4 angle units]
+    G4double yRot = 0.0; // Rotation around vertical axis   [G4 angle units]
 
     std::map<G4String,G4String> keyValPairs;
     DetectorConstruction* detCon;
@@ -55,12 +59,20 @@ protected:
     G4LogicalVolume* mainLV = NULL;
     G4LogicalVolume* MakeNewMainLV(G4String name_postfix);
 
+    G4double mainLV_w = 0.0; // Width  of mainLV after removing what is needed for trans and rot [G4 units]
+    G4double mainLV_h = 0.0; // Height of mainLV after removing what is needed for trans and rot [G4 units]
+
+    G4Transform3D mainPV_transform;
+    void BuildMainPV_transform();
+
     virtual void ConstructDetectorLV();
     G4LogicalVolume* detectorLV = NULL;
     G4VSensitiveDetector* magnetSD = NULL;
 
 public:
     const G4String magnetName;
+
+    const G4Transform3D GetMainPV_transform() const {return mainPV_transform;};
 
     virtual void Construct() = 0;
     G4LogicalVolume* GetMainLV() const;

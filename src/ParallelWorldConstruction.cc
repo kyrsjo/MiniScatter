@@ -19,10 +19,7 @@ void ParallelWorldConstruction::Construct() {
     for (auto magnet : mainGeometryConstruction->magnets) {
         //Pretty much a copy of what goes on in DetectorConstruction::Construct()
         G4VPhysicalVolume* magnetDetectorPV   =
-            new G4PVPlacement(NULL,
-                              G4ThreeVector(magnet->GetXOffset(),
-                                            magnet->GetYOffset(),
-                                            magnet->getZ0()      ),
+            new G4PVPlacement(magnet->GetMainPV_transform(),
                               magnet->GetDetectorLV(),
                               magnet->magnetName + "_detectorPV",
                               ghostWorldLogical,

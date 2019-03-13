@@ -135,10 +135,19 @@ G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix){
         exit(1);
     }
 
+    mainLV_w = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(xRot/rad);
+    mainLV_h = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(yRot/rad);
+
+    if (mainLV_w < 0.0 or mainLV_h < 0.0) {
+        G4cerr << "Error in MagnetBase::MakeNewMainLV():" << G4endl
+               << " It is not possible to fit the rotated and translated" << G4endl
+               << " outer volume for magnet '" << magnetName << "' inside the world volume." << G4endl;
+        exit(1);
+    }
 
     G4VSolid* mainBox = new G4Box(magnetName+"_"+name_postfix+"S",
-                                  detCon->getWorldSizeX()/2.0-xOffset,
-                                  detCon->getWorldSizeY()/2.0-yOffset,
+                                  mainLV_w/2.0,
+                                  mainLV_h/2.0,
                                   length/2.0);
 
     G4LogicalVolume* newMainLV = new G4LogicalVolume(mainBox,vacuumMaterial,
@@ -157,6 +166,16 @@ G4LogicalVolume* MagnetBase::GetMainLV() const {
         G4cout << "Error in MagnetClasses::GetMainLV(): MainLV has not been constructed!" << G4endl;
         exit(1);
     }
+}
+
+void MagnetBase::BuildMainPV_transform() {
+    G4RotationMatrix mainPV_rotate;
+    mainPV_rotate.rotateX(xRot);
+    mainPV_rotate.rotateY(yRot);
+    G4ThreeVector    mainPV_translate;
+    mainPV_translate.setX(xOffset);
+    mainPV_translate.setY(yOffset);
+    mainPV_transform = G4Transform3D(mainPV_rotate, mainPV_translate);
 }
 
 void MagnetBase::ConstructDetectorLV() {
@@ -270,6 +289,28 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
                 exit(1);
             }
         }
+        else if (it.first == "xRot") {
+            try {
+                xRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading xRot" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "yRot") {
+            try {
+                yRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading yRot" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
         else {
             G4cerr << "MagnetPLASMA1 did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
@@ -299,6 +340,8 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
     G4cout << "\t cryHeight          = " << cryHeight/mm       << " [mm]"  << G4endl;
     G4cout << "\t xOffset            = " << xOffset/mm         << " [mm]"  << G4endl;
     G4cout << "\t yOffset            = " << yOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t xRot               = " << xRot/deg           << " [deg]" << G4endl;
+    G4cout << "\t yRot               = " << yRot/deg           << " [deg]" << G4endl;
 
 }
 
@@ -311,6 +354,7 @@ void MagnetPLASMA1::Construct() {
 
     this->mainLV = MakeNewMainLV("main");
 
+    /*
     G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
     if (not vacuumMaterial) {
         G4cerr << "Internal error -- material G4_Galactic not found in MagnetPLASMA1::Construct()!" << G4endl;
@@ -320,7 +364,7 @@ void MagnetPLASMA1::Construct() {
     //Field box
     // TODO: Not really neccessary, use the mainLV directly
     // (unless the goal is to make it smaller and contain the gas...)
-/*     G4VSolid* fieldBox            = new G4Box(magnetName+"_fieldBoxS",
+    G4VSolid* fieldBox            = new G4Box(magnetName+"_fieldBoxS",
                                               detCon->getWorldSizeX()/2.0,
                                               detCon->getWorldSizeX()/2.0,
                                               length/2.0);
@@ -346,17 +390,13 @@ void MagnetPLASMA1::Construct() {
     //fieldBoxLV->SetFieldManager(fieldMgr,true);
     mainLV->SetFieldManager(fieldMgr,true);
 
-    // The crystal
-    if (cryWidth+2*xOffset > detCon->getWorldSizeX()) {
+    if (cryWidth > mainLV_w || cryHeight > mainLV_h) {
         G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
-               << " The crystal+xOffset is wider than the world!"  << G4endl;
+               << " The crystal is wider than it's allowed envelope "
+               << " including offsets and rotations."  << G4endl;
         exit(1);
     }
-    if (cryHeight+2*yOffset > detCon->getWorldSizeX()) {
-        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
-               << " The crystal+yOffset is wider than the world!"  << G4endl;
-        exit(1);
-    }
+
     if (capRadius > cryWidth/2.0 or capRadius > cryHeight/2.0) {
         G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
                << " The capillary doesn't fit in the crystal!" << G4endl;
@@ -366,6 +406,7 @@ void MagnetPLASMA1::Construct() {
     //TODO: Insert here a "gas box" that is exactly the same size as the crystal
     // and made of gas material, but has no hole, OR is exactly the size of the hole.
 
+    // The crystal
     G4VSolid* crystalBox      = new G4Box(magnetName+"_crystalBoxS",
                                           cryWidth/2.0, cryHeight/2.0, length/2.0);
     G4VSolid* crystalCylinder = new G4Tubs(magnetName+"_crystalCylinderS",
@@ -390,6 +431,7 @@ void MagnetPLASMA1::Construct() {
                                                      true);
 
     ConstructDetectorLV();
+    BuildMainPV_transform();
 }
 
 
@@ -525,7 +567,29 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
                 yOffset = std::stod(std::string(it.second)) * mm;
             }
             catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xOffset" << G4endl
+                G4cerr << "Invalid argument when reading yOffset" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "xRot") {
+            try {
+                xRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading xRot" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "yRot") {
+            try {
+                yRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading yRot" << G4endl
                        << "Got: '" << it.second << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
@@ -554,6 +618,8 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
     G4cout << "\t height             = " << height/mm          << " [mm]"  << G4endl;
     G4cout << "\t xOffset            = " << xOffset/mm         << " [mm]"  << G4endl;
     G4cout << "\t yOffset            = " << yOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t xRot               = " << xRot/deg           << " [deg]" << G4endl;
+    G4cout << "\t yRot               = " << yRot/deg           << " [deg]" << G4endl;
 }
 
 void MagnetCOLLIMATOR1::Construct() {
@@ -564,24 +630,21 @@ void MagnetCOLLIMATOR1::Construct() {
 
     this->mainLV = MakeNewMainLV("main");
 
-    // The absorber
-    if (width+2*xOffset > detCon->getWorldSizeX()) {
+    //Sanity checks on dimensions
+    if (width > mainLV_w || height > mainLV_h) {
         G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
-               << " The absorber+xOffset is wider than the world!"  << G4endl;
+               << " The absorber is wider than it's allowed envelope "
+               << " including offsets and rotations."  << G4endl;
         exit(1);
     }
-    if (height+2*yOffset > detCon->getWorldSizeX()) {
-        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
-               << " The absorber+yOffset is taller than the world!"  << G4endl;
-        exit(1);
-    }
+
     if (radius > width/2.0 or radius > height/2.0) {
         G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
                << " The channel doesn't fit in the absorber!" << G4endl;
         exit(1);
     }
 
-
+    // Build the absorber
     G4VSolid* absorberBox      = new G4Box(magnetName+"_absorberBoxS",
                                            width/2.0, height/2.0, length/2.0);
     G4VSolid* absorberCylinder = new G4Tubs(magnetName+"_absorberCylinderS",
@@ -614,4 +677,5 @@ void MagnetCOLLIMATOR1::Construct() {
                                                       true);
 
     ConstructDetectorLV();
+    BuildMainPV_transform();
 }

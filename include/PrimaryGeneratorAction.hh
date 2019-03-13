@@ -56,8 +56,6 @@ private:
     void setupCovariance();
     G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
 
-    G4int rngSeed; // Seed to use when random-generating particles within Twiss distribution
-
     G4String covarianceString; // String defining the covariance matrix via Twiss parameters
     G4double epsN_x;  // Normalized emittance  (x) [um]
     G4double epsG_x;  // Geometrical emittance (x) [um]
@@ -83,6 +81,7 @@ private:
     G4double Rcut; // [mm]
 
     TRandom* RNG;
+    G4int rngSeed; // Seed to use when random-generating particles within Twiss distribution
 
 public:
     //Leave the generated positions where RootFileWriter can pick it up [G4 units]
