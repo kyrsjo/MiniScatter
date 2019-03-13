@@ -34,13 +34,18 @@ public:
         }
     }
 
-    G4double GetLength()    const { return length; };
+    G4double GetLength()    const { return length;  };
+    G4double GetXOffset()   const { return xOffset; };
+    G4double GetYOffset()   const { return yOffset; };
 
 protected:
     G4double zPos;     // [G4 units]
     G4bool   doRelPos;
     G4double length;   // [G4units]
     G4double gradient; // [T/m]
+
+    G4double xOffset; // [G4 length units]
+    G4double yOffset; // [G4 length units]
 
     std::map<G4String,G4String> keyValPairs;
     DetectorConstruction* detCon;

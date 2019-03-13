@@ -475,7 +475,8 @@ int main(int argc,char** argv) {
                                                                     beam_zpos,
                                                                     doBacktrack,
                                                                     covarianceString,
-                                                                    beam_rCut);
+                                                                    beam_rCut,
+                                                                    rngSeed);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -631,7 +632,7 @@ void printHelp(G4double target_thick,
                    << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
                    << " If a '*' is prepended, the distribution is to be generated at z=0," << G4endl
                    << " then backtracked to the given z value (which may be 0.0)" << G4endl;
-            
+
             G4cout << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
                    << " Set realistic beam distribution (on target surface); " << G4endl
                    << " if optional part given then x,y are treated separately" << G4endl;
@@ -681,10 +682,14 @@ void printHelp(G4double target_thick,
                    << " as the total current [A] instead of in [T/m]." << G4endl
                    << "     width:     Capillay crystal width (<double> [mm])" << G4endl
                    << "     height:    Capillay crystal height (<double> [mm])" << G4endl
+                   << "     xOffset:   Center offset in X (<double> [mm]) " << G4endl
+                   << "     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
                    << "  'COLLIMATOR1':" << G4endl
                    << "     radius:    Channel radius (<double> [mm])" << G4endl
                    << "     width:     Absorber width (<double> [mm])" << G4endl
                    << "     height:    Absorber height (<double> [mm])" << G4endl
+                   << "     xOffset:   Center offset in X (<double> [mm]) " << G4endl
+                   << "     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
                    << "Currently have the following magnet setups:" << G4endl;
             for (auto mag : magnetDefinitions) {
                 G4cout << mag << G4endl;

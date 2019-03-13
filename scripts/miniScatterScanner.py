@@ -410,7 +410,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 if getObjects:
                     for objName in getObjects:
                         thisObj = objects_singleSim[objName]
-                        thisObjName = thisObj.GetName()
+                        #thisObjName = thisObj.GetName()
                         thisObj.SetName(objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT)
                         objects[objName][i] = thisObj
                 #Do special analysis over the TTrees

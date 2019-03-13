@@ -20,7 +20,9 @@ void ParallelWorldConstruction::Construct() {
         //Pretty much a copy of what goes on in DetectorConstruction::Construct()
         G4VPhysicalVolume* magnetDetectorPV   =
             new G4PVPlacement(NULL,
-                              G4ThreeVector(0.0,0.0,magnet->getZ0()),
+                              G4ThreeVector(magnet->GetXOffset(),
+                                            magnet->GetYOffset(),
+                                            magnet->getZ0()      ),
                               magnet->GetDetectorLV(),
                               magnet->magnetName + "_detectorPV",
                               ghostWorldLogical,

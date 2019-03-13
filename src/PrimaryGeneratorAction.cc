@@ -24,7 +24,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4double beam_zpos_in,
                                                G4bool   doBacktrack_in,
                                                G4String covarianceString_in,
-                                               G4double Rcut_in ) :
+                                               G4double Rcut_in,
+                                               G4int rngSeed_in ) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
@@ -32,7 +33,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     beam_zpos(beam_zpos_in),
     doBacktrack(doBacktrack_in),
     covarianceString(covarianceString_in),
-    Rcut(Rcut_in) {
+    Rcut(Rcut_in),
+    rngSeed(rngSeed_in) {
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
@@ -242,7 +244,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             setupCovariance();
         }
         if (covarianceString != "" or Rcut != 0.0) {
-            RNG = new TRandom1();
+            RNG = new TRandom1((UInt_t) rngSeed);
         }
     }
 

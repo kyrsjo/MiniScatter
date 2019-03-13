@@ -31,7 +31,8 @@ public:
                            G4double beam_zpos_in,
                            G4bool   doBacktrack_in,
                            G4String covarianceString_in,
-                           G4double Rcut_in );
+                           G4double Rcut_in,
+                           G4int rngSeed );
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
@@ -54,6 +55,8 @@ private:
     G4bool hasCovariance = false;
     void setupCovariance();
     G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
+
+    G4int rngSeed; // Seed to use when random-generating particles within Twiss distribution
 
     G4String covarianceString; // String defining the covariance matrix via Twiss parameters
     G4double epsN_x;  // Normalized emittance  (x) [um]
