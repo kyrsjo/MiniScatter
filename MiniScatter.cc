@@ -681,7 +681,7 @@ void printHelp(G4double target_thick,
             G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
                    << "default/current value = " << cutoff_radius << " [mm]" << G4endl;
 
-            G4cout << "--edepDZ               : Z bin width for energy deposit histograms " 
+            G4cout << "--edepDZ               : Z bin width for energy deposit histograms, "
                    << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
@@ -721,7 +721,7 @@ void printHelp(G4double target_thick,
                    << G4endl;
 
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
-            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
+            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4." << G4endl;
             G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
             G4cout << "Extra arguments are not compatible with -g" << G4endl;
             G4cout << G4endl;
