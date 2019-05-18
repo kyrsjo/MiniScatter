@@ -49,6 +49,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double target_angle,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
@@ -82,6 +83,8 @@ int main(int argc,char** argv) {
 
     G4double target_thick        = 1.0;       // Target thickness [mm]; 0.0 for no target slab (only magnets)
     G4String target_material     = "G4_Al";   // Name of target material to use
+    G4double target_angle        = 0.0;       // Target angle around y-axis [deg]
+    G4bool   target_rotate       = false;
 
     G4double detector_distance   = 50.0;      // Detector distance at x=y=0  [mm]
     G4double detector_angle      = 0.0;       // Detectector angle around y-axis [deg]
@@ -122,6 +125,7 @@ int main(int argc,char** argv) {
                                            {"mat",                   required_argument, NULL, 'm' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
+                                           {"targetAngle",           required_argument, NULL, 'A' },
                                            {"worldsize",             required_argument, NULL, 'w' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
@@ -147,13 +151,14 @@ int main(int argc,char** argv) {
                                            {0,0,0,0}
     };
 
-    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
+    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:A:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
                       target_material,
                       detector_distance,
                       detector_angle,
+                      target_angle,
                       world_size,
                       physListName,
                       beam_energy,
@@ -213,6 +218,19 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             detector_rotate = true;
+            break;
+
+        case 'A': //Target angle
+            try {
+                target_angle = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading target angle" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            target_rotate = true;
             break;
 
         case 'w': //World size
@@ -400,6 +418,7 @@ int main(int argc,char** argv) {
               target_material,
               detector_distance,
               detector_angle,
+              target_angle,
               world_size,
               physListName,
               beam_energy,
@@ -472,6 +491,8 @@ int main(int argc,char** argv) {
                                                                detector_distance,
                                                                detector_angle,
                                                                detector_rotate,
+                                                               target_angle,
+                                                               target_rotate,
                                                                world_size,
                                                                magnetDefinitions);
 
@@ -582,6 +603,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double target_angle,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
@@ -620,6 +642,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "-a <double> : Detector angle [deg],   default/current value = "
                    << detector_angle << G4endl;
+            
+            G4cout << "-A <double> : Target angle [deg],   default/current value = "
+                   << target_angle << G4endl;
 
             G4cout << "-w <double> : World size X/Y [mm],    default/current value = "
                    << world_size << G4endl;

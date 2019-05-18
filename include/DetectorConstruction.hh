@@ -38,6 +38,8 @@ public:
                          G4double DetectorDistance_in,
                          G4double DetectorAngle_in,
                          G4bool   DetectorRotated_in,
+                         G4double TargetAngle_in,
+                         G4bool   TargetRotated_in,
                          G4double WorldSize_in,
                          std::vector <G4String> &magnetDefinitions_in);
     ~DetectorConstruction(){};
@@ -105,6 +107,9 @@ private:
     G4double           TargetSizeX;
     G4double           TargetSizeY;
     G4double           TargetThickness;
+
+    G4double           TargetAngle;   //[rad]
+    G4bool             TargetRotated;
 
     G4bool             HasTarget      = false;
     G4Material*        TargetMaterial = NULL;

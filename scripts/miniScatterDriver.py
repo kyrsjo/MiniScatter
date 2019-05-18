@@ -26,7 +26,7 @@ def runScatter(simSetup, quiet=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
 
     for key in simSetup.keys():
-        if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "WORLDSIZE", "PHYS",\
+        if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS",\
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
@@ -53,6 +53,9 @@ def runScatter(simSetup, quiet=False):
 
     if "ANG" in simSetup:
         cmd += ["-a", str(simSetup["ANG"])]
+
+    if "TARG_ANG" in simSetup:
+        cmd += ["-A", str(simSetup["TARG_ANG"])]
 
     if "WORLDSIZE" in simSetup:
         cmd += ['-w', str(simSetup["WORLDSIZE"])]
