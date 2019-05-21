@@ -94,11 +94,12 @@ void RootFileWriter::initializeRootFile(){
 
     // Target energy deposition
     if (detCon->GetHasTarget()) {
-        targetEdep = new TH1D("targetEdep","targetEdep",1000,0,beamEnergy);
+        targetEdep = new TH1D("targetEdep","targetEdep",edepNbins,0,beamEnergy);
+        G4cerr << edepNbins << G4endl;
         targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
         targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
         targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
-        targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
+        targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",edepNbins,0,beamEnergy);
         targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
         if(edep_dens_dz != 0.0) {
