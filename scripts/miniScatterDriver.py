@@ -30,7 +30,7 @@ def runScatter(simSetup, quiet=False):
                        "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
-                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "EDEP_NBINS"):
+                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS"):
             if key.startswith("MAGNET"):
                 continue
             raise KeyError("Did not expect key {} in the simSetup".format(key))
@@ -132,8 +132,8 @@ def runScatter(simSetup, quiet=False):
     if "EDEP_DZ" in simSetup:
         cmd += ["--edepDZ", str(simSetup["EDEP_DZ"])]
 
-    if "EDEP_NBINS" in simSetup:
-        cmd += ["--edepNbins", str(simSetup["EDEP_NBINS"])]
+    if "ENG_NBINS" in simSetup:
+        cmd += ["--engNbins", str(simSetup["ENG_NBINS"])]
 
     if "MAGNET" in simSetup:
         for mag in simSetup["MAGNET"]:

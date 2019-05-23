@@ -66,7 +66,7 @@ void printHelp(G4double target_thick,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
                G4double edep_dens_dz,
-               G4int    edep_Nbins,
+               G4int    engNbins,
                std::vector<G4String> &magnetDefinitions);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -118,7 +118,7 @@ int main(int argc,char** argv) {
     G4double cutoff_radius         = 1.0;     // [mm]
 
     G4double edep_dens_dz          = 0.0;     // Z bin width for energy deposit histograms [mm]
-    G4int    edep_Nbins            = 0;       // Number of bins for the 1D energy deposition histograms
+    G4int    engNbins              = 0;       // Number of bins for the 1D energy histograms
 
     std::vector<G4String> magnetDefinitions;
 
@@ -149,7 +149,7 @@ int main(int argc,char** argv) {
                                            {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
-                                           {"edepNbins",             required_argument, NULL, 1003 },
+                                           {"engNbins",              required_argument, NULL, 1003 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {0,0,0,0}
     };
@@ -178,7 +178,7 @@ int main(int argc,char** argv) {
                       cutoff_energyFraction,
                       cutoff_radius,
                       edep_dens_dz,
-                      edep_Nbins,
+                      engNbins,
                       magnetDefinitions);
             exit(1);
             break;
@@ -400,12 +400,12 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1003: // Number of bins for the energy deposit 1D histograms
+        case 1003: // Number of bins for the energy 1D histograms
             try {
-                edep_Nbins = std::stoi(string(optarg));
+                engNbins = std::stoi(string(optarg));
             }
             catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading edep_Nbins" << G4endl
+                G4cout << "Invalid argument when reading engNbins" << G4endl
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected an integer!" << G4endl;
                 exit(1);
@@ -453,7 +453,7 @@ int main(int argc,char** argv) {
               cutoff_energyFraction,
               cutoff_radius,
               edep_dens_dz,
-              edep_Nbins,
+              engNbins,
               magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
@@ -554,7 +554,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
     RootFileWriter::GetInstance()->setEdepDensDZ(edep_dens_dz);
-    RootFileWriter::GetInstance()->setEdepNbins(edep_Nbins);
+    RootFileWriter::GetInstance()->setEngNbins(engNbins);
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
 
 #ifdef G4VIS_USE
@@ -640,7 +640,7 @@ void printHelp(G4double target_thick,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
                G4double edep_dens_dz,
-               G4int    edep_Nbins,
+               G4int    engNbins,
                std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
@@ -730,8 +730,8 @@ void printHelp(G4double target_thick,
             G4cout << "--edepDZ               : Z bin width for energy deposit histograms, "
                    << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
 
-            G4cout << "--edepNbins            : Number of bins for 1D energy deposit histograms, "
-                   << "default/current value = " << edep_Nbins << G4endl;
+            G4cout << "--engNbins             : Number of bins for 1D energy histograms, "
+                   << "default/current value = " << engNbins << G4endl;
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
                    << " Create a magnet of the given type at the given position. " << G4endl
