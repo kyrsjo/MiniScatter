@@ -61,8 +61,8 @@ G4bool MyTrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     return false;
   }
 
-  G4double energy = aStep->GetPreStepPoint()->GetTotalEnergy(); //theTrack->GetTotalEnergy();
-  const G4ThreeVector momentum = aStep->GetPreStepPoint()->GetMomentum(); //theTrack->GetMomentum();
+  G4double energy = aStep->GetPreStepPoint()->GetKineticEnergy();
+  const G4ThreeVector momentum = aStep->GetPreStepPoint()->GetMomentum();
   const G4ThreeVector& hitPos = aStep->GetPreStepPoint()->GetPosition();
 
   G4Track* theTrack = aStep->GetTrack();
