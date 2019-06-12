@@ -54,6 +54,8 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4double DetectorDistance_in,
                                            G4double DetectorAngle_in,
                                            G4bool   DetectorRotated_in,
+                                           G4double TargetAngle_in,
+                                           G4bool   TargetRotated_in,
                                            G4double WorldSize_in,
                                            std::vector <G4String> &magnetDefinitions_in) :
     solidWorld(0),logicWorld(0),physiWorld(0),
@@ -65,14 +67,25 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     // Compute geometry
 
     TargetThickness = TargetThickness_in*mm;
+    TargetAngle = TargetAngle_in*pi/180.0;
+    TargetRotated = TargetRotated_in;
+
     DetectorThickness = 1*um;
     DetectorDistance = DetectorDistance_in*mm;
     DetectorRotated = DetectorRotated_in;
     DetectorAngle = DetectorAngle_in*pi/180.0;
 
+    if (TargetRotated and DetectorRotated) {
+        G4cout << "Both target and detector rotation is not supported." << G4endl;
+        exit(1);
+    }
     if (TargetThickness == 0.0) {
         if (DetectorRotated) {
             G4cerr << "TargetThickness=0 doesn't work together with rotated detector" << G4endl;
+            exit(1);
+        }
+        if (TargetRotated) {
+            G4cerr << "TargetThickness=0 doesn't make any sense with a rotated target." << G4endl;
             exit(1);
         }
 
@@ -91,12 +104,12 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     else {
         HasTarget = true;
     }
-    
+
     //Set the z-size of the world volume to fit the detector + buffer,
     // in case of no rotation
     G4double WorldSizeZ_minimum = (DetectorDistance + DetectorThickness + WorldSizeZ_buffer)*2.0;
 
-    if (not DetectorRotated) { // No detector angle, make a simple world
+    if (not DetectorRotated and not TargetRotated) { // No detector or target angle, make a simple world
 
         WorldSizeZ = WorldSizeZ_minimum;
 
@@ -131,36 +144,44 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         }
 
     }
-    else { //Detector has angle -- make sure that everything fits together
-        double theta = abs(DetectorAngle);
-        // Offset of detector center vs. end of target
-        double dz = DetectorDistance-TargetThickness/2.0;
-        // Transverse size of volume needed to contain the detector
+    else { //Detector or target has angle -- make sure that everything fits together
+        double theta;
+        double thickness;
+        if (DetectorRotated) {
+            theta = abs(DetectorAngle);
+            thickness = DetectorThickness;
+        }
+        else if (TargetRotated){
+            theta = abs(TargetAngle);
+            thickness = TargetThickness;
+        }
+
+        // Offset of rotated component center vs. end of non-rotated
+        double dz = DetectorDistance-thickness/2.0;
+        // Transverse size of volume needed to contain the device
         double dx = dz/tan(theta);
-        // Total length of detector volume (including part to be "chopped off" to fit the thickness)
+        // Total length of rotated volume (including part to be "chopped off" to fit the thickness)
         double rp = dz/sin(theta);
 
         // How much to cut off the end so that it doesn't crash with the wall when thickness > 0?
         double dr = 0.0;
         if (theta < pi/4.0) {
-            dr = DetectorThickness/(2.0*tan(theta));
+            dr = thickness/(2.0*tan(theta));
         }
         else if (theta > pi/4.0) {
-            dr = (DetectorThickness*tan(theta))/2.0;
+            dr = (thickness*tan(theta))/2.0;
         }
         else if (theta == pi/4.0) {
-            dr = DetectorThickness/2.0;
+            dr = thickness/2.0;
         }
         else if (theta > pi/2.0) {
-            G4cerr << "Error: Detector angle  should be within +/- pi/2.0" << G4endl;
+            G4cerr << "Error: Rotation angle  should be within +/- pi/2.0" << G4endl;
             exit(1);
         }
 
-        DetectorSizeX = (rp-dr)*2.0;
-        DetectorSizeY = DetectorSizeX;
-
+        double sizeXY = (rp-dr)*2.0;
         WorldSizeX = dx*2.0;
-        WorldSizeY = DetectorSizeY;
+        WorldSizeY = sizeXY;
         if (WorldSize_in != 0.0) {
             if (WorldSize_in*mm < WorldSizeX or WorldSize_in*mm < WorldSizeY) {
                 G4cerr << "Error: Manually spesified WorldSize must be larger than "
@@ -171,13 +192,23 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
             WorldSizeY = WorldSize_in*mm;
         }
 
+        if (DetectorRotated) {
+            DetectorSizeX = sizeXY;
+            DetectorSizeY = DetectorSizeX;
+            TargetSizeX = WorldSizeX;
+            TargetSizeY = WorldSizeY;
+        }
+        else if (TargetRotated) {
+            TargetSizeX = sizeXY;
+            TargetSizeY = TargetSizeX;
+            DetectorSizeX = WorldSizeX;
+            DetectorSizeY = WorldSizeY;
+        }
+
         WorldSizeZ = 2*(TargetThickness/2+2*dz);
         if (WorldSizeZ < WorldSizeZ_minimum) {
             WorldSizeZ = WorldSizeZ_minimum;
         }
-
-        TargetSizeX = WorldSizeX;
-        TargetSizeY = WorldSizeY;
 
         if (magnetDefinitions.size() > 0) {
             G4cerr << "Error: Magnet definitions not currently supported with a rotated detector." << G4endl;
@@ -231,14 +262,30 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     if (TargetThickness > 0.0) {
         solidTarget = new G4Box("TargetS", TargetSizeX/2,TargetSizeY/2, TargetThickness/2);
         logicTarget = new G4LogicalVolume(solidTarget, TargetMaterial,"TargetLV");
-        physiTarget = new G4PVPlacement(NULL,                        //no rotation
-                                        G4ThreeVector(0.0,0.0,0.0),  //its position
-                                        logicTarget,                 //its logical volume
-                                        "TargetPV",                  //its name
-                                        logicWorld,                  //its mother
-                                        false,                       //pMany not used
-                                        0,                           //copy number
-                                        true);                       //Check for overlaps
+
+        if (not TargetRotated) {
+            physiTarget = new G4PVPlacement(NULL,                        //no rotation
+                                            G4ThreeVector(0.0,0.0,0.0),  //its position
+                                            logicTarget,                 //its logical volume
+                                            "TargetPV",                  //its name
+                                            logicWorld,                  //its mother
+                                            false,                       //pMany not used
+                                            0,                           //copy number
+                                            true);                       //Check for overlaps
+        }
+        else {
+            G4RotationMatrix* targetRot = new G4RotationMatrix();
+            targetRot->rotateY(TargetAngle*rad);
+            G4ThreeVector zTrans(0.0,0.0,0.0);
+            physiTarget = new G4PVPlacement(G4Transform3D(*targetRot,zTrans), //Translate (by zero)
+                                                                              // then rotate
+                                              logicTarget,                    //its logical volume
+                                              "TargetPV",                     //its name
+                                              logicWorld,                     //its mother
+                                              false,                          //pMany not used
+                                              0,                              //copy number
+                                              true);                          //Check for overlaps
+        }
     }
     else {
         solidTarget = NULL;
@@ -254,13 +301,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         G4RotationMatrix* detectorRot = new G4RotationMatrix();
         detectorRot->rotateY(DetectorAngle*rad);
         G4ThreeVector zTrans(0.0,0.0,DetectorDistance);
-        physiDetector = new G4PVPlacement(G4Transform3D(*detectorRot,zTrans),        //Translate then rotate
-                                          logicDetector,                            //its logical volume
-                                          "DetectorPV",                             //its name
-                                          logicWorld,                               //its mother
-                                          false,                                    //pMany not used
-                                          0,                                        //copy number
-                                          true);                                    //Check for overlaps
+        physiDetector = new G4PVPlacement(G4Transform3D(*detectorRot,zTrans), //Translate then rotate
+                                          logicDetector,                      //its logical volume
+                                          "DetectorPV",                       //its name
+                                          logicWorld,                         //its mother
+                                          false,                              //pMany not used
+                                          0,                                  //copy number
+                                          true);                              //Check for overlaps
 
     }
     else{

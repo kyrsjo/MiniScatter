@@ -49,6 +49,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double target_angle,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
@@ -65,6 +66,7 @@ void printHelp(G4double target_thick,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
                G4double edep_dens_dz,
+               G4int    engNbins,
                std::vector<G4String> &magnetDefinitions);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -82,6 +84,8 @@ int main(int argc,char** argv) {
 
     G4double target_thick        = 1.0;       // Target thickness [mm]; 0.0 for no target slab (only magnets)
     G4String target_material     = "G4_Al";   // Name of target material to use
+    G4double target_angle        = 0.0;       // Target angle around y-axis [deg]
+    G4bool   target_rotate       = false;
 
     G4double detector_distance   = 50.0;      // Detector distance at x=y=0  [mm]
     G4double detector_angle      = 0.0;       // Detectector angle around y-axis [deg]
@@ -114,6 +118,7 @@ int main(int argc,char** argv) {
     G4double cutoff_radius         = 1.0;     // [mm]
 
     G4double edep_dens_dz          = 0.0;     // Z bin width for energy deposit histograms [mm]
+    G4int    engNbins              = 0;       // Number of bins for the 1D energy histograms
 
     std::vector<G4String> magnetDefinitions;
 
@@ -122,6 +127,7 @@ int main(int argc,char** argv) {
                                            {"mat",                   required_argument, NULL, 'm' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
+                                           {"targetAngle",           required_argument, NULL, 'A' },
                                            {"worldsize",             required_argument, NULL, 'w' },
                                            {"dist",                  required_argument, NULL, 'd' },
                                            {"ang",                   required_argument, NULL, 'a' },
@@ -143,17 +149,19 @@ int main(int argc,char** argv) {
                                            {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
+                                           {"engNbins",              required_argument, NULL, 1003 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {0,0,0,0}
     };
 
-    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
+    while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:A:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
         case 'h': //Help
             printHelp(target_thick,
                       target_material,
                       detector_distance,
                       detector_angle,
+                      target_angle,
                       world_size,
                       physListName,
                       beam_energy,
@@ -170,6 +178,7 @@ int main(int argc,char** argv) {
                       cutoff_energyFraction,
                       cutoff_radius,
                       edep_dens_dz,
+                      engNbins,
                       magnetDefinitions);
             exit(1);
             break;
@@ -213,6 +222,21 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             detector_rotate = true;
+            break;
+
+        case 'A': //Target angle
+            try {
+                target_angle = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading target angle" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            if (target_angle != 0.0) {
+                target_rotate = true;
+            }
             break;
 
         case 'w': //World size
@@ -376,6 +400,18 @@ int main(int argc,char** argv) {
             }
             break;
 
+        case 1003: // Number of bins for the energy 1D histograms
+            try {
+                engNbins = std::stoi(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading engNbins" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected an integer!" << G4endl;
+                exit(1);
+            }
+            break;
+
         case 1100: //Magnet definition
             magnetDefinitions.push_back(string(optarg));
             break;
@@ -400,6 +436,7 @@ int main(int argc,char** argv) {
               target_material,
               detector_distance,
               detector_angle,
+              target_angle,
               world_size,
               physListName,
               beam_energy,
@@ -416,6 +453,7 @@ int main(int argc,char** argv) {
               cutoff_energyFraction,
               cutoff_radius,
               edep_dens_dz,
+              engNbins,
               magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
@@ -472,6 +510,8 @@ int main(int argc,char** argv) {
                                                                detector_distance,
                                                                detector_angle,
                                                                detector_rotate,
+                                                               target_angle,
+                                                               target_rotate,
                                                                world_size,
                                                                magnetDefinitions);
 
@@ -514,6 +554,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
     RootFileWriter::GetInstance()->setEdepDensDZ(edep_dens_dz);
+    RootFileWriter::GetInstance()->setEngNbins(engNbins);
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
 
 #ifdef G4VIS_USE
@@ -582,6 +623,7 @@ void printHelp(G4double target_thick,
                G4String target_material,
                G4double detector_distance,
                G4double detector_angle,
+               G4double target_angle,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
@@ -598,6 +640,7 @@ void printHelp(G4double target_thick,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
                G4double edep_dens_dz,
+               G4int    engNbins,
                std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
@@ -620,6 +663,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "-a <double> : Detector angle [deg],   default/current value = "
                    << detector_angle << G4endl;
+
+            G4cout << "-A <double> : Target angle [deg],   default/current value = "
+                   << target_angle << G4endl;
 
             G4cout << "-w <double> : World size X/Y [mm],    default/current value = "
                    << world_size << G4endl;
@@ -681,8 +727,11 @@ void printHelp(G4double target_thick,
             G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
                    << "default/current value = " << cutoff_radius << " [mm]" << G4endl;
 
-            G4cout << "--edepDZ               : Z bin width for energy deposit histograms " 
+            G4cout << "--edepDZ               : Z bin width for energy deposit histograms, "
                    << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
+
+            G4cout << "--engNbins             : Number of bins for 1D energy histograms, "
+                   << "default/current value = " << engNbins << G4endl;
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
                    << " Create a magnet of the given type at the given position. " << G4endl
@@ -721,7 +770,7 @@ void printHelp(G4double target_thick,
                    << G4endl;
 
             G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
-            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4" << G4endl;
+            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4." << G4endl;
             G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
             G4cout << "Extra arguments are not compatible with -g" << G4endl;
             G4cout << G4endl;

@@ -94,11 +94,11 @@ void RootFileWriter::initializeRootFile(){
 
     // Target energy deposition
     if (detCon->GetHasTarget()) {
-        targetEdep = new TH1D("targetEdep","targetEdep",1000,0,beamEnergy);
+        targetEdep = new TH1D("targetEdep","targetEdep",engNbins,0,beamEnergy);
         targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
         targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
         targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
-        targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",1000,0,beamEnergy);
+        targetEdep_IEL = new TH1D("targetEdep_IEL","targetEdep_IEL",engNbins,0,beamEnergy);
         targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
         if(edep_dens_dz != 0.0) {
@@ -131,32 +131,38 @@ void RootFileWriter::initializeRootFile(){
         // Target tracking info
         target_exit_energy[11]  = new TH1D("target_exit_energy_PDG11",
                                         "Particle energy when exiting target (electrons)",
-                                        1000,0,beamEnergy);
+                                        engNbins,0,beamEnergy);
         target_exit_energy[-11] = new TH1D("target_exit_energy_PDG-11",
                                         "Particle energy when exiting target (positrons)",
-                                        1000,0,beamEnergy);
+                                        engNbins,0,beamEnergy);
         target_exit_energy[22]  = new TH1D("target_exit_energy_PDG22",
                                         "Particle energy when exiting target (photons)",
-                                        1000,0,beamEnergy);
+                                        engNbins,0,beamEnergy);
+        target_exit_energy[2212]= new TH1D("target_exit_energy_PDG2212",
+                                        "Particle energy when exiting target (protons)",
+                                        engNbins,0,beamEnergy);
         target_exit_energy[0]   = new TH1D("target_exit_energy_PDGother",
                                         "Particle energy when exiting target (other)",
-                                        1000,0,beamEnergy);
+                                        engNbins,0,beamEnergy);
         for (auto it : target_exit_energy) {
             it.second->GetXaxis()->SetTitle("Energy [MeV]");
         }
 
         target_exit_cutoff_energy[11]  = new TH1D("target_exit_cutoff_energy_PDG11",
-                                                "Particle energy when exiting target (electrons) (r < Rcut)",
-                                                1000,0,beamEnergy);
+                                                "Particle energy when exiting target (electrons) (r < Rcut, E > Ecut)",
+                                                engNbins,0,beamEnergy);
         target_exit_cutoff_energy[-11] = new TH1D("target_exit_cutoff_energy_PDG-11",
-                                                "Particle energy when exiting target (positrons) (r < Rcut)",
-                                                1000,0,beamEnergy);
+                                                "Particle energy when exiting target (positrons) (r < Rcut, E > Ecut)",
+                                                engNbins,0,beamEnergy);
         target_exit_cutoff_energy[22]  = new TH1D("target_exit_cutoff_energy_PDG22",
-                                                "Particle energy when exiting target (photons) (r < Rcut)",
-                                                1000,0,beamEnergy);
+                                                "Particle energy when exiting target (photons) (r < Rcut, E > Ecut)",
+                                                engNbins,0,beamEnergy);
+        target_exit_cutoff_energy[2212]= new TH1D("target_exit_cutoff_energy_PDG2212",
+                                                "Particle energy when exiting target (protons) (r < Rcut, E > Ecut)",
+                                                engNbins,0,beamEnergy);
         target_exit_cutoff_energy[0]   = new TH1D("target_exit_cutoff_energy_PDGother",
                                                 "Particle energy when exiting target (other) (r < Rcut)",
-                                                1000,0,beamEnergy);
+                                                engNbins,0,beamEnergy);
         for (auto it : target_exit_cutoff_energy) {
             it.second->GetXaxis()->SetTitle("Energy [MeV]");
         }
@@ -208,32 +214,38 @@ void RootFileWriter::initializeRootFile(){
 
     tracker_type_energy[11]  = new TH1D("tracker_energy_PDG11",
                                       "Particle energy when hitting tracker (electrons)",
-                                      1000,0,beamEnergy);
+                                      engNbins,0,beamEnergy);
     tracker_type_energy[-11] = new TH1D("tracker_energy_PDG-11",
                                       "Particle energy when hitting tracker (positrons)",
-                                      1000,0,beamEnergy);
+                                      engNbins,0,beamEnergy);
     tracker_type_energy[22]  = new TH1D("tracker_energy_PDG22",
                                       "Particle energy when hitting tracker (photons)",
-                                      1000,0,beamEnergy);
+                                      engNbins,0,beamEnergy);
+    tracker_type_energy[2212]= new TH1D("tracker_energy_PDG2212",
+                                      "Particle energy when hitting tracker (protons)",
+                                      engNbins,0,beamEnergy);
     tracker_type_energy[0]   = new TH1D("tracker_energy_PDGother",
                                       "Particle energy when hitting tracker (other)",
-                                      1000,0,beamEnergy);
+                                      engNbins,0,beamEnergy);
     for (auto it : tracker_type_energy) {
         it.second->GetXaxis()->SetTitle("Energy [MeV]");
     }
 
     tracker_type_cutoff_energy[11]  = new TH1D("tracker_cutoff_energy_PDG11",
                                               "Particle energy when hitting tracker (electrons) (r < Rcut)",
-                                              1000,0,beamEnergy);
+                                              engNbins,0,beamEnergy);
     tracker_type_cutoff_energy[-11] = new TH1D("tracker_cutoff_energy_PDG-11",
                                               "Particle energy when hitting tracker (positrons) (r < Rcut)",
-                                              1000,0,beamEnergy);
+                                              engNbins,0,beamEnergy);
     tracker_type_cutoff_energy[22]  = new TH1D("tracker_cutoff_energy_PDG22",
                                               "Particle energy when hitting tracker (photons) (r < Rcut)",
-                                              1000,0,beamEnergy);
+                                              engNbins,0,beamEnergy);
+    tracker_type_cutoff_energy[2212]= new TH1D("tracker_cutoff_energy_PDG2212",
+                                              "Particle energy when hitting tracker (protons) (r < Rcut)",
+                                              engNbins,0,beamEnergy);
     tracker_type_cutoff_energy[0]   = new TH1D("tracker_cutoff_energy_PDGother",
                                               "Particle energy when hitting tracker (other) (r < Rcut)",
-                                              1000,0,beamEnergy);
+                                              engNbins,0,beamEnergy);
     for (auto it : tracker_type_cutoff_energy) {
         it.second->GetXaxis()->SetTitle("Energy [MeV]");
     }
@@ -303,6 +315,9 @@ void RootFileWriter::initializeRootFile(){
         target_exit_Rpos[22]  = new TH1D("target_exit_rpos_PDG22",
                                         "target exit rpos (photons)",
                                         1000,0,minR);
+        target_exit_Rpos[2212]= new TH1D("target_exit_rpos_PDG2212",
+                                        "target exit rpos (protons)",
+                                        1000,0,minR);
         target_exit_Rpos[0]   = new TH1D("target_exit_rpos_PDGother",
                                         "target exit rpos (other)",
                                         1000,0,minR);
@@ -317,6 +332,9 @@ void RootFileWriter::initializeRootFile(){
                                                 1000,0,minR);
         target_exit_Rpos_cutoff[22]  = new TH1D("target_exit_rpos_cutoff_PDG22",
                                                 "target exit rpos (photons, energy > E_cut)",
+                                                1000,0,minR);
+        target_exit_Rpos_cutoff[2212]= new TH1D("target_exit_rpos_cutoff_PDG2212",
+                                                "target exit rpos (protons, energy > E_cut)",
                                                 1000,0,minR);
         target_exit_Rpos_cutoff[0]   = new TH1D("target_exit_rpos_cutoff_PDGother",
                                                 "target exit rpos (other, energy > E_cut)",
@@ -336,6 +354,9 @@ void RootFileWriter::initializeRootFile(){
     tracker_Rpos[22]  = new TH1D("tracker_rpos_PDG22",
                                  "tracker rpos (photons)",
                                  1000,0,minR);
+    tracker_Rpos[2212]= new TH1D("tracker_rpos_PDG2212",
+                                 "tracker rpos (protons)",
+                                 1000,0,minR);
     tracker_Rpos[0]   = new TH1D("tracker_rpos_PDGother",
                                  "tracker rpos (other)",
                                  1000,0,minR);
@@ -350,6 +371,9 @@ void RootFileWriter::initializeRootFile(){
                                         1000,0,minR);
     tracker_Rpos_cutoff[22]  = new TH1D("tracker_rpos_cutoff_PDG22",
                                         "tracker rpos (photons, energy > E_cut)",
+                                        1000,0,minR);
+    tracker_Rpos_cutoff[2212]= new TH1D("tracker_rpos_cutoff_PDG2212",
+                                        "tracker rpos (protons, energy > E_cut)",
                                         1000,0,minR);
     tracker_Rpos_cutoff[0]   = new TH1D("tracker_rpos_cutoff_PDGother",
                                         "tracker rpos (other, energy > E_cut)",
@@ -408,6 +432,9 @@ void RootFileWriter::initializeRootFile(){
         magnet_exit_Rpos.back()[22]  = new TH1D((magName + "_rpos_PDG22").c_str(),
                                                 (magName + " rpos (photons)").c_str(),
                                                 1000,0,minR);
+        magnet_exit_Rpos.back()[2212]= new TH1D((magName + "_rpos_PDG2212").c_str(),
+                                                (magName + " rpos (protons)").c_str(),
+                                                1000,0,minR);
         magnet_exit_Rpos.back()[0]   = new TH1D((magName + "_rpos_PDGother").c_str(),
                                                 (magName + " rpos (other)").c_str(),
                                                 1000,0,minR);
@@ -424,6 +451,9 @@ void RootFileWriter::initializeRootFile(){
                                                        1000,0,minR);
         magnet_exit_Rpos_cutoff.back()[22]  = new TH1D((magName + "_rpos_cutoff_PDG22").c_str(),
                                                        (magName + " rpos (photons, energy > Ecut)").c_str(),
+                                                       1000,0,minR);
+        magnet_exit_Rpos_cutoff.back()[2212]= new TH1D((magName + "_rpos_cutoff_PDG2212").c_str(),
+                                                       (magName + " rpos (protons, energy > Ecut)").c_str(),
                                                        1000,0,minR);
         magnet_exit_Rpos_cutoff.back()[0]   = new TH1D((magName + "_rpos_cutoff_PDGother").c_str(),
                                                        (magName + " rpos (other, energy > Ecut)").c_str(),
@@ -474,16 +504,19 @@ void RootFileWriter::initializeRootFile(){
         magnet_exit_energy.push_back(std::map<G4int,TH1D*>());
         magnet_exit_energy.back()[11]  = new TH1D((magName+"_exit_energy_PDG11").c_str(),
                                                   ("Particle energy when exiting "+magName+" (electrons)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         magnet_exit_energy.back()[-11] = new TH1D((magName+"_exit_energy_PDG-11").c_str(),
                                                   ("Particle energy when exiting "+magName+" (positrons)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         magnet_exit_energy.back()[22]  = new TH1D((magName+"_exit_energy_PDG22").c_str(),
                                                   ("Particle energy when exiting "+magName+" (photons)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
+        magnet_exit_energy.back()[2212]= new TH1D((magName+"_exit_energy_PDG22").c_str(),
+                                                  ("Particle energy when exiting "+magName+" (protons)").c_str(),
+                                                  engNbins,0,beamEnergy);
         magnet_exit_energy.back()[0]   = new TH1D((magName+"_exit_energy_PDGother").c_str(),
                                                   ("Particle energy when exiting "+magName+" (other)").c_str(),
-                                      1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         for (auto PDG : magnet_exit_energy.back()) {
             PDG.second->GetXaxis()->SetTitle("Energy [MeV]");
         }
@@ -491,16 +524,19 @@ void RootFileWriter::initializeRootFile(){
         magnet_exit_cutoff_energy.push_back(std::map<G4int,TH1D*>());
         magnet_exit_cutoff_energy.back()[11]  = new TH1D((magName+"_exit_cutoff_energy_PDG11").c_str(),
                                                   ("Particle energy when exiting "+magName+" (electrons, r < Rcut)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         magnet_exit_cutoff_energy.back()[-11] = new TH1D((magName+"_exit_cutoff_energy_PDG-11").c_str(),
                                                   ("Particle energy when exiting "+magName+" (positrons, r < Rcut)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         magnet_exit_cutoff_energy.back()[22]  = new TH1D((magName+"_exit_cutoff_energy_PDG22").c_str(),
                                                   ("Particle energy when exiting "+magName+" (photons, r < Rcut)").c_str(),
-                                                  1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
+        magnet_exit_cutoff_energy.back()[2212]= new TH1D((magName+"_exit_cutoff_energy_PDG2212").c_str(),
+                                                  ("Particle energy when exiting "+magName+" (protons, r < Rcut)").c_str(),
+                                                  engNbins,0,beamEnergy);
         magnet_exit_cutoff_energy.back()[0]   = new TH1D((magName+"_exit_cutoff_energy_PDGother").c_str(),
                                                   ("Particle energy when exiting "+magName+" (other, r < Rcut)").c_str(),
-                                      1000,0,beamEnergy);
+                                                  engNbins,0,beamEnergy);
         for (auto PDG : magnet_exit_cutoff_energy.back()) {
             PDG.second->GetXaxis()->SetTitle("Energy [MeV]");
         }
@@ -625,7 +661,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                         target_exit_energy[0]->Fill(energy/MeV);
                     }
 
-                    if (hitR/mm < position_cutoffR) {
+                    if (hitR/mm < position_cutoffR and energy/MeV > beamEnergy*beamEnergy_cutoff) {
                         if (target_exit_cutoff_energy.find(PDG) != target_exit_cutoff_energy.end()) {
                             target_exit_cutoff_energy[PDG]->Fill(energy/MeV);
                         }

@@ -101,6 +101,9 @@ public:
     void setEdepDensDZ(G4double edep_dens_dz_in) {
         this->edep_dens_dz = edep_dens_dz_in;
     }
+    void setEngNbins(G4int edepNbins_in) {
+        this->engNbins = edepNbins_in;
+    }
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -221,6 +224,9 @@ private:
 
     //Delta z for the energy deposition density TH3Ds [mm, 0 => Disable]
     G4double edep_dens_dz = 0.0;
+
+    //Energy deposition and energy-remaining number of bins
+    G4int engNbins = 1000;
 
     // RNG for sampling over the step
     TRandom* RNG;

@@ -71,7 +71,7 @@ G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
 
     //Only use outgoing tracks
     if (aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary) {
-        G4double energy = aStep->GetPostStepPoint()->GetTotalEnergy();
+        G4double energy = aStep->GetPostStepPoint()->GetKineticEnergy();
         const G4ThreeVector momentum = aStep->GetPostStepPoint()->GetMomentum();
         const G4ThreeVector& hitPos = aStep->GetPostStepPoint()->GetPosition();
 
