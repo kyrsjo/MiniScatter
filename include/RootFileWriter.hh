@@ -101,9 +101,8 @@ public:
     void setEdepDensDZ(G4double edep_dens_dz_in) {
         this->edep_dens_dz = edep_dens_dz_in;
     }
-    void setEngNbins(G4int edepNbins_in) {
-        this->engNbins = edepNbins_in;
-    }
+    void setEngNbins(G4int edepNbins_in);
+    
 private:
     RootFileWriter(){
         has_filename_out = false;

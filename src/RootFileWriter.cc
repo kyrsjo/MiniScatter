@@ -1539,3 +1539,13 @@ void RootFileWriter::FillParticleTypes(particleTypesCounter& pt, G4int PDG, G4St
     pt.particleTypes[PDG] += 1;
     pt.numParticles       += 1;
 }
+
+void RootFileWriter::setEngNbins(G4int edepNbins_in) {
+    if (edepNbins_in > 0) {
+        this->engNbins = edepNbins_in;
+    }
+    else if (edepNbins_in < 0) {
+        G4cerr << "Error: edepNbins must be > 0 (or 0 for auto)" << G4endl;
+        exit(1);
+    }
+}
