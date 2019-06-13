@@ -401,6 +401,10 @@ int main(int argc,char** argv) {
             break;
 
         case 1003: // Number of bins for the energy 1D histograms
+            if (engNbins != 0) {
+                G4cout << "Can only set engNbins once." << G4endl;
+            }
+
             try {
                 engNbins = std::stoi(string(optarg));
             }
@@ -409,6 +413,10 @@ int main(int argc,char** argv) {
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected an integer!" << G4endl;
                 exit(1);
+            }
+
+            if (engNbins < 0){
+                G4cout << "engNbins must be >= 0" << G4endl;
             }
             break;
 
@@ -554,7 +562,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
     RootFileWriter::GetInstance()->setEdepDensDZ(edep_dens_dz);
-    RootFileWriter::GetInstance()->setEngNbins(engNbins);
+    RootFileWriter::GetInstance()->setEngNbins(engNbins); // 0 = auto
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
 
 #ifdef G4VIS_USE
@@ -730,7 +738,7 @@ void printHelp(G4double target_thick,
             G4cout << "--edepDZ               : Z bin width for energy deposit histograms, "
                    << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
 
-            G4cout << "--engNbins             : Number of bins for 1D energy histograms, "
+            G4cout << "--engNbins             : Number of bins for 1D energy histograms (0 => internal default), "
                    << "default/current value = " << engNbins << G4endl;
 
             G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
