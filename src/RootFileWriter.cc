@@ -40,7 +40,12 @@
 
 #include <iostream>
 #include <iomanip>
-#include <experimental/filesystem> //Mainstreamed from C++17
+#ifdef MINISCATTER_CXXFILESYSTEM_OK
+#include <experimental/filesystem> //Mainstreamed from C++17,
+                                   // but G4 doesn't like C++17.
+                                   // Also, AppleClang still don't
+                                   // support filesystem.
+#endif
 
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = 0;
@@ -65,11 +70,25 @@ void RootFileWriter::initializeRootFile(){
     G4String rootFileName = foldername_out + "/" + filename_out + ".root";
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
 
-    //Create folder if it does not exist
+    //Create folder if it does not exist (GCC only)
+#ifdef MINISCATTER_CXXFILESYSTEM_OK
     if (not experimental::filesystem::exists(foldername_out.data())) {
         G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
         experimental::filesystem::create_directories(foldername_out.data());
     }
+#else
+    G4cerr << G4endl << G4endl << G4endl
+           << "*************************************************************"
+           << G4endl << G4endl << G4endl;
+    G4cerr << "Not running on GCC, so can't check if a folder is present / "
+           << "create it if neccessary." << G4endl;
+    G4cerr << "The user must make sure that the folder '" << foldername_out
+           << "' exist or we will crash!!!"
+           << G4endl << G4endl << G4endl
+           << "*************************************************************"
+           << G4endl << G4endl << G4endl;
+#endif
+
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
     if ( not histFile->IsOpen() ) {

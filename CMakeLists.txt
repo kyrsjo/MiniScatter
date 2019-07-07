@@ -3,7 +3,13 @@
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(MiniScatter)
 
+#Unfortunately, the Geant4 headers doesn't really work with C++17
+# Therefore, for now we stick to to 14 and load the libstd++fs
+# manually (GNU only). Using a non-GNU compiler (e.g. Apple-CLANG)
+# will loose some functionality.
 set(CMAKE_CXX_STANDARD 14)
+
+#CMAKE_POLICY(SET CMP0025 NEW) #Separate AppleClang from Clang
 
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
@@ -57,7 +63,12 @@ list(FILTER sources EXCLUDE REGEX \\.sys\\.v)
 # Add the executable, and link it to the Geant4 libraries
 #
 add_executable(MiniScatter MiniScatter.cc ${sources} ${headers})
-target_link_libraries(MiniScatter "-lstdc++fs") #Will become standard in C++17
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_link_libraries(MiniScatter "-lstdc++fs") #Will become standard in C++17, but does not work on OS X
+  add_definitions(-DMINISCATTER_CXXFILESYSTEM_OK)
+else()
+  message(WARNING "Not compiling on GCC, some functionality will be lost")
+endif()
 
 target_compile_options(MiniScatter PRIVATE "-Wno-overloaded-virtual")
 
