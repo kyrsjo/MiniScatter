@@ -656,7 +656,7 @@ void printHelp(G4double target_thick,
 
             G4cout << "-t <double> : Target thickness [mm],  default/current value = "
                    << target_thick << G4endl
-                   << " Set thickness to 0.0 for no target (only magnets)";
+                   << " Set thickness to 0.0 for no target (only magnets)" << G4endl;
 
             G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
