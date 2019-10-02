@@ -1,0 +1,174 @@
+/*
+ * This file is part of MiniScatter.
+ *
+ *  MiniScatter is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  MiniScatter is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "MagnetClasses.hh"
+
+#include "G4Box.hh"
+#include "G4Tubs.hh"
+#include "G4SubtractionSolid.hh"
+
+#include "G4PVPlacement.hh"
+
+MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                                     std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                                     G4String magnetName_in) :
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in){
+
+    for (auto it : keyValPairs) {
+        if (it.first == "width") {
+            try {
+                width = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading absorber width" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "height") {
+            try {
+                height = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading absorber height" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "material") {
+            targetMaterialName = it.second;
+        }
+        else if (it.first == "xOffset") {
+            try {
+                xOffset = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading xOffset" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "yOffset") {
+            try {
+                yOffset = std::stod(std::string(it.second)) * mm;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading yOffset" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "xRot") {
+            try {
+                xRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading xRot" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else if (it.first == "yRot") {
+            try {
+                yRot = std::stod(std::string(it.second)) * deg;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Invalid argument when reading yRot" << G4endl
+                       << "Got: '" << it.second << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+        }
+        else {
+            G4cerr << "MagnetTARGET did not understand key=value pair '"
+                   << it.first << "'='" << it.second << "'." << G4endl;
+            exit(1);
+        }
+    }
+
+    if (gradient != 0.0) {
+        G4cerr << "Invalid gradient for TARGET: Gradient must be 0.0, but was "
+               << gradient << "[T/m]" << G4endl;
+        exit(1);
+    }
+
+    G4cout << "Initialized a MagnetTARGET, parameters:" << G4endl;
+    G4cout << "\t magnetName         = " << magnetName << G4endl;
+    G4cout << "\t targetMaterialName = " << targetMaterialName << G4endl;
+    G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
+    G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
+    G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
+    G4cout << "\t width              = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t height             = " << height/mm          << " [mm]"  << G4endl;
+    G4cout << "\t xOffset            = " << xOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t yOffset            = " << yOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t xRot               = " << xRot/deg           << " [deg]" << G4endl;
+    G4cout << "\t yRot               = " << yRot/deg           << " [deg]" << G4endl;
+}
+
+void MagnetTARGET::Construct() {
+    if (this->mainLV != NULL) {
+        G4cerr << "Error in MagnetTARGET::Construct(): The mainLV has already been constructed?" << G4endl;
+        exit(1);
+    }
+
+    this->mainLV = MakeNewMainLV("main");
+
+    //Sanity checks on dimensions
+    if (width > mainLV_w || height > mainLV_h) {
+        G4cerr << "Error in MagnetTARGET::Construct():" << G4endl
+               << " The absorber is wider than it's allowed envelope "
+               << " including offsets and rotations."  << G4endl;
+        exit(1);
+    }
+
+    // Build the target
+    G4VSolid* targetSolid      = new G4Box(magnetName+"_targetS",
+                                           width/2.0, height/2.0, length/2.0);
+
+    targetMaterial = G4Material::GetMaterial(targetMaterialName);
+    if (not targetMaterial){
+        G4cerr << "Error when setting material '"
+               << targetMaterialName << "' for MagnetTARGET '"
+               << magnetName << "' -- not found!" << G4endl;
+        G4MaterialTable* materialTable = G4Material::GetMaterialTable();
+        G4cerr << "Valid choices:" << G4endl;
+        for (auto mat : *materialTable) {
+            G4cerr << mat->GetName() << G4endl;
+        }
+        exit(1);
+    }
+
+    G4LogicalVolume*   targetLV = new G4LogicalVolume(targetSolid,targetMaterial, magnetName+"_targetLV");
+    G4VPhysicalVolume* targetPV = new G4PVPlacement(NULL,
+                                                      G4ThreeVector(0.0,0.0,0.0),
+                                                      targetLV,
+                                                      magnetName + "_targetPV",
+                                                      mainLV,
+                                                      false,
+                                                      0,
+                                                      true);
+
+    ConstructDetectorLV();
+    BuildMainPV_transform();
+}
+

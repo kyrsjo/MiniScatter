@@ -151,6 +151,7 @@ int main(int argc,char** argv) {
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
                                            {"magnet",                required_argument, NULL, 1100 },
+                                           {"object",                required_argument, NULL, 1100 },
                                            {0,0,0,0}
     };
 
@@ -420,7 +421,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1100: //Magnet definition
+        case 1100: //Object/Magnet definition
             magnetDefinitions.push_back(string(optarg));
             break;
 
@@ -656,7 +657,7 @@ void printHelp(G4double target_thick,
 
             G4cout << "-t <double> : Target thickness [mm],  default/current value = "
                    << target_thick << G4endl
-                   << " Set thickness to 0.0 for no target (only magnets)" << G4endl;
+                   << " Set thickness to 0.0 for no target (only objects)" << G4endl;
 
             G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
@@ -741,13 +742,13 @@ void printHelp(G4double target_thick,
             G4cout << "--engNbins             : Number of bins for 1D energy histograms (0 => internal default), "
                    << "default/current value = " << engNbins << G4endl;
 
-            G4cout << "--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
-                   << " Create a magnet of the given type at the given position. " << G4endl
+            G4cout << "--object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
+                   << " Create an object (which may be a magnet) of the given type at the given position. " << G4endl
                    << " If a '*' is prepended the position (<double> [mm]), the position is the " << G4endl
                    << "   start of the active element relative to the end of the target;" << G4endl
                    << "   otherwise it is the z-position of the middle of the element." << G4endl
-                   << " The gradient (<double> [T/m]) is the focusing gradient of the device." << G4endl
-                   << " The length <double> [mm] is the total length of the volumes used by the device." << G4endl
+                   << " The gradient (<double> [T/m]) is the focusing gradient of the object (should be 0.0 if not a magnet)." << G4endl
+                   << " The length <double> [mm] is the total length of the volumes used by the object." << G4endl
                    << " The type-specific arguments are given as key=value pairs." << G4endl
                    << " Accepted types and their arguments:" << G4endl
                    << "  'PLASMA1':" << G4endl
