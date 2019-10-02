@@ -102,7 +102,7 @@ public:
         this->edep_dens_dz = edep_dens_dz_in;
     }
     void setEngNbins(G4int edepNbins_in);
-    
+
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -174,6 +174,7 @@ private:
     TH2D* init_phasespaceX;
     TH2D* init_phasespaceY;
     TH2D* init_phasespaceXY;
+    TH1D* init_E;
 
     // End-of-run statistics
 

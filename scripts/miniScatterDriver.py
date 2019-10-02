@@ -27,7 +27,8 @@ def runScatter(simSetup, quiet=False):
 
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS",\
-                       "N", "ENERGY", "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
+                       "N", "ENERGY", "ENERGY_FLAT",\
+                       "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS"):
@@ -68,6 +69,9 @@ def runScatter(simSetup, quiet=False):
 
     if "ENERGY" in simSetup:
         cmd += ["-e", str(simSetup["ENERGY"])]
+
+    if "ENERGY_FLAT" in simSetup:
+        cmd += ["--energyDistFlat", str(simSetup["ENERGY_FLAT"][0])+':'+str(simSetup["ENERGY_FLAT"][1]) ]
 
     if "BEAM" in simSetup:
         cmd += ["-b", str(simSetup["BEAM"])]

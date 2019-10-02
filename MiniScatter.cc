@@ -53,6 +53,8 @@ void printHelp(G4double target_thick,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
+               G4double beam_eFlat_min,
+               G4double beam_eFlat_max,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
@@ -94,6 +96,9 @@ int main(int argc,char** argv) {
     G4double world_size          = 0.0;       // World size X/Y [mm]
 
     G4double beam_energy = 200;               // Beam energy [MeV]
+    G4double beam_eFlat_min = -1.0;           // For flat-spectrum energy distribution,
+    G4double beam_eFlat_max = -1.0;           //  set these to min/max, both > 0.0.
+
     G4String beam_type   = "e-";              // Beam particle type
     G4double beam_offset = 0.0;               // Beam offset (x) [mm]
     G4double beam_zpos   = 0.0;               // Beam offset (z) [mm]
@@ -134,6 +139,7 @@ int main(int argc,char** argv) {
                                            {"phys",                  required_argument, NULL, 'p' },
                                            // -n is only short
                                            {"energy",                required_argument, NULL, 'e' },
+                                           {"energyDistFlat",        required_argument, NULL, 1300},
                                            {"beam",                  required_argument, NULL, 'b' },
                                            {"xoffset",               required_argument, NULL, 'x' },
                                            {"zoffset",               required_argument, NULL, 'z' },
@@ -151,7 +157,7 @@ int main(int argc,char** argv) {
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
                                            {"magnet",                required_argument, NULL, 1100 },
-                                           {"object",                required_argument, NULL, 1100 },
+                                           {"object",                required_argument, NULL, 1100 }, //synonum with --magnet
                                            {0,0,0,0}
     };
 
@@ -166,6 +172,8 @@ int main(int argc,char** argv) {
                       world_size,
                       physListName,
                       beam_energy,
+                      beam_eFlat_min,
+                      beam_eFlat_max,
                       beam_type,
                       beam_offset,
                       beam_zpos,
@@ -281,6 +289,53 @@ int main(int argc,char** argv) {
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
+            }
+            break;
+
+        case 1300: {//beam energy (flat distribution)
+            G4String edist_str = G4String(optarg);
+
+            str_size startPos = 0;
+            str_size endPos   = edist_str.index(":",startPos);
+            if (endPos == std::string::npos) {
+                G4cout << " Error while searching for ':' in edist_str = "
+                       << edist_str << "', did not find?" << G4endl;
+                exit(1);
+            }
+
+            try {
+                beam_eFlat_min = std::stod(string(edist_str(0,endPos)));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading minimum energy '" << edist_str(0,endPos) << "' for eFlat." << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+
+            startPos = endPos+1;
+            endPos   = edist_str.index(":",startPos);
+            if (endPos != std::string::npos) {
+                G4cout << " Error while searching for ':' in edist_str = "
+                       << edist_str << "', found a second one?" << G4endl;
+                exit(1);
+            }
+
+            try {
+                beam_eFlat_max = std::stod(string(edist_str(startPos,endPos-startPos)));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading maximum energy '" << edist_str(startPos,endPos-startPos) << "' for eFlat." << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+
+            if (beam_eFlat_min < 0 or beam_eFlat_max <= 0 or beam_eFlat_min >= beam_eFlat_max) {
+                G4cout << "Invalid eFlat_min/_max" << G4endl;
+                exit(1);
+            }
+
             }
             break;
 
@@ -449,6 +504,8 @@ int main(int argc,char** argv) {
               world_size,
               physListName,
               beam_energy,
+              beam_eFlat_min,
+              beam_eFlat_max,
               beam_type,
               beam_offset,
               beam_zpos,
@@ -541,7 +598,9 @@ int main(int argc,char** argv) {
                                                                     doBacktrack,
                                                                     covarianceString,
                                                                     beam_rCut,
-                                                                    rngSeed);
+                                                                    rngSeed,
+                                                                    beam_eFlat_min,
+                                                                    beam_eFlat_max);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -636,6 +695,8 @@ void printHelp(G4double target_thick,
                G4double world_size,
                G4String physListName,
                G4double beam_energy,
+               G4double beam_eFlat_min,
+               G4double beam_eFlat_max,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
@@ -687,6 +748,10 @@ void printHelp(G4double target_thick,
 
             G4cout << "-e <double> : Beam energy [MeV],      default/current value = "
                    << beam_energy << G4endl;
+
+            G4cout << "--energyDistFlat <double>[MeV]:<double>[MeV] : Use a flat energy distribution, "
+                   << "between the two limits. If used, -e will just be reference energy. Current min/max: "
+                   << beam_eFlat_min << ", " << beam_eFlat_max << G4endl;
 
             G4cout << "-b <string> : Particle type,          default/current value = "
                    << beam_type << G4endl

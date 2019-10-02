@@ -319,6 +319,10 @@ void RootFileWriter::initializeRootFile(){
                  "Initial phase space (x,y)",
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
+    init_E =
+        new TH1D("init_E",
+                 "Initial particle energy",
+                 1000, 0.0, max(beamEnergy*1.1,genAct->get_beam_energy_flatMax()));
 
     // Limit for radial histograms
     G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
@@ -530,7 +534,7 @@ void RootFileWriter::initializeRootFile(){
         magnet_exit_energy.back()[22]  = new TH1D((magName+"_exit_energy_PDG22").c_str(),
                                                   ("Particle energy when exiting "+magName+" (photons)").c_str(),
                                                   engNbins,0,beamEnergy);
-        magnet_exit_energy.back()[2212]= new TH1D((magName+"_exit_energy_PDG22").c_str(),
+        magnet_exit_energy.back()[2212]= new TH1D((magName+"_exit_energy_PDG2212").c_str(),
                                                   ("Particle energy when exiting "+magName+" (protons)").c_str(),
                                                   engNbins,0,beamEnergy);
         magnet_exit_energy.back()[0]   = new TH1D((magName+"_exit_energy_PDGother").c_str(),
@@ -859,6 +863,7 @@ void RootFileWriter::doEvent(const G4Event* event){
     init_phasespaceX->Fill(genAct->x/mm,genAct->xp/rad);
     init_phasespaceY->Fill(genAct->y/mm,genAct->yp/rad);
     init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
+    init_E->Fill(genAct->E/MeV);
 
     //**Data from Magnets, which use a TargetSD**
     size_t magIdx = -1;
@@ -1299,6 +1304,8 @@ void RootFileWriter::finalizeRootFile() {
     }
 
     G4cout << "Writing 1D histograms..." << G4endl;
+
+    init_E->Write();
 
     if (detCon->GetHasTarget()) {
         targetEdep->Write();
