@@ -20,7 +20,36 @@
 #include "G4SystemOfUnits.hh"
 
 #include "DetectorConstruction.hh"
-#include "FieldClasses.hh"
+//#include "FieldClasses.hh"
+
+// For the field classes
+#include "G4MagneticField.hh"
+#include "G4Navigator.hh"
+
+/** Magnet field base classes
+ *  (must be on top, as it is used in the MagnetBase)
+ * **/
+
+class FieldBase : public G4MagneticField {
+    // Class that has the navigator and transform
+public:
+    FieldBase(G4ThreeVector centerPoint_in, G4LogicalVolume* fieldLV_in) :
+        centerPoint(centerPoint_in), fieldLV(fieldLV_in) {};
+    virtual void PostInitialize() {
+        SetupTransform();
+    }
+private:
+    G4ThreeVector centerPoint;
+    G4LogicalVolume* fieldLV;
+    static G4Navigator* fNavigator;
+protected:
+    void SetupTransform();
+    G4AffineTransform fGlobalToLocal;
+
+    G4double gradient; // [T/m]
+};
+
+/** Magnet/Object geometry base class **/
 
 class MagnetBase {
 public:
@@ -28,9 +57,10 @@ public:
 
     MagnetBase(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
-               G4String magnetName_in) :
+               G4String magnetName_in, G4String magnetType_in) :
         zPos(zPos_in), doRelPos(doRelPos_in), length(length_in),gradient(gradient_in),
-        keyValPairs(keyValPairs_in), detCon(detCon_in), magnetName(magnetName_in) {};
+        keyValPairs(keyValPairs_in), detCon(detCon_in),
+        magnetName(magnetName_in), magnetType(magnetType_in) {};
 
     virtual G4double getZ0() {
         //Get the global z position of the center of the magnet in G4 units.
@@ -87,6 +117,7 @@ protected:
 
 public:
     const G4String magnetName;
+    const G4String magnetType;
 
     const G4Transform3D GetMainPV_transform() const {return mainPV_transform;};
 
@@ -94,8 +125,20 @@ public:
     G4LogicalVolume* GetMainLV() const;
     G4LogicalVolume* GetDetectorLV() const;
     void AddSD(); // Adds an SD to the detectorLV
+
+public:
+    //Parsing helpers
+    void ParseOffsetRot(G4String k, G4String v);
+
+    G4bool   ParseBool  (G4String inStr, G4String readWhat);
+    G4double ParseDouble(G4String inStr, G4String readWhat);
+
+    void PrintCommonParameters();
 };
 
+/** Various magnets or objects **/
+
+// PLASMA LENS
 class MagnetPLASMA1 : public MagnetBase {
 public:
     MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -110,6 +153,20 @@ private:
     G4double cryHeight;          // [G4 length units]
 };
 
+class FieldPLASMA1 : public FieldBase {
+public:
+    FieldPLASMA1(G4double current_in, G4double radius_in,
+                 G4ThreeVector centerPoint_in, G4LogicalVolume* fieldLV_in);
+    virtual void GetFieldValue(const G4double point[4], G4double field[6]) const;
+
+private:
+    G4double plasmaTotalCurrent; // [A]
+    G4double capRadius;  // [G4 units]
+
+};
+
+// CIRCULAR OPENING COLLIMATOR
+
 class MagnetCOLLIMATOR1 : public MagnetBase {
 public:
     MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -120,8 +177,23 @@ private:
     G4String absorberMaterialName;
     G4Material* absorberMaterial = NULL;
     G4double width  = 10.0*mm;  //[G4 length units]
-    G4double height = 50*mm;    //[G4 length units]
-    G4double radius = 50*mm;    //[G4 length units]
+    G4double height = 50.0*mm;  //[G4 length units]
+    G4double radius = 50.0*mm;  //[G4 length units]
+};
+
+// TARGET -- JUST A SIMPLE SLAB OF MATERIAL
+
+class MagnetTARGET : public MagnetBase {
+public:
+    MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                      std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                      G4String magnetName_in);
+    virtual void Construct();
+private:
+    G4String targetMaterialName;
+    G4Material* targetMaterial = NULL;
+    G4double width  = 10.0*mm;  //[G4 length units]
+    G4double height = 10.0*mm;  //[G4 length units]
 };
 
 #endif

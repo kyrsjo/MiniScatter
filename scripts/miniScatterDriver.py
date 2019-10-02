@@ -85,10 +85,8 @@ def runScatter(simSetup, quiet=False):
                              str(simSetup["ZOFFSET_BACKTRACK"]) +\
                              " is inconsistent with ZOFFSET="+str(simSetup["ZOFFSET"]))
     else:
-        if "ZOFFSET_BACKTRACK" in simSetup or simSetup["ZOFFSET_BACKTRACK"] == False:
-            raise ValueError("ZOFFSET_BACKTRACK=" +\
-                             str(simSetup["ZOFFSET_BACKTRACK"]) +\
-                             " is inconsistent with ZOFFSET="+str(simSetup["ZOFFSET"]))
+        if "ZOFFSET_BACKTRACK" in simSetup:
+            raise ValueError("ZOFFSET_BACKTRACK present but not ZOFFSET?")
 
     if "COVAR" in simSetup:
         if len(simSetup["COVAR"]) == 3:
@@ -138,7 +136,7 @@ def runScatter(simSetup, quiet=False):
     if "MAGNET" in simSetup:
         for mag in simSetup["MAGNET"]:
             mag_cmd = ""
-            if mag["mag_pos_relative"] == True:
+            if "mag_pos_relative" in mag and mag["mag_pos_relative"] == True:
                 mag_cmd += "*"
             mag_cmd += str(float(mag["pos"]))       + ":"
             mag_cmd += str(mag["type"])             + ":"
