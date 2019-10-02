@@ -229,3 +229,39 @@ G4LogicalVolume* MagnetBase::GetDetectorLV() const {
     }
 }
 
+/** FIELD PATTERN BASE CLASS **/
+
+G4Navigator* FieldBase::fNavigator = NULL;
+
+void FieldBase::SetupTransform() {
+    // Initialization of global->local transform based on the Geant4 example  "extended/field/field04"
+    // Ran the first time the GetFieldValue is called, since it needs to know the whole volume tree.
+
+    //If neccessary, create our own navigator
+    G4Navigator* theNavigator =
+        G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
+    if (!fNavigator) {
+        // fNaviator is a shared static object. If it does not exist, create it.
+        FieldBase::fNavigator = new G4Navigator();
+        if( theNavigator->GetWorldVolume() )
+            fNavigator->SetWorldVolume(theNavigator->GetWorldVolume());
+    }
+
+    //·set·fGlobalToLocal·transform
+    fNavigator->LocateGlobalPointAndSetup(centerPoint,0,false);
+    G4TouchableHistoryHandle touchable = fNavigator->CreateTouchableHistoryHandle();
+    G4int depth = touchable->GetHistoryDepth();
+    G4bool foundVolume = false;
+    for (G4int i = 0; i<depth; ++i) {
+        if(touchable->GetVolume()->GetLogicalVolume() == fieldLV) {
+            foundVolume = true;
+            break;
+        }
+        touchable->MoveUpHistory();
+    }
+    if (not foundVolume) {
+        G4cerr << "Internal error in FieldBase::InitializeTransform(): Could not find the volume!" << G4endl;
+        exit(1);
+    }
+    fGlobalToLocal = touchable->GetHistory()->GetTopTransform();
+}

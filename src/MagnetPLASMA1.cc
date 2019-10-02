@@ -153,8 +153,8 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
         plasmaTotalCurrent = ( (gradient*tesla/meter) * twopi*capRadius*capRadius / mu0 ) / ampere;
     }
 
-    G4cout << "Initialized a MagnetPLASMA1, parameters:" << G4endl;
-    G4cout << "\t magnetName         = " << magnetName << G4endl;
+    G4cout << "Initialized a MagnetPLASMA1, parameters:"       <<             G4endl;
+    G4cout << "\t magnetName         = " << magnetName         <<             G4endl;
     G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
     G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
@@ -245,54 +245,22 @@ void MagnetPLASMA1::Construct() {
         exit(1);
     }
     G4LogicalVolume*   crystalLV = new G4LogicalVolume(crystalSolid,sapphireMaterial, magnetName+"_crystalLV");
-    G4VPhysicalVolume* crystalPV = new G4PVPlacement(NULL,
-                                                     G4ThreeVector(0.0,0.0,0.0),
-                                                     crystalLV,
-                                                     magnetName + "_crystalPV",
-                                                     mainLV,
-                                                     false,
-                                                     0,
-                                                     true);
+    //G4VPhysicalVolume* crystalPV =
+                                   new G4PVPlacement  (NULL,
+                                                       G4ThreeVector(0.0,0.0,0.0),
+                                                       crystalLV,
+                                                       magnetName + "_crystalPV",
+                                                       mainLV,
+                                                       false,
+                                                       0,
+                                                       true);
 
     ConstructDetectorLV();
     BuildMainPV_transform();
 }
 
 
-G4Navigator* FieldBase::fNavigator = NULL;
-
-void FieldBase::SetupTransform() {
-    // Initialization of global->local transform based on the Geant4 example  "extended/field/field04"
-    // Ran the first time the GetFieldValue is called, since it needs to know the whole volume tree.
-
-    //If neccessary, create our own navigator
-    G4Navigator* theNavigator =
-        G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
-    if (!fNavigator) {
-        // fNaviator is a shared static object. If it does not exist, create it.
-        FieldBase::fNavigator = new G4Navigator();
-        if( theNavigator->GetWorldVolume() )
-            fNavigator->SetWorldVolume(theNavigator->GetWorldVolume());
-    }
-
-    //·set·fGlobalToLocal·transform
-    fNavigator->LocateGlobalPointAndSetup(centerPoint,0,false);
-    G4TouchableHistoryHandle touchable = fNavigator->CreateTouchableHistoryHandle();
-    G4int depth = touchable->GetHistoryDepth();
-    G4bool foundVolume = false;
-    for (G4int i = 0; i<depth; ++i) {
-        if(touchable->GetVolume()->GetLogicalVolume() == fieldLV) {
-            foundVolume = true;
-            break;
-        }
-        touchable->MoveUpHistory();
-    }
-    if (not foundVolume) {
-        G4cerr << "Internal error in FieldBase::InitializeTransform(): Could not find the volume!" << G4endl;
-        exit(1);
-    }
-    fGlobalToLocal = touchable->GetHistory()->GetTopTransform();
-}
+/** FIELD PATTERN CLASS **/
 
 FieldPLASMA1::FieldPLASMA1(G4double current_in, G4double radius_in,
                            G4ThreeVector centerPoint_in, G4LogicalVolume* fieldLV_in) :

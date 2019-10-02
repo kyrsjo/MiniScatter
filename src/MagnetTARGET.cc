@@ -111,9 +111,9 @@ MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length
         exit(1);
     }
 
-    G4cout << "Initialized a MagnetTARGET, parameters:" << G4endl;
-    G4cout << "\t magnetName         = " << magnetName << G4endl;
-    G4cout << "\t targetMaterialName = " << targetMaterialName << G4endl;
+    G4cout << "Initialized a MagnetTARGET, parameters:"        <<             G4endl;
+    G4cout << "\t magnetName         = " << magnetName         <<             G4endl;
+    G4cout << "\t targetMaterialName = " << targetMaterialName <<             G4endl;
     G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
     G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
@@ -159,7 +159,8 @@ void MagnetTARGET::Construct() {
     }
 
     G4LogicalVolume*   targetLV = new G4LogicalVolume(targetSolid,targetMaterial, magnetName+"_targetLV");
-    G4VPhysicalVolume* targetPV = new G4PVPlacement(NULL,
+    //G4VPhysicalVolume* targetPV =
+                                  new G4PVPlacement  (NULL,
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       targetLV,
                                                       magnetName + "_targetPV",

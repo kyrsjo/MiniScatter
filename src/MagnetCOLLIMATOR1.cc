@@ -122,18 +122,19 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
         exit(1);
     }
 
-    G4cout << "Initialized a MagnetCOLLIMATOR1, parameters:" << G4endl;
-    G4cout << "\t magnetName         = " << magnetName << G4endl;
-    G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
-    G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
-    G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
-    G4cout << "\t radius             = " << radius/mm          << " [mm]"  << G4endl;
-    G4cout << "\t width              = " << width/mm           << " [mm]"  << G4endl;
-    G4cout << "\t height             = " << height/mm          << " [mm]"  << G4endl;
-    G4cout << "\t xOffset            = " << xOffset/mm         << " [mm]"  << G4endl;
-    G4cout << "\t yOffset            = " << yOffset/mm         << " [mm]"  << G4endl;
-    G4cout << "\t xRot               = " << xRot/deg           << " [deg]" << G4endl;
-    G4cout << "\t yRot               = " << yRot/deg           << " [deg]" << G4endl;
+    G4cout << "Initialized a MagnetCOLLIMATOR1, parameters:"       <<             G4endl;
+    G4cout << "\t magnetName           = " << magnetName           <<             G4endl;
+    G4cout << "\t absorberMaterialName = " << absorberMaterialName <<             G4endl;
+    G4cout << "\t Z0                   = " << getZ0()/mm           << " [mm]"  << G4endl;
+    G4cout << "\t length               = " << length/mm            << " [mm]"  << G4endl;
+    G4cout << "\t gradient             = " << gradient             << " [T/m]" << G4endl;
+    G4cout << "\t radius               = " << radius/mm            << " [mm]"  << G4endl;
+    G4cout << "\t width                = " << width/mm             << " [mm]"  << G4endl;
+    G4cout << "\t height               = " << height/mm            << " [mm]"  << G4endl;
+    G4cout << "\t xOffset              = " << xOffset/mm           << " [mm]"  << G4endl;
+    G4cout << "\t yOffset              = " << yOffset/mm           << " [mm]"  << G4endl;
+    G4cout << "\t xRot                 = " << xRot/deg             << " [deg]" << G4endl;
+    G4cout << "\t yRot                 = " << yRot/deg             << " [deg]" << G4endl;
 }
 
 void MagnetCOLLIMATOR1::Construct() {
@@ -181,14 +182,15 @@ void MagnetCOLLIMATOR1::Construct() {
     }
 
     G4LogicalVolume*   absorberLV = new G4LogicalVolume(absorberSolid,absorberMaterial, magnetName+"_absorberLV");
-    G4VPhysicalVolume* absorberPV = new G4PVPlacement(NULL,
-                                                      G4ThreeVector(0.0,0.0,0.0),
-                                                      absorberLV,
-                                                      magnetName + "_absorberPV",
-                                                      mainLV,
-                                                      false,
-                                                      0,
-                                                      true);
+    //G4VPhysicalVolume* absorberPV = 
+                                    new G4PVPlacement  (NULL,
+                                                        G4ThreeVector(0.0,0.0,0.0),
+                                                        absorberLV,
+                                                        magnetName + "_absorberPV",
+                                                        mainLV,
+                                                        false,
+                                                        0,
+                                                        true);
 
     ConstructDetectorLV();
     BuildMainPV_transform();
