@@ -35,7 +35,7 @@
 MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                              std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                              G4String magnetName_in) :
-    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in) {
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "PLASMA1") {
 
     // Default values
     G4bool inputIsTotalAmps = false;
@@ -77,19 +77,12 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
         plasmaTotalCurrent = ( (gradient*tesla/meter) * twopi*capRadius*capRadius / mu0 ) / ampere;
     }
 
-    G4cout << "Initialized a MagnetPLASMA1, parameters:"       <<             G4endl;
-    G4cout << "\t magnetName         = " << magnetName         <<             G4endl;
-    G4cout << "\t Z0                 = " << getZ0()/mm         << " [mm]"  << G4endl;
-    G4cout << "\t length             = " << length/mm          << " [mm]"  << G4endl;
-    G4cout << "\t gradient           = " << gradient           << " [T/m]" << G4endl;
-    G4cout << "\t plasmaTotalcurrent = " << plasmaTotalCurrent << " [A]"   << G4endl;
-    G4cout << "\t capRadius          = " << capRadius/mm       << " [mm]"  << G4endl;
-    G4cout << "\t cryWidth           = " << cryWidth/mm        << " [mm]"  << G4endl;
-    G4cout << "\t cryHeight          = " << cryHeight/mm       << " [mm]"  << G4endl;
-    G4cout << "\t xOffset            = " << xOffset/mm         << " [mm]"  << G4endl;
-    G4cout << "\t yOffset            = " << yOffset/mm         << " [mm]"  << G4endl;
-    G4cout << "\t xRot               = " << xRot/deg           << " [deg]" << G4endl;
-    G4cout << "\t yRot               = " << yRot/deg           << " [deg]" << G4endl;
+    PrintCommonParameters();
+    G4cout << "\t plasmaTotalcurrent      = " << plasmaTotalCurrent << " [A]"   << G4endl;
+    G4cout << "\t capRadius               = " << capRadius/mm       << " [mm]"  << G4endl;
+    G4cout << "\t cryWidth                = " << cryWidth/mm        << " [mm]"  << G4endl;
+    G4cout << "\t cryHeight               = " << cryHeight/mm       << " [mm]"  << G4endl;
+
 
 }
 

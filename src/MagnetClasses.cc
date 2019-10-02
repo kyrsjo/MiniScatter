@@ -50,9 +50,9 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     } while (endPos != std::string::npos);
 
     //Debug
-    for (auto arg : argList) {
-        G4cout << "'" << arg << "'" << G4endl;
-    }
+    //for (auto arg : argList) {
+    //    G4cout << "'" << arg << "'" << G4endl;
+    //}
 
     if (argList.size() < 4) {
         G4cerr << "Error when parsing object/magnet input string '"<<inputString<<"'" << G4endl;
@@ -72,9 +72,9 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     }
 
     //Debug
-    for (auto arg : keyValPairs) {
-        G4cout << "'" << arg.first << "' = '" << arg.second << "'" << G4endl;
-    }
+    //for (auto arg : keyValPairs) {
+    //    G4cout << "'" << arg.first << "' = '" << arg.second << "'" << G4endl;
+    //}
 
     //Parse the common part
     G4bool doRelPos = false;
@@ -276,6 +276,18 @@ void MagnetBase::ParseOffsetRot(G4String k, G4String v) {
                << "(value = '" << v << "')" << G4endl;
         exit(1);
     }
+}
+
+void MagnetBase::PrintCommonParameters() {
+    G4cout << "Initialized a " << magnetType << ", parameters:" <<             G4endl;
+    G4cout << "\t magnetName              = " << magnetName         <<             G4endl;
+    G4cout << "\t Z0                      = " << getZ0()/mm         << " [mm]"  << G4endl;
+    G4cout << "\t length                  = " << length/mm          << " [mm]"  << G4endl;
+    G4cout << "\t gradient                = " << gradient           << " [T/m]" << G4endl;
+    G4cout << "\t xOffset                 = " << xOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t yOffset                 = " << yOffset/mm         << " [mm]"  << G4endl;
+    G4cout << "\t xRot                    = " << xRot/deg           << " [deg]" << G4endl;
+    G4cout << "\t yRot                    = " << yRot/deg           << " [deg]" << G4endl;
 }
 
 /** FIELD PATTERN BASE CLASS **/

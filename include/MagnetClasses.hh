@@ -57,9 +57,10 @@ public:
 
     MagnetBase(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
-               G4String magnetName_in) :
+               G4String magnetName_in, G4String magnetType_in) :
         zPos(zPos_in), doRelPos(doRelPos_in), length(length_in),gradient(gradient_in),
-        keyValPairs(keyValPairs_in), detCon(detCon_in), magnetName(magnetName_in) {};
+        keyValPairs(keyValPairs_in), detCon(detCon_in),
+        magnetName(magnetName_in), magnetType(magnetType_in) {};
 
     virtual G4double getZ0() {
         //Get the global z position of the center of the magnet in G4 units.
@@ -116,6 +117,7 @@ protected:
 
 public:
     const G4String magnetName;
+    const G4String magnetType;
 
     const G4Transform3D GetMainPV_transform() const {return mainPV_transform;};
 
@@ -130,6 +132,8 @@ public:
 
     G4bool   ParseBool  (G4String inStr, G4String readWhat);
     G4double ParseDouble(G4String inStr, G4String readWhat);
+
+    void PrintCommonParameters();
 };
 
 /** Various magnets or objects **/

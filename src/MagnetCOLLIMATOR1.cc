@@ -26,7 +26,7 @@
 MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                                      std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                                      G4String magnetName_in) :
-    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in){
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "COLLIMATOR1"){
 
     for (auto it : keyValPairs) {
         if (it.first == "radius") {
@@ -57,19 +57,12 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
         exit(1);
     }
 
-    G4cout << "Initialized a MagnetCOLLIMATOR1, parameters:"       <<             G4endl;
-    G4cout << "\t magnetName           = " << magnetName           <<             G4endl;
-    G4cout << "\t absorberMaterialName = " << absorberMaterialName <<             G4endl;
-    G4cout << "\t Z0                   = " << getZ0()/mm           << " [mm]"  << G4endl;
-    G4cout << "\t length               = " << length/mm            << " [mm]"  << G4endl;
-    G4cout << "\t gradient             = " << gradient             << " [T/m]" << G4endl;
-    G4cout << "\t radius               = " << radius/mm            << " [mm]"  << G4endl;
-    G4cout << "\t width                = " << width/mm             << " [mm]"  << G4endl;
-    G4cout << "\t height               = " << height/mm            << " [mm]"  << G4endl;
-    G4cout << "\t xOffset              = " << xOffset/mm           << " [mm]"  << G4endl;
-    G4cout << "\t yOffset              = " << yOffset/mm           << " [mm]"  << G4endl;
-    G4cout << "\t xRot                 = " << xRot/deg             << " [deg]" << G4endl;
-    G4cout << "\t yRot                 = " << yRot/deg             << " [deg]" << G4endl;
+    PrintCommonParameters();
+    G4cout << "\t absorberMaterialName    = " << absorberMaterialName <<             G4endl;
+    G4cout << "\t radius                  = " << radius/mm            << " [mm]"  << G4endl;
+    G4cout << "\t width                   = " << width/mm             << " [mm]"  << G4endl;
+    G4cout << "\t height                  = " << height/mm            << " [mm]"  << G4endl;
+
 }
 
 void MagnetCOLLIMATOR1::Construct() {
