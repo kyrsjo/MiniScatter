@@ -37,7 +37,7 @@
 
 #include "G4PhysicalConstants.hh"
 
-MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
+MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
 
     //Split by '::'
     std::vector<G4String> argList;
@@ -55,7 +55,7 @@ MagnetBase* MagnetBase:: MagnetFactory(G4String inputString, DetectorConstructio
     }
 
     if (argList.size() < 4) {
-        G4cerr << "Error when parsing magnet input string '"<<inputString<<"'" << G4endl;
+        G4cerr << "Error when parsing object/magnet input string '"<<inputString<<"'" << G4endl;
         G4cerr << "Expected at least 4 arguments, as in 'pos:type:length:gradient'." << G4endl;
         exit(1);
     }
@@ -225,6 +225,54 @@ G4LogicalVolume* MagnetBase::GetDetectorLV() const {
     }
     else {
         G4cout << "Error in MagnetClasses::GetDetectorLV(): DetectorLV has not been constructed!" << G4endl;
+        exit(1);
+    }
+}
+
+// Input parsing helpers
+G4double MagnetBase::ParseDouble(G4String inStr, G4String readWhat) {
+    try {
+        return std::stod(std::string(inStr));
+    }
+    catch (const std::invalid_argument& ia) {
+        G4cerr << "Invalid argument when reading " << readWhat << G4endl
+               << "Got: '" << inStr << "'" << G4endl
+               << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+        exit(1);
+    }
+}
+
+G4bool MagnetBase::ParseBool(G4String inStr, G4String readWhat) {
+    if (inStr == "True") {
+        return true;
+    }
+    else if (inStr == "False") {
+        return false;
+    }
+    else {
+        G4cerr << "Invalid argument when reading " << readWhat << " flag" << G4endl
+               << "Got: " << inStr << "'" << G4endl
+               << "Expected 'True' or 'False'" << G4endl;
+        exit(1);
+    }
+}
+
+void MagnetBase::ParseOffsetRot(G4String k, G4String v) {
+    if (k == "xOffset") {
+        xOffset = ParseDouble(v, "xOffset") * mm;
+    }
+    else if (k == "yOffset") {
+        yOffset = ParseDouble(v, "yOffset") * mm;
+    }
+    else if (k == "xRot") {
+        xRot = ParseDouble(v, "xRot") * deg;
+    }
+    else if (k == "yRot") {
+        yRot = ParseDouble(v, "yRot") * deg;
+    }
+    else {
+        G4cerr << "MagnetBase::ParseOffsetRot() cannot parse key '" << k << "' "
+               << "(value = '" << v << "')" << G4endl;
         exit(1);
     }
 }

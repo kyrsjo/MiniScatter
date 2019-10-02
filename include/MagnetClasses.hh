@@ -123,6 +123,13 @@ public:
     G4LogicalVolume* GetMainLV() const;
     G4LogicalVolume* GetDetectorLV() const;
     void AddSD(); // Adds an SD to the detectorLV
+
+public:
+    //Parsing helpers
+    void ParseOffsetRot(G4String k, G4String v);
+
+    G4bool   ParseBool  (G4String inStr, G4String readWhat);
+    G4double ParseDouble(G4String inStr, G4String readWhat);
 };
 
 /** Various magnets or objects **/

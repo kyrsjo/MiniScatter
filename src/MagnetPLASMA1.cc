@@ -39,101 +39,25 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
 
     // Default values
     G4bool inputIsTotalAmps = false;
-    capRadius= 1.0*mm;
-    cryWidth = 10.0*mm;
+    capRadius = 1.0*mm;
+    cryWidth  = 10.0*mm;
     cryHeight = 20.0*mm;
 
     for (auto it : keyValPairs) {
         if (it.first == "radius") {
-            try {
-                capRadius = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading capillary radius" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+            capRadius = ParseDouble(it.second, "capillary radius") * mm;
         }
         else if (it.first == "totalAmps") {
-            if (it.second == "True") {
-                inputIsTotalAmps = true;
-            }
-            else if (it.second == "False") {
-                inputIsTotalAmps = false;
-            }
-            else {
-                G4cerr << "Invalid argument when reading capillary totalAmps flag" << G4endl
-                       << "Got: " << it.second << "'" << G4endl
-                       << "Expected 'True' or 'False'" << G4endl;
-                exit(1);
-            }
+            inputIsTotalAmps = ParseBool(it.second, "capillary totalAmps");
         }
         else if (it.first == "width") {
-            try {
-                cryWidth = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading crystal width" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+            cryWidth = ParseDouble(it.second, "crystal width") * mm;
         }
         else if (it.first == "height") {
-            try {
-                cryHeight = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading crystal height" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+            cryWidth = ParseDouble(it.second, "crystal height") * mm;
         }
-        else if (it.first == "xOffset") {
-            try {
-                xOffset = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xOffset" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "yOffset") {
-            try {
-                yOffset = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xOffset" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "xRot") {
-            try {
-                xRot = std::stod(std::string(it.second)) * deg;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xRot" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "yRot") {
-            try {
-                yRot = std::stod(std::string(it.second)) * deg;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading yRot" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+        else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
+            ParseOffsetRot(it.first, it.second);
         }
         else {
             G4cerr << "MagnetPLASMA1 did not understand key=value pair '"

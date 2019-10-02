@@ -30,73 +30,16 @@ MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length
 
     for (auto it : keyValPairs) {
         if (it.first == "width") {
-            try {
-                width = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading absorber width" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+            width  = ParseDouble(it.second, "target width") * mm;
         }
         else if (it.first == "height") {
-            try {
-                height = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading absorber height" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+            height = ParseDouble(it.second, "target height") * mm;
         }
         else if (it.first == "material") {
             targetMaterialName = it.second;
         }
-        else if (it.first == "xOffset") {
-            try {
-                xOffset = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xOffset" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "yOffset") {
-            try {
-                yOffset = std::stod(std::string(it.second)) * mm;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading yOffset" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "xRot") {
-            try {
-                xRot = std::stod(std::string(it.second)) * deg;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading xRot" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
-        }
-        else if (it.first == "yRot") {
-            try {
-                yRot = std::stod(std::string(it.second)) * deg;
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cerr << "Invalid argument when reading yRot" << G4endl
-                       << "Got: '" << it.second << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
-            }
+        else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
+            ParseOffsetRot(it.first, it.second);
         }
         else {
             G4cerr << "MagnetTARGET did not understand key=value pair '"
@@ -107,7 +50,7 @@ MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length
 
     if (gradient != 0.0) {
         G4cerr << "Invalid gradient for TARGET: Gradient must be 0.0, but was "
-               << gradient << "[T/m]" << G4endl;
+               << gradient << " [T/m]" << G4endl;
         exit(1);
     }
 
