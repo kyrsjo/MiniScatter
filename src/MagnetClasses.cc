@@ -196,6 +196,7 @@ void MagnetBase::BuildMainPV_transform() {
     G4ThreeVector    mainPV_translate;
     mainPV_translate.setX(xOffset);
     mainPV_translate.setY(yOffset);
+    mainPV_translate.setZ(getZ0());
     mainPV_transform = G4Transform3D(mainPV_rotate, mainPV_translate);
 }
 
