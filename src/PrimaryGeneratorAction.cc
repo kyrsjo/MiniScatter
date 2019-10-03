@@ -42,7 +42,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4bool   doBacktrack_in,
                                                G4String covarianceString_in,
                                                G4double Rcut_in,
-                                               G4int rngSeed_in ) :
+                                               G4int rngSeed_in,
+                                               G4double beam_energy_min_in,
+                                               G4double beam_energy_max_in  ) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
@@ -51,7 +53,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     doBacktrack(doBacktrack_in),
     covarianceString(covarianceString_in),
     Rcut(Rcut_in),
-    rngSeed(rngSeed_in) {
+    rngSeed(rngSeed_in),
+    beam_energy_min(beam_energy_min_in),
+    beam_energy_max(beam_energy_max_in) {
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
@@ -260,7 +264,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             hasCovariance = true;
             setupCovariance();
         }
-        if (covarianceString != "" or Rcut != 0.0) {
+        if (covarianceString != "" or Rcut != 0.0 or (beam_energy_min >= 0.0 and beam_energy_max > 0.0)) {
             RNG = new TRandom1((UInt_t) rngSeed);
         }
     }
@@ -326,6 +330,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     //Technically not completely accurate but close enough for now
     particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
 
-    particleGun->SetParticleEnergy(beam_energy*MeV);
+    if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {
+        E = beam_energy_min+RNG->Uniform()*(beam_energy_max-beam_energy_min);
+        E *= MeV;
+    }
+    else {
+        E = beam_energy*MeV;
+    }
+    particleGun->SetParticleEnergy(E);
     particleGun->GeneratePrimaryVertex(anEvent);
 }

@@ -48,18 +48,23 @@ public:
                            G4bool   doBacktrack_in,
                            G4String covarianceString_in,
                            G4double Rcut_in,
-                           G4int rngSeed );
+                           G4int rngSeed,
+                           G4double beam_energy_min_in,
+                           G4double beam_energy_max_in );
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
     G4double get_beam_energy()         const { return beam_energy; };
+    G4double get_beam_energy_flatMax() const { return beam_energy_max; };
     G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
+
 private:
-    G4ParticleGun*           particleGun;  //pointer a to G4  class
+    G4ParticleGun*           particleGun;  //pointer a to G4 class
     DetectorConstruction*    Detector;     //pointer to the geometry
 
     G4double beam_energy;    // Beam energy [MeV]
+
     G4String beam_type;      // Beam particle type
     G4double beam_offset;    // Beam offset (x) [mm]
     G4double beam_zpos;      // Beam initial z position [converted to G4 units in constructor]
@@ -99,9 +104,13 @@ private:
     TRandom* RNG;
     G4int rngSeed; // Seed to use when random-generating particles within Twiss distribution
 
+    //Setup for uniform energy distribution between min/max
+    G4double beam_energy_min; // [MeV]
+    G4double beam_energy_max; // [MeV]
+
 public:
     //Leave the generated positions where RootFileWriter can pick it up [G4 units]
-    G4double x,xp,y,yp;
+    G4double x,xp, y,yp, E;
 };
 
 // -----------------------------------------------------------------------------------------
