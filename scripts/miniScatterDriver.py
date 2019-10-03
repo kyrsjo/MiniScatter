@@ -276,4 +276,4 @@ def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryloa
     else:
         print("Found a file at '"+ROOTfilename+"', loading!")
 
-    return getData(ROOTfilename, quiet, getRaw, getObjects)
+    return getData(ROOTfilename, quiet=quiet, getRaw=getRaw, getObjects=getObjects)

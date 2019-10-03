@@ -101,15 +101,19 @@ void RootFileWriter::initializeRootFile(){
     RNG = new TRandom1(); //TODO: Seed it!
 
     // TTrees for external analysis
-    if (detCon->GetHasTarget()) {
-        targetExit = new TTree("TargetExit","TargetExit tree");
-        targetExit->Branch("TargetExitBranch", &targetExitBuffer,
-                           "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
-    }
+    if (not miniFile) {
+        if (detCon->GetHasTarget()) {
+            targetExit = new TTree("TargetExit","TargetExit tree");
+            targetExit->Branch("TargetExitBranch", &targetExitBuffer,
+                               "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+        }
 
-    trackerHits = new TTree("TrackerHits","TrackerHits tree");
-    trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
-                        "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+        trackerHits = new TTree("TrackerHits","TrackerHits tree");
+        trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
+                            "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+
+        magnetEdeps = new TTree("magnetEdeps", "Magnet Edeps tree");
+    }
 
     // Target energy deposition
     if (detCon->GetHasTarget()) {
@@ -563,7 +567,17 @@ void RootFileWriter::initializeRootFile(){
         for (auto PDG : magnet_exit_cutoff_energy.back()) {
             PDG.second->GetXaxis()->SetTitle("Energy [MeV]");
         }
+    }
 
+    if (not miniFile) {
+        size_t numMagnets = detCon->magnets.size();
+        magnetEdepsBuffer = new Double_t[numMagnets];
+        size_t i = 0;
+        for (auto mag : detCon->magnets) {
+            G4String magName = mag->magnetName;
+            magnetEdeps->Branch(magName, &(magnetEdepsBuffer[i]), (magName+"/D").c_str());
+            i++;
+        }
     }
 }
 
@@ -883,6 +897,10 @@ void RootFileWriter::doEvent(const G4Event* event){
                     edep      += (*magnetEdepHitsCollection)[i]->GetDepositedEnergy();
                 }
                 magnet_edep[magIdx]->Fill(edep/MeV);
+
+                if (not miniFile){
+                    magnetEdepsBuffer[magIdx] = edep/MeV;
+                }
             }
             else {
                 G4cout << "magnetEdepHitsCollection was NULL for '" << magName << "'!" <<G4endl;
@@ -1008,6 +1026,9 @@ void RootFileWriter::doEvent(const G4Event* event){
         else {
             G4cout << "myMagnetExitpos_CollID was " << myMagnetExitpos_CollID << " < 0 for '" << magName << "'!"<<G4endl;
         }
+    } // END loop over magnets
+    if (not miniFile) {
+        magnetEdeps->Fill(); // Outside loop over magnets
     }
 }
 void RootFileWriter::finalizeRootFile() {
@@ -1303,6 +1324,22 @@ void RootFileWriter::finalizeRootFile() {
 
     }
 
+    if (not miniFile) {
+        G4cout << "Writing TTrees..." << G4endl;
+
+        if (detCon->GetHasTarget()) {
+            targetExit->Write();
+        }
+        trackerHits->Write();
+
+        magnetEdeps->Write();
+        delete magnetEdeps;
+        magnetEdeps=NULL;
+
+        delete magnetEdepsBuffer;
+        magnetEdepsBuffer = NULL;
+    }
+
     G4cout << "Writing 1D histograms..." << G4endl;
 
     init_E->Write();
@@ -1463,6 +1500,13 @@ void RootFileWriter::finalizeRootFile() {
     delete tracker_energy; tracker_energy = NULL;
     delete tracker_hitPos; tracker_hitPos = NULL;
     delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
+
+    if(not miniFile) {
+        delete trackerHits; trackerHits = NULL;
+        if (detCon->GetHasTarget()) {
+            delete targetExit; targetExit = NULL;
+        }
+    }
 
     histFile->Write();
     histFile->Close();

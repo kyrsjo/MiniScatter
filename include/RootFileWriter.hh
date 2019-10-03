@@ -120,6 +120,9 @@ private:
     trackerHitStruct targetExitBuffer;
     trackerHitStruct trackerHitsBuffer;
 
+    Double_t* magnetEdepsBuffer = NULL;
+    TTree* magnetEdeps;
+
     // Histograms //
 
     // Target histograms
