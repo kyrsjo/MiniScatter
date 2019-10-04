@@ -166,7 +166,6 @@ private:
 };
 
 // CIRCULAR OPENING COLLIMATOR
-
 class MagnetCOLLIMATOR1 : public MagnetBase {
 public:
     MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -182,7 +181,6 @@ private:
 };
 
 // TARGET -- JUST A SIMPLE SLAB OF MATERIAL
-
 class MagnetTARGET : public MagnetBase {
 public:
     MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -194,6 +192,19 @@ private:
     G4Material* targetMaterial = NULL;
     G4double width  = 10.0*mm;  //[G4 length units]
     G4double height = 10.0*mm;  //[G4 length units]
+};
+
+// TARGETR -- JUST A SIMPLE SLAB OF MATERIAL, BUT ROUND
+class MagnetTARGETR : public MagnetBase {
+public:
+    MagnetTARGETR(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                    std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                    G4String magnetName_in);
+    virtual void Construct();
+private:
+    G4String targetMaterialName;
+    G4Material* targetMaterial = NULL;
+    G4double radius = 10.0*mm;  //[G4 length units]
 };
 
 #endif
