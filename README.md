@@ -23,6 +23,21 @@ Assuming that it is installed in e.g. `~/code/geant4/geant4.10.04.p02-install`, 
 If you intend to use MiniScatter with Jupyter [4], do this in the shell you plan to start Jupyter before launching `jupyter-notebook`.
 You must also remember to load Geant4 before compiling and running MiniScatter.
 
+In order to use the graphical interface you need set the following Cmake options when installing GEANT4:
+ * `-DGEANT4_USE_OPENGL_X11=ON`
+ * `-DGEANT4_USE_QT=ON`
+On Fedora we have also seen that you need the following packages intalled in order to make the GUI work:
+ * glui-devel
+ * libglu
+ * libglu-devel
+ * libXmu-devel
+ * qt-devel
+ * glx-utils
+
+Note that if your `.bashrc` (etc.) is loading a modified environment (such as Anaconda's default installation), this may lead to nonstandard version of e.g. QT libraries being used instead of the ones installed with your distribution's package manager.
+To be safe, make sure anaconda (etc.) is sourced when installing geant4.
+In order to get rid of this problem, one must first remove the anaconda `source` command from `.bashrc`, then completely log the user out and in again (or reboot), before running cmake/make/make install for Geant4.
+
 For ROOT, simply install it using your distribution's package manager, e.g. `dnf` on Fedora.
 
 Then, clone MiniScatter into a new folder, e.g. from ~/code run `git clone https://github.com/kyrsjo/MiniScatter.git`.
