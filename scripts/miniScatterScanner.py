@@ -46,6 +46,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     global SEED # Updated every time one does a scan
 
+    if COMMENT==None:
+        raise ValueError("COMMENT argument is required.")
+
     # Initialize the scanVar in case of magnet
     scanVarMagnet = None
     if scanVar.startswith("MAGNET"):

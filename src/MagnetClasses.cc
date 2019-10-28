@@ -137,6 +137,10 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
         theMagnet = new MagnetTARGET      (magnetPos, doRelPos, magnetLength, magnetGradient,
                                            keyValPairs, detCon, magnetName);
     }
+    else if(magnetType == "TARGETR") {
+        theMagnet = new MagnetTARGETR     (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                           keyValPairs, detCon, magnetName);
+    }
     else {
         G4cerr << "Uknown magnet type '" << magnetType << "'" << G4endl;
         exit(1);

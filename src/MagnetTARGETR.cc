@@ -18,21 +18,19 @@
 #include "MagnetClasses.hh"
 
 #include "G4Box.hh"
+#include "G4Tubs.hh"
 #include "G4SubtractionSolid.hh"
 
 #include "G4PVPlacement.hh"
 
-MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
-                                     std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
-                                     G4String magnetName_in) :
-    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "TARGET"){
+MagnetTARGETR::MagnetTARGETR(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                            std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                            G4String magnetName_in) :
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "TARGETR"){
 
     for (auto it : keyValPairs) {
-        if (it.first == "width") {
-            width  = ParseDouble(it.second, "target width") * mm;
-        }
-        else if (it.first == "height") {
-            height = ParseDouble(it.second, "target height") * mm;
+        if (it.first == "radius") {
+            radius  = ParseDouble(it.second, "target radius") * mm;
         }
         else if (it.first == "material") {
             targetMaterialName = it.second;
@@ -41,49 +39,49 @@ MagnetTARGET::MagnetTARGET(G4double zPos_in, G4bool doRelPos_in, G4double length
             ParseOffsetRot(it.first, it.second);
         }
         else {
-            G4cerr << "MagnetTARGET did not understand key=value pair '"
+            G4cerr << "MagnetTARGETR did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
             exit(1);
         }
     }
 
     if (gradient != 0.0) {
-        G4cerr << "Invalid gradient for TARGET: Gradient must be 0.0, but was "
+        G4cerr << "Invalid gradient for TARGETR: Gradient must be 0.0, but was "
                << gradient << " [T/m]" << G4endl;
         exit(1);
     }
 
     PrintCommonParameters();
     G4cout << "\t targetMaterialName      = " << targetMaterialName <<             G4endl;
-    G4cout << "\t width                   = " << width/mm           << " [mm]"  << G4endl;
-    G4cout << "\t height                  = " << height/mm          << " [mm]"  << G4endl;
+    G4cout << "\t radius                  = " << radius/mm          << " [mm]"  << G4endl;
 
 }
 
-void MagnetTARGET::Construct() {
+void MagnetTARGETR::Construct() {
     if (this->mainLV != NULL) {
-        G4cerr << "Error in MagnetTARGET::Construct(): The mainLV has already been constructed?" << G4endl;
+        G4cerr << "Error in MagnetTARGETR::Construct(): The mainLV has already been constructed?" << G4endl;
         exit(1);
     }
 
     this->mainLV = MakeNewMainLV("main");
 
     //Sanity checks on dimensions
-    if (width > mainLV_w || height > mainLV_h) {
-        G4cerr << "Error in MagnetTARGET::Construct():" << G4endl
-               << " The absorber is wider than it's allowed envelope "
+    if (radius > mainLV_w) {
+        G4cerr << "Error in MagnetTARGETR::Construct():" << G4endl
+               << " The absorber is bigger than it's allowed envelope "
                << " including offsets and rotations."  << G4endl;
         exit(1);
     }
 
     // Build the target
-    G4VSolid* targetSolid      = new G4Box(magnetName+"_targetS",
-                                           width/2.0, height/2.0, length/2.0);
+    G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
+                                            0.0, radius, length/2.0,
+                                            0.0, 360.0*deg);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
         G4cerr << "Error when setting material '"
-               << targetMaterialName << "' for MagnetTARGET '"
+               << targetMaterialName << "' for MagnetTARGETR '"
                << magnetName << "' -- not found!" << G4endl;
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
         G4cerr << "Valid choices:" << G4endl;

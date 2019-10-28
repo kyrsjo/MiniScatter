@@ -838,6 +838,9 @@ void printHelp(G4double target_thick,
                    << "  'TARGET':" << G4endl
                    << "     width:     Target width (<double> [mm])" << G4endl
                    << "     height:    Target height (<double> [mm])" << G4endl
+                   << "     material:  Target material (similar to -m)" << G4endl
+                   << "  'TARGETR':" << G4endl
+                   << "     radius:    Target radius(<double> [mm])" << G4endl
                    << "     material:  Target material (similar to -m)" << G4endl;
 
             G4cout << "Currently have the following magnet setups:" << G4endl;
