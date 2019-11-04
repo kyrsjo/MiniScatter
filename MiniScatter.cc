@@ -64,6 +64,7 @@ void printHelp(G4double target_thick,
                G4String filename_out,
                G4String foldername_out,
                G4bool   quickmode,
+               G4bool   anaScatterTest,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
@@ -110,14 +111,16 @@ int main(int argc,char** argv) {
 
     G4int    numEvents    = 0;                // Number of events to generate
 
-    G4bool   useGUI       = false;            // GUI on/off
-    G4bool   quickmode    = false;            // Don't make slow plots
+    G4bool   useGUI         = false;          // GUI on/off
+    G4bool   quickmode      = false;          // Don't make slow plots
+    G4bool   anaScatterTest = false;          // Compute analytical multiple scattering,
+                                              // for comparison with simulation output.
     G4String filename_out   = "output";       // Output filename
     G4String foldername_out = "plots";        // Output foldername
-    G4bool   miniROOTfile = false;            // Write small root file
+    G4bool   miniROOTfile   = false;          // Write small root file
                                               // (only analysis output, no TTrees)
 
-    G4int    rngSeed      = 123;              // RNG seed
+    G4int    rngSeed        = 0;              // RNG seed
 
     G4double cutoff_energyFraction = 0.95;    // [fraction]
     G4double cutoff_radius         = 1.0;     // [mm]
@@ -128,30 +131,31 @@ int main(int argc,char** argv) {
     std::vector<G4String> magnetDefinitions;
 
     static struct option long_options[] = {
-                                           {"thick",                 required_argument, NULL, 't' },
-                                           {"mat",                   required_argument, NULL, 'm' },
-                                           {"dist",                  required_argument, NULL, 'd' },
-                                           {"ang",                   required_argument, NULL, 'a' },
-                                           {"targetAngle",           required_argument, NULL, 'A' },
-                                           {"worldsize",             required_argument, NULL, 'w' },
-                                           {"dist",                  required_argument, NULL, 'd' },
-                                           {"ang",                   required_argument, NULL, 'a' },
-                                           {"phys",                  required_argument, NULL, 'p' },
+                                           {"thick",                 required_argument, NULL, 't'  },
+                                           {"mat",                   required_argument, NULL, 'm'  },
+                                           {"dist",                  required_argument, NULL, 'd'  },
+                                           {"ang",                   required_argument, NULL, 'a'  },
+                                           {"targetAngle",           required_argument, NULL, 'A'  },
+                                           {"worldsize",             required_argument, NULL, 'w'  },
+                                           {"dist",                  required_argument, NULL, 'd'  },
+                                           {"ang",                   required_argument, NULL, 'a'  },
+                                           {"phys",                  required_argument, NULL, 'p'  },
                                            // -n is only short
-                                           {"energy",                required_argument, NULL, 'e' },
-                                           {"energyDistFlat",        required_argument, NULL, 1300},
-                                           {"beam",                  required_argument, NULL, 'b' },
-                                           {"xoffset",               required_argument, NULL, 'x' },
-                                           {"zoffset",               required_argument, NULL, 'z' },
-                                           {"covar",                 required_argument, NULL, 'c' },
-                                           {"beamRcut",              required_argument, NULL, 1200},
-                                           {"outname",               required_argument, NULL, 'f' },
-                                           {"outfolder",             required_argument, NULL, 'o' },
-                                           {"seed",                  required_argument, NULL, 's' },
-                                           {"help",                  no_argument,       NULL, 'h' },
-                                           {"gui",                   no_argument,       NULL, 'g' },
-                                           {"quickmode",             no_argument,       NULL, 'q' },
-                                           {"miniroot",              no_argument,       NULL, 'r' },
+                                           {"energy",                required_argument, NULL, 'e'  },
+                                           {"energyDistFlat",        required_argument, NULL, 1300 },
+                                           {"beam",                  required_argument, NULL, 'b'  },
+                                           {"xoffset",               required_argument, NULL, 'x'  },
+                                           {"zoffset",               required_argument, NULL, 'z'  },
+                                           {"covar",                 required_argument, NULL, 'c'  },
+                                           {"beamRcut",              required_argument, NULL, 1200 },
+                                           {"outname",               required_argument, NULL, 'f'  },
+                                           {"outfolder",             required_argument, NULL, 'o'  },
+                                           {"seed",                  required_argument, NULL, 's'  },
+                                           {"help",                  no_argument,       NULL, 'h'  },
+                                           {"gui",                   no_argument,       NULL, 'g'  },
+                                           {"quickmode",             no_argument,       NULL, 'q'  },
+                                           {"anaScatterTest",        no_argument,       NULL, 1004 },
+                                           {"miniroot",              no_argument,       NULL, 'r'  },
                                            {"cutoffEnergyFraction",  required_argument, NULL, 1000 },
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
@@ -183,6 +187,7 @@ int main(int argc,char** argv) {
                       filename_out,
                       foldername_out,
                       quickmode,
+                      anaScatterTest,
                       miniROOTfile,
                       cutoff_energyFraction,
                       cutoff_radius,
@@ -420,6 +425,10 @@ int main(int argc,char** argv) {
             quickmode = true;
             break;
 
+        case 1004: // anaScatterTest
+            anaScatterTest = true;
+            break;
+
         case 1000: // Cutoff energy fraction
             try {
                 cutoff_energyFraction = std::stod(string(optarg));
@@ -515,6 +524,7 @@ int main(int argc,char** argv) {
               filename_out,
               foldername_out,
               quickmode,
+              anaScatterTest,
               miniROOTfile,
               cutoff_energyFraction,
               cutoff_radius,
@@ -539,7 +549,12 @@ int main(int argc,char** argv) {
     G4RunManager * runManager = new G4RunManager;
 
     //Set the initial seed
-    G4Random::setTheSeed(rngSeed);
+    if (rngSeed == 0) {
+        G4Random::setTheSeed(time(NULL));
+    }
+    else {
+        G4Random::setTheSeed(rngSeed);
+    }
 
     // Set mandatory initialization classes
 
@@ -618,12 +633,14 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setFilename(filename_out);
     RootFileWriter::GetInstance()->setFoldername(foldername_out);
     RootFileWriter::GetInstance()->setQuickmode(quickmode);
+    RootFileWriter::GetInstance()->setanaScatterTest(anaScatterTest);
     RootFileWriter::GetInstance()->setMiniFile(miniROOTfile);
     RootFileWriter::GetInstance()->setBeamEnergyCutoff(cutoff_energyFraction);
     RootFileWriter::GetInstance()->setPositionCutoffR(cutoff_radius);
     RootFileWriter::GetInstance()->setEdepDensDZ(edep_dens_dz);
     RootFileWriter::GetInstance()->setEngNbins(engNbins); // 0 = auto
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
+    RootFileWriter::GetInstance()->setRNGseed(rngSeed);
 
 #ifdef G4VIS_USE
     // Initialize visualization
@@ -677,7 +694,7 @@ int main(int argc,char** argv) {
 #ifdef G4VIS_USE
     delete visManager;
 #endif
-    //End comment
+
     // Delete runManager
     delete runManager;
     G4cout << "runManager deleted" << G4endl;
@@ -706,6 +723,7 @@ void printHelp(G4double target_thick,
                G4String filename_out,
                G4String foldername_out,
                G4bool   quickmode,
+               G4bool   anaScatterTest,
                G4bool   miniROOTfile,
                G4double cutoff_energyFraction,
                G4double cutoff_radius,
@@ -723,7 +741,8 @@ void printHelp(G4double target_thick,
             G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', 'Sapphire'" << G4endl
+                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', "
+                   << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << " Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)." << G4endl;
@@ -778,13 +797,16 @@ void printHelp(G4double target_thick,
                    << " If given together with -c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
                    << " Default/current value = " << beam_rCut << G4endl;
 
-            G4cout << "-s <int>    : Set the initial seed,   default/current value = "
+            G4cout << "-s <int>    : Set the initial seed, 0->use the clock etc., default/current value = "
                    << rngSeed << G4endl;
 
             G4cout << "-g : Use a GUI" << G4endl;
 
             G4cout << "-q : Quickmode, skip most post-processing and plots, default/current value = "
                    << (quickmode?"true":"false") << G4endl;
+
+            G4cout << "--anaScatterTest : Compute analytical scattering angle distribution, default/current value = "
+                   << (anaScatterTest?"true":"false") << G4endl;
 
             G4cout << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
                    << (miniROOTfile?"true":"false") << G4endl;

@@ -94,6 +94,9 @@ private:
 
     G4Material*        SapphireMaterial = NULL;
 
+    G4Material*        ChromoxMaterial       = NULL;
+    G4Material*        ChromoxScreenMaterial = NULL;
+
     G4Material*        gasH_2         = NULL;
     G4Material*        gasHe          = NULL;
     G4Material*        gasN_2         = NULL;

@@ -83,6 +83,9 @@ public:
     void setQuickmode(G4bool quickmode_arg) {
         this->quickmode = quickmode_arg;
     };
+    void setanaScatterTest(G4bool anaScatterTest_arg) {
+        this->anaScatterTest = anaScatterTest_arg;
+    };
     void setMiniFile(G4bool miniFile_arg) {
         this->miniFile = miniFile_arg;
     };
@@ -102,6 +105,10 @@ public:
         this->edep_dens_dz = edep_dens_dz_in;
     }
     void setEngNbins(G4int edepNbins_in);
+
+    void setRNGseed(G4int rngSeed_in) {
+        this->rngSeed = rngSeed_in;
+    }
 
 private:
     RootFileWriter(){
@@ -212,8 +219,9 @@ private:
 
     G4String foldername_out = "plots";
 
-    G4bool quickmode = false;
-    G4bool miniFile = false;
+    G4bool quickmode      = false;
+    G4bool anaScatterTest = false;
+    G4bool miniFile       = false;
 
     G4double beamEnergy; // [MeV]
 
@@ -232,6 +240,7 @@ private:
     G4int engNbins = 1000;
 
     // RNG for sampling over the step
+    G4int rngSeed;
     TRandom* RNG;
 
     Int_t eventCounter; // Used for EventID-ing and metadata
