@@ -381,6 +381,16 @@ void DetectorConstruction::DefineMaterials() {
     SapphireMaterial = new G4Material("Sapphire", 4.0*g/cm3, 2);
     SapphireMaterial->AddElement(elAl, 2);
     SapphireMaterial->AddElement(elO,  3);
+
+    G4Element* elCr = new G4Element("Chromium", "Cr", 24.0, 51.9961*g/mole);
+    ChromoxMaterial = new G4Material("ChromoxPure",5.22*g/cm3,2);
+    ChromoxMaterial->AddElement(elCr,2);
+    ChromoxMaterial->AddElement(elO,3);
+
+    // Chromox parameters from https://www.advatech-uk.co.uk/chromox.html
+    ChromoxScreenMaterial = new G4Material("ChromoxScreen", 3.85*g/cm3,2);
+    ChromoxScreenMaterial->AddMaterial(SapphireMaterial,0.995);
+    ChromoxScreenMaterial->AddMaterial(ChromoxMaterial,0.005);
 }
 
 //------------------------------------------------------------------------------
@@ -614,7 +624,7 @@ G4int DetectorConstruction::GetTargetMaterialZ() {
         }
     }
 
-    return elementVector[maxAtomsIndex][0]->GetZ();
+    return (*elementVector)[maxAtomsIndex]->GetZ();
 }
 
 G4double DetectorConstruction::GetTargetMaterialA() {
@@ -640,12 +650,8 @@ G4double DetectorConstruction::GetTargetMaterialA() {
         }
     }
 
-    G4double A_avg = 0.0;
-    for (auto el : elementVector[maxAtomsIndex]) {
-        A_avg += el->GetAtomicMassAmu();
-    }
+    return (*elementVector)[maxAtomsIndex]->GetAtomicMassAmu();
 
-    return A_avg / ((G4double)elementVector[maxAtomsIndex].size());
 }
 
 //------------------------------------------------------------------------------
