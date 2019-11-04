@@ -120,7 +120,7 @@ int main(int argc,char** argv) {
     G4bool   miniROOTfile   = false;          // Write small root file
                                               // (only analysis output, no TTrees)
 
-    G4int    rngSeed      = 123;              // RNG seed
+    G4int    rngSeed        = 0;              // RNG seed
 
     G4double cutoff_energyFraction = 0.95;    // [fraction]
     G4double cutoff_radius         = 1.0;     // [mm]
@@ -549,7 +549,12 @@ int main(int argc,char** argv) {
     G4RunManager * runManager = new G4RunManager;
 
     //Set the initial seed
-    G4Random::setTheSeed(rngSeed);
+    if (rngSeed == 0) {
+        G4Random::setTheSeed(time(NULL));
+    }
+    else {
+        G4Random::setTheSeed(rngSeed);
+    }
 
     // Set mandatory initialization classes
 
@@ -736,7 +741,8 @@ void printHelp(G4double target_thick,
             G4cout << "-m <string> : Target material name,   default/current       = '"
                    << target_material << "'" << G4endl
                    << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', 'Sapphire'" << G4endl
+                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', "
+                   << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << " Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)." << G4endl;
@@ -791,7 +797,7 @@ void printHelp(G4double target_thick,
                    << " If given together with -c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
                    << " Default/current value = " << beam_rCut << G4endl;
 
-            G4cout << "-s <int>    : Set the initial seed,   default/current value = "
+            G4cout << "-s <int>    : Set the initial seed, 0->use the clock etc., default/current value = "
                    << rngSeed << G4endl;
 
             G4cout << "-g : Use a GUI" << G4endl;
