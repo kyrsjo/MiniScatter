@@ -106,6 +106,10 @@ public:
     }
     void setEngNbins(G4int edepNbins_in);
 
+    void setRNGseed(G4int rngSeed_in) {
+        this->rngSeed = rngSeed_in;
+    }
+
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -236,6 +240,7 @@ private:
     G4int engNbins = 1000;
 
     // RNG for sampling over the step
+    G4int rngSeed;
     TRandom* RNG;
 
     Int_t eventCounter; // Used for EventID-ing and metadata

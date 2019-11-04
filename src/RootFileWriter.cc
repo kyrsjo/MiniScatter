@@ -97,7 +97,7 @@ void RootFileWriter::initializeRootFile(){
 
     eventCounter = 0;
 
-    RNG = new TRandom1(); //TODO: Seed it!
+    RNG = new TRandom1((UInt_t) rngSeed);
 
     // TTrees for external analysis
     if (not miniFile) {
