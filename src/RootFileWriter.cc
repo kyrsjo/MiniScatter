@@ -1169,7 +1169,7 @@ void RootFileWriter::finalizeRootFile() {
     PrintTwissParameters(tracker_phasespaceX_cutoff);
     PrintTwissParameters(tracker_phasespaceY_cutoff);
 
-    if (not quickmode and detCon->GetHasTarget()) {
+    if (anaScatterTest and detCon->GetHasTarget()) {
         // Compute the analytical multiple scattering angle distribution
         // Formulas from various sources:
         //

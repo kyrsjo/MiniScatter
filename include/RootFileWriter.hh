@@ -83,6 +83,9 @@ public:
     void setQuickmode(G4bool quickmode_arg) {
         this->quickmode = quickmode_arg;
     };
+    void setanaScatterTest(G4bool anaScatterTest_arg) {
+        this->anaScatterTest = anaScatterTest_arg;
+    };
     void setMiniFile(G4bool miniFile_arg) {
         this->miniFile = miniFile_arg;
     };
@@ -212,8 +215,9 @@ private:
 
     G4String foldername_out = "plots";
 
-    G4bool quickmode = false;
-    G4bool miniFile = false;
+    G4bool quickmode      = false;
+    G4bool anaScatterTest = false;
+    G4bool miniFile       = false;
 
     G4double beamEnergy; // [MeV]
 
