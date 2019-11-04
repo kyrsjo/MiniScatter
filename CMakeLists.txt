@@ -63,12 +63,6 @@ list(FILTER sources EXCLUDE REGEX \\.sys\\.v)
 # Add the executable, and link it to the Geant4 libraries
 #
 add_executable(MiniScatter MiniScatter.cc ${sources} ${headers})
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  target_link_libraries(MiniScatter "-lstdc++fs") #Will become standard in C++17, but does not work on OS X
-  add_definitions(-DMINISCATTER_CXXFILESYSTEM_OK)
-else()
-  message(WARNING "Not compiling on GCC, some functionality will be lost")
-endif()
 
 target_compile_options(MiniScatter PRIVATE "-Wno-overloaded-virtual")
 

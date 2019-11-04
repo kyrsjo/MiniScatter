@@ -688,7 +688,7 @@ int main(int argc,char** argv) {
 #ifdef G4VIS_USE
     delete visManager;
 #endif
-    //End comment
+
     // Delete runManager
     delete runManager;
     G4cout << "runManager deleted" << G4endl;

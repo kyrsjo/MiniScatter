@@ -40,12 +40,11 @@
 
 #include <iostream>
 #include <iomanip>
-#ifdef MINISCATTER_CXXFILESYSTEM_OK
-#include <experimental/filesystem> //Mainstreamed from C++17,
-                                   // but G4 doesn't like C++17.
-                                   // Also, AppleClang still don't
-                                   // support filesystem.
-#endif
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+struct stat stat_info;
 
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = 0;
@@ -70,24 +69,24 @@ void RootFileWriter::initializeRootFile(){
     G4String rootFileName = foldername_out + "/" + filename_out + ".root";
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
 
-    //Create folder if it does not exist (GCC only)
-#ifdef MINISCATTER_CXXFILESYSTEM_OK
-    if (not experimental::filesystem::exists(foldername_out.data())) {
-        G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
-        experimental::filesystem::create_directories(foldername_out.data());
+    //Create folder if it does not exist
+    if(stat(foldername_out.c_str(), &stat_info) != 0) {
+        if (errno == ENOENT) {
+            G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
+            mkdir(foldername_out.c_str(), 0755);
+        }
+        else {
+            G4cerr << "ERROR: Could not lookup folder " << foldername_out << " - aborting!" << G4endl;
+            exit(1);
+        }
     }
-#else
-    G4cerr << G4endl << G4endl << G4endl
-           << "*************************************************************"
-           << G4endl << G4endl << G4endl;
-    G4cerr << "Not running on GCC, so can't check if a folder is present / "
-           << "create it if neccessary." << G4endl;
-    G4cerr << "The user must make sure that the folder '" << foldername_out
-           << "' exist or we will crash!!!"
-           << G4endl << G4endl << G4endl
-           << "*************************************************************"
-           << G4endl << G4endl << G4endl;
-#endif
+    else if(not S_ISDIR(stat_info.st_mode)) {
+        G4cerr << "ERROR: An non-folder entity named " << foldername_out << " already exist- aborting!" << G4endl;
+        exit(1);
+    }
+    else {
+        G4cout << "Folder '" << foldername_out << "' already exists -- using it!" << G4endl;
+    }
 
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
