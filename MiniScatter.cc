@@ -52,6 +52,7 @@ void printHelp(G4double target_thick,
                G4double target_angle,
                G4double world_size,
                G4String physListName,
+               G4double physCutoffDist,
                G4double beam_energy,
                G4double beam_eFlat_min,
                G4double beam_eFlat_max,
@@ -108,6 +109,7 @@ int main(int argc,char** argv) {
     G4double beam_rCut = 0.0;                 // Beam distribution radial cutoff
 
     G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
+    G4double physCutoffDist = 0.1;            // Default physics cutoff distance [mm]
 
     G4int    numEvents    = 0;                // Number of events to generate
 
@@ -140,6 +142,7 @@ int main(int argc,char** argv) {
                                            {"dist",                  required_argument, NULL, 'd'  },
                                            {"ang",                   required_argument, NULL, 'a'  },
                                            {"phys",                  required_argument, NULL, 'p'  },
+                                           {"physCutoffDist",        required_argument, NULL, 1400 },
                                            // -n is only short
                                            {"energy",                required_argument, NULL, 'e'  },
                                            {"energyDistFlat",        required_argument, NULL, 1300 },
@@ -175,6 +178,7 @@ int main(int argc,char** argv) {
                       target_angle,
                       world_size,
                       physListName,
+                      physCutoffDist,
                       beam_energy,
                       beam_eFlat_min,
                       beam_eFlat_max,
@@ -267,6 +271,18 @@ int main(int argc,char** argv) {
 
         case 'p': //Named physics list
             physListName = G4String(optarg);
+            break;
+
+        case 1400: //Physics cutoff distance (--physCutoffDist)
+            try {
+                physCutoffDist = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading physCutoffDist" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
             break;
 
         case 'm': //Target material
@@ -512,6 +528,7 @@ int main(int argc,char** argv) {
               target_angle,
               world_size,
               physListName,
+              physCutoffDist,
               beam_energy,
               beam_eFlat_min,
               beam_eFlat_max,
@@ -584,7 +601,7 @@ int main(int argc,char** argv) {
     physlist->SetVerboseLevel(verbose);
     runManager->SetUserInitialization(physlist);
     //physlist->SetDefaultCutValue( 0.00001*mm);
-    physlist->SetDefaultCutValue( 0.1*mm);
+    physlist->SetDefaultCutValue( physCutoffDist*mm);
 
     DetectorConstruction* physWorld = new DetectorConstruction(target_thick,
                                                                target_material,
@@ -711,6 +728,7 @@ void printHelp(G4double target_thick,
                G4double target_angle,
                G4double world_size,
                G4String physListName,
+               G4double physCutoffDist,
                G4double beam_energy,
                G4double beam_eFlat_min,
                G4double beam_eFlat_max,
@@ -761,6 +779,9 @@ void printHelp(G4double target_thick,
 
             G4cout << "-p <string> : Physics list name,      default/current       = '"
                    << physListName << G4endl;
+
+            G4cout << "--physCutoffDist <double>: Standard physics cutoff distance [mm], default/current value = "
+                   << physCutoffDist << G4endl;
 
             G4cout << "-n <int>    : Run a given number of events automatically"
                    << G4endl;
