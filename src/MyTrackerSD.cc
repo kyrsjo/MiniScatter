@@ -30,6 +30,7 @@
 MyTrackerSD::MyTrackerSD(const G4String& name) :
   G4VSensitiveDetector(name) {
 
+  fHitsCollection = NULL; //Note: The HitsCollection objects are deleted by Geant4.
   collectionName.insert("TrackerCollection");
   fHitsCollectionID = -1;
 

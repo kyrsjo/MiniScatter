@@ -31,12 +31,13 @@
 MyTargetSD::MyTargetSD(const G4String& name) :
     G4VSensitiveDetector(name) {
 
+    fHitsCollection_edep = NULL; //Note: The HitsCollection objects are deleted by Geant4.
     collectionName.insert(name+"_edep");
     fHitsCollectionID_edep = -1;
 
+    fHitsCollection_exitpos = NULL; //Note: The HitsCollection objects are deleted by Geant4.
     collectionName.insert(name+"_exitpos");
     fHitsCollectionID_exitpos = -1;
-
 }
 
 MyTargetSD::~MyTargetSD() {}
