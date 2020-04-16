@@ -81,14 +81,17 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         assert detailedAnalysisRoutine_names == None
 
     objects = None
+    objectNames = None #Some objects can use SetName(), but we can still Write() them with a separate name...
     if getObjects:
         objects = {}
+        objectNames = {}
         assert type(getObjects) == list
         for objName in getObjects:
-            objects[objName] = [None]*len(scanVarRange) #One entry per scanVarRange value
+            objects[objName]     = [None]*len(scanVarRange) #One entry per scanVarRange value
+            objectNames[objName] = [None]*len(scanVarRange)
 
     #Later we have assumed electron beam for emittance calculation
-    assert baseSimSetup["BEAM"] == "e+" or baseSimSetup["BEAM"] == "e-"
+    #assert baseSimSetup["BEAM"] == "e+" or baseSimSetup["BEAM"] == "e-" #(I think this was actually fixed?)
     assert "ENERGY" in baseSimSetup or scanVar=="ENERGY"
 
     #Sanity check
@@ -320,11 +323,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         if not objectsFile.GetListOfKeys().Contains(thisObjName):
                             objectsFile.Close()
                             loadFile.close()
-                            raise KeyError("Did not find key {} in ROOT file {}".format(thisObjName,objectsFileName))
+                            raise KeyError("Did not find key '{}' in ROOT file '{}'".format(thisObjName,objectsFileName))
 
                         thisObj = objectsFile.Get(thisObjName)
                         objects[objName][i] = thisObj.Clone(thisObj.GetName()+ "-clone")
-                        objects[objName][i].SetDirectory(0)
+                        try:
+                            objects[objName][i].SetDirectory(0)
+                        except AttributeError:
+                            #Doesn't work on TVector etc.
+                            print("WARNING while loading aux ROOT file '{}': Can't SetDirectory() on object '{}'.".format(objectsFile,objName))
 
                 objectsFile.Close()
 
@@ -333,7 +340,12 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     assert len(objects[objName]) == len(scanVarRange)
                     for i in range(len(scanVarRange)):
                         thisObjName = objects[objName][i].GetName()
-                        objects[objName][i].SetName(thisObjName[:-16]) # remove '-fileClone-clone'
+                        try:
+                            # remove '-fileClone-clone'
+                            objects[objName][i].SetName(thisObjName[:-16])
+                        except AttributeError:
+                            #Doesn't work on TVectorT etc.
+                            print("WARNING while loading aux ROOT file '{}': Can't SetName() on object '{}'.".format(objectsFile,objName))
                 print ("Auxillary ROOT file {} loaded.".format(objectsFileName))
 
             loadFile.close()
@@ -385,7 +397,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         if tmpFolder is not None:
             simSetup["OUTFOLDER"] = tmpFolder
 
+        ##RUN THE SIMULATION!
         miniScatterDriver.runScatter(simSetup,quiet=QUIET)
+        ##SIMULATION COMPLETE!
 
         filenameROOTfile = None
         if tmpFolder is None:
@@ -431,8 +445,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     for objName in getObjects:
                         thisObj = objects_singleSim[objName]
                         #thisObjName = thisObj.GetName()
-                        thisObj.SetName(objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT)
-                        objects[objName][i] = thisObj
+                        thisObjName = objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT
+                        try:
+                            thisObj.SetName(thisObjName)
+                        except AttributeError:
+                            #Doesn't work on TVectorT etc.
+                            print("WARNING while retrieving object from single-sim ROOT file {}: Can't SetName() on object '{}'.".format(filenameROOTfile,objName))
+
+                        objects[objName][i]     = thisObj
+                        objectNames[objName][i] = thisObjName
                 #Do special analysis over the TTrees
                 if detailedAnalysisRoutine:
                     #Put the call to the external routine in a try/catch,
@@ -540,9 +561,10 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         objectsFile = ROOT.TFile(objectsFileName,'RECREATE');
         for objName in getObjects:
             for i in range(len(scanVarRange)):
-                thisObjName = objects[objName][i].GetName() + "-fileClone"
+                #thisObjName = objects[objName][i].GetName() + "-fileClone"
+                thisObjName = objectNames[objName][i] + "-fileClone"
                 objCopy = objects[objName][i].Clone(thisObjName)
-                objCopy.Write()
+                objCopy.Write(thisObjName)
         objectsFile.Close()
 
     saveFile.close()

@@ -237,7 +237,7 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
                 raise KeyError("Object {} not found in file {}".format(objName,filename))
             #Clone the object -- the name can be changed later, but make it unique
             objects[objName] = dataFile.Get(objName).Clone(objName+"-localClone")
-             # make it independent of the datafile TFile (histograms only)
+            # make it independent of the datafile TFile (histograms only)
             try:
                 objects[objName].SetDirectory(0)
             except AttributeError:
