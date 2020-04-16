@@ -164,7 +164,7 @@ int main(int argc,char** argv) {
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
                                            {"magnet",                required_argument, NULL, 1100 },
-                                           {"object",                required_argument, NULL, 1100 }, //synonum with --magnet
+                                           {"object",                required_argument, NULL, 1100 }, //synonymous with --magnet
                                            {0,0,0,0}
     };
 
