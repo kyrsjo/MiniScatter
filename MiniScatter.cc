@@ -716,6 +716,13 @@ int main(int argc,char** argv) {
     delete runManager;
     G4cout << "runManager deleted" << G4endl;
 
+    //Cleanup memory
+    delete[] argv_effective;
+    argv_effective = NULL;
+
+    delete magnetSensorWorld;
+    magnetSensorWorld = NULL;
+
     return 0;
 }
 

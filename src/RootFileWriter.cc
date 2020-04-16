@@ -570,12 +570,14 @@ void RootFileWriter::initializeRootFile(){
 
     if (not miniFile) {
         size_t numMagnets = detCon->magnets.size();
-        magnetEdepsBuffer = new Double_t[numMagnets];
-        size_t i = 0;
-        for (auto mag : detCon->magnets) {
-            G4String magName = mag->magnetName;
-            magnetEdeps->Branch(magName, &(magnetEdepsBuffer[i]), (magName+"/D").c_str());
-            i++;
+        if (numMagnets > 0) {
+            magnetEdepsBuffer = new Double_t[numMagnets];
+            size_t i = 0;
+            for (auto mag : detCon->magnets) {
+                G4String magName = mag->magnetName;
+                magnetEdeps->Branch(magName, &(magnetEdepsBuffer[i]), (magName+"/D").c_str());
+                i++;
+            }
         }
     }
 }
@@ -1335,8 +1337,10 @@ void RootFileWriter::finalizeRootFile() {
         delete magnetEdeps;
         magnetEdeps=NULL;
 
-        delete magnetEdepsBuffer;
-        magnetEdepsBuffer = NULL;
+        if (magnetEdepsBuffer != NULL) {
+            delete magnetEdepsBuffer;
+            magnetEdepsBuffer = NULL;
+        }
     }
 
     G4cout << "Writing 1D histograms..." << G4endl;
