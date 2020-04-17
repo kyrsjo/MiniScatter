@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-def plotRZgray(objects, nevents_simulated, nparts_actual):
+def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False):
     """
     Scale an RZ histogram (produced by MiniScatter) to Gray (J/kg).
 
@@ -40,17 +40,38 @@ def plotRZgray(objects, nevents_simulated, nparts_actual):
     scaleFactor_energyUnit = 1.6021766e-13; #J/MeV
     scaleFactor_nPart = nparts_actual/nevents_simulated
 
-    for rBinIdx in range(1,rzScaled.GetYaxis().GetNbins()+1):
-        dA = np.pi*(rzScaled.GetYaxis().GetBinUpEdge(rBinIdx)**2   -\
-                    rzScaled.GetYaxis().GetBinLowEdge(rBinIdx)**2   ) #[mm^2]
+    #Try to use the C++ implementation of the algorithm, for the speeds
+    useCPP = False
+    if forcePython == False:
+        try:
+            from ROOT import gSystem
+            import os.path
+            soPath = os.path.join(os.path.dirname(__file__),\
+                "ROOTclasses/libMiniScatter_ROOTclasses.so")
+            loadSuccess = gSystem.Load( soPath)
+            if loadSuccess < 0: #Accept 0 (success) and 1 (already loaded)
+                raise ImportError
+            from ROOT import MSR_plotRZgray_histoScalerVolume #Can also throw importError
+            useCPP = True
+        except ImportError:
+            print("WARNING: Could not load C++ function MSR_plotRZgray_histoScalerVolume")
+            useCPP = False
 
-        for zBinIdx in range(1,rzScaled.GetXaxis().GetNbins()+1):
-            dZ = rzScaled.GetXaxis().GetBinUpEdge(zBinIdx) - rzScaled.GetXaxis().GetBinLowEdge(zBinIdx) #[mm]
-            dV = dA*dZ # [mm^3]
+    if useCPP:
+        #Implemenmtation of the same for-loop as bel
+        MSR_plotRZgray_histoScalerVolume(rzScaled)
+    else:
+        for rBinIdx in range(1,rzScaled.GetYaxis().GetNbins()+1):
+            dA = np.pi*(rzScaled.GetYaxis().GetBinUpEdge(rBinIdx)**2   -\
+                        rzScaled.GetYaxis().GetBinLowEdge(rBinIdx)**2   ) #[mm^2]
 
-            #Scale to volume unit
-            binIdx = rzScaled.GetBin(zBinIdx,rBinIdx)
-            rzScaled.SetBinContent(binIdx, rzScaled.GetBinContent(binIdx)/dV) #[MeV/mm^3]
+            for zBinIdx in range(1,rzScaled.GetXaxis().GetNbins()+1):
+                dZ = rzScaled.GetXaxis().GetBinUpEdge(zBinIdx) - rzScaled.GetXaxis().GetBinLowEdge(zBinIdx) #[mm]
+                dV = dA*dZ # [mm^3]
+
+                #Scale to volume unit
+                binIdx = rzScaled.GetBin(zBinIdx,rBinIdx)
+                rzScaled.SetBinContent(binIdx, rzScaled.GetBinContent(binIdx)/dV) #[MeV/mm^3]
 
     #Scale with density and unit conversion
     rzScaled.Scale((scaleFactor_nPart/density)*(scaleFactor_energyUnit*1e6))

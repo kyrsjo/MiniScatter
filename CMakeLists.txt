@@ -23,7 +23,6 @@ else()
   find_package(Geant4 REQUIRED)
 endif()
 
-
 #----------------------------------------------------------------------------
 # Find ROOT variables if the variable G4ANALYSIS_USE_ROOT is set
 #
@@ -31,7 +30,6 @@ endif()
 set(CMAKE_MODULE_PATH ${Geant4_dir}/Modules)
 #find_package(ROOT QUIET)
 find_package(ROOT)
-
 
 #----------------------------------------------------------------------------
 # Setup Geant4 include directories and compile definitions
@@ -111,3 +109,7 @@ endforeach()
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS MiniScatter DESTINATION bin)
+
+## ROOT classes
+add_subdirectory(ROOTclasses)
+install(TARGETS MiniScatter_ROOTclasses DESTINATION bin)
