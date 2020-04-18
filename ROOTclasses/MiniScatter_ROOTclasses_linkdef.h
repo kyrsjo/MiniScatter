@@ -13,5 +13,6 @@
 
 // all functions
 #pragma link C++ function MSR_plotRZgray_histoScalerVolume;
+#pragma link C++ function MSR_plotZgray_sumR;
 
 #endif

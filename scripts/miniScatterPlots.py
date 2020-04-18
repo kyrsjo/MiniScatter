@@ -61,6 +61,7 @@ def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False):
         #Implemenmtation of the same for-loop as bel
         MSR_plotRZgray_histoScalerVolume(rzScaled)
     else:
+        #Scale the bin content with 1/dV
         for rBinIdx in range(1,rzScaled.GetYaxis().GetNbins()+1):
             dA = np.pi*(rzScaled.GetYaxis().GetBinUpEdge(rBinIdx)**2   -\
                         rzScaled.GetYaxis().GetBinLowEdge(rBinIdx)**2   ) #[mm^2]
@@ -79,10 +80,12 @@ def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False):
 
     return rzScaled
 
-def plotZgray(rzHist_Gy, r0):
+def plotZgray(rzHist_Gy, r0, forcePython=False):
     """
-    Get the central column of radius r0 [mm] and plot the dose deposition in Gy.
-    Use the plotRZgray function to obtain rzHist_Gy.
+    Get the central column of radius r0 [mm] (rounded upwards to nearest bin)
+    and plot the dose deposition in Gy as a function of depth z [mm].
+
+    Use the plotRZgray function to obtain the input rzHist_Gy.
     """
 
     #Reset scaling and check that the scaling we're attempting is on a bin edge
@@ -95,11 +98,17 @@ def plotZgray(rzHist_Gy, r0):
     rzHist_Gy.GetXaxis().SetRange(1,rzHist_Gy.GetXaxis().GetNbins())
 
     yAxis = rzHist_Gy.GetYaxis()
-    yAxis_lastbin = yAxis.FindFixBin(r0)
+
+    yAxis_lastbin = yAxis.FindFixBin(r0) #Finds the index of the bin where low <= r0 < hi.
+                                         # If r0 >= max, returns Nbins+1 (overflow bin index)
+    if yAxis_lastbin == yAxis.GetNbins()+1:
+        yAxis_lastbin = yAxis.GetNbins() # Don't use the overflow bin.
+                                         # Note: If we are really far from a bin edge, 
     if yAxis_lastbin == -1:
         raise (ValueError("The chose r0={} is outside the r range of the histogram {} to {}.".\
-                format(r0, yAxis.GetBinLowEdge(yAxis.GetFirst()), yAxis.GetBinLowEdge(yAxis.GetLast()))\
+                format(r0, yAxis.GetBinLowEdge(yAxis.GetFirst()), yAxis.GetBinUpEdge(yAxis.GetLast()))\
                 ))
+
     assert (rzHist_Gy.GetYaxis().GetBinLowEdge(yAxis.GetFirst()) == 0.0)
 
     r0_actual = yAxis.GetBinUpEdge(yAxis_lastbin)
@@ -114,13 +123,33 @@ def plotZgray(rzHist_Gy, r0):
                            0, rzHist_Gy.GetXaxis().GetBinUpEdge(rzHist_Gy.GetXaxis().GetLast())
                           )
 
-    for zIdx in range(1,rzHist_Gy.GetNbinsX()):
-        avgDoseZ = 0.0 #[Gy*mm^2]
-        for rIdx in range(1,yAxis_lastbin):
-            dA = np.pi*(rzHist_Gy.GetYaxis().GetBinUpEdge(rIdx)**2 - rzHist_Gy.GetYaxis().GetBinLowEdge(rIdx)**2) #[mm^2]
-            avgDoseZ += rzHist_Gy.GetBinContent(zIdx,rIdx)*dA
-        volTot = np.pi*r0_actual**2 #[mm^2]
-        centerHist.SetBinContent(zIdx,avgDoseZ/volTot) #[Gy]
+    #Try to use the C++ implementation of the algorithm, for the speeds
+    useCPP = False
+    if forcePython == False:
+        try:
+            from ROOT import gSystem
+            import os.path
+            soPath = os.path.join(os.path.dirname(__file__),\
+                "ROOTclasses/libMiniScatter_ROOTclasses.so")
+            loadSuccess = gSystem.Load( soPath)
+            if loadSuccess < 0: #Accept 0 (success) and 1 (already loaded)
+                raise ImportError
+            from ROOT import MSR_plotZgray_sumR #Can also throw importError
+            useCPP = True
+        except ImportError:
+            print("WARNING: Could not load C++ function MSR_plotZgray_sumR")
+            useCPP = False
+
+    if useCPP:
+        MSR_plotZgray_sumR(rzHist_Gy, centerHist, yAxis_lastbin, r0_actual)
+    else:
+        for zIdx in range(1,rzHist_Gy.GetNbinsX()+1):
+            avgDoseZ = 0.0 #[Gy*mm^2]
+            for rIdx in range(1,yAxis_lastbin+1):
+                dA = np.pi*(rzHist_Gy.GetYaxis().GetBinUpEdge(rIdx)**2 - rzHist_Gy.GetYaxis().GetBinLowEdge(rIdx)**2) #[mm^2]
+                avgDoseZ += rzHist_Gy.GetBinContent(zIdx,rIdx)*dA
+            volTot = np.pi*r0_actual**2 #[mm^2]
+            centerHist.SetBinContent(zIdx,avgDoseZ/volTot) #[Gy]
 
     #Restore the range settings of the 2D histogram
     rzHist_Gy.GetXaxis().SetRange(firstX_old, lastX_old)
