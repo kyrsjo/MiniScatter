@@ -41,6 +41,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <unistd.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -70,10 +72,77 @@ void RootFileWriter::initializeRootFile(){
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
 
     //Create folder if it does not exist
+    // Note: This code assumes UNIX filesystem conventions.
+    // Linux, Mac, etc. should be OK. Windows is NOT supported, and it may eat all your cheese.
+    // On a cheese-eating platform, replace the recusive folder-creation logic below
+    // (everything inside the if (errno==ENOENT) { .... }) with
+    // mkdir(foldername_out.c_str(), 0755);
+    // This will not do recursive folder creation, but it should work.
+    // Note: no guarantees that some other part of the code won't drink all your beer, this is untested...
+    #if not ( defined(unix) || defined(__unix__) || defined(__unix) )
+    #error Only UNIX is supported.
+    #endif
     if(stat(foldername_out.c_str(), &stat_info) != 0) {
         if (errno == ENOENT) {
             G4cout << "Creating folder '" << foldername_out << "'" << G4endl;
-            mkdir(foldername_out.c_str(), 0755);
+
+            G4String foldername_out_full;
+            if (foldername_out.c_str()[0] != '/') {
+
+                char* cwd = get_current_dir_name();
+                if (cwd == NULL) {
+                    perror("Error getting the current path");
+                    exit(1);
+                }
+
+                if (cwd[strlen(cwd)-1] == '/') {
+                    foldername_out_full = G4String(cwd) + foldername_out;
+                }
+                else {
+                    foldername_out_full = G4String(cwd) + G4String('/') + foldername_out;
+                }
+
+                delete[] cwd;
+
+                G4cout << "Converted relative path '" << foldername_out << "' to absolute path '" 
+                       << foldername_out_full << "'." << G4endl;
+            }
+            else {
+                foldername_out_full = foldername_out;
+            }
+            const char* path_full = foldername_out_full.c_str();
+
+            if( strlen(path_full) < 2 ) {
+                G4cerr << "ERROR: Path string must be more than '/' (and why is '/' not existing?), got '"
+                       << path_full << "' - aborting!" << G4endl;
+                exit(1);
+            }
+
+            //Create the folders recursively
+            size_t idx_stop;
+            for (idx_stop = 1; idx_stop < strlen(path_full); ++idx_stop) {
+                if (path_full[idx_stop] == '/') { // Got it!
+
+                    //Extract the path up to here
+                    char* path_part = new char[idx_stop+1];
+                    strncpy(path_part, path_full, idx_stop);
+                    path_part[idx_stop] = '\0';
+
+                    // Create it if it does not exist
+                    if(stat(path_part, &stat_info) != 0) {
+                        if (errno == ENOENT) {
+                            mkdir(path_part, 0755);
+                        }
+                    }
+
+                    delete[] path_part;
+                }
+            }
+            //3. Get the end if the string is not terminated by a "/"
+            if (path_full[strlen(path_full)-1] != '/') {
+                // We have already checked that the folder doesn't exist
+                mkdir (path_full, 0755);
+            }
         }
         else {
             G4cerr << "ERROR: Could not lookup folder " << foldername_out << " - aborting!" << G4endl;
