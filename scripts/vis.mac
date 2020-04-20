@@ -26,9 +26,20 @@
 # trajectories are established:
 /vis/viewer/set/autoRefresh false
 /vis/verbose errors
+
+#Draw mode: solid, with hidden line and surface removal
+/vis/viewer/set/style s
+#/vis/viewer/refresh
+/vis/viewer/set/hiddenEdge 1
+#/vis/viewer/refresh
+
 #
 # Draw geometry:
 /vis/drawVolume
+
+#Center on z=0, x=y=0 (default: middle of what is visible)
+/vis/viewer/set/targetPoint 0 0 0 mm
+
 #
 # Specify view angle:
 /vis/viewer/set/viewpointThetaPhi -90. 0
@@ -75,3 +86,5 @@
 #
 # For file-based drivers, use this to create an empty detector view:
 #/vis/viewer/flush
+
+/vis/viewer/refresh

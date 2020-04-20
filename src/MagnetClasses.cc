@@ -37,6 +37,8 @@
 
 #include "G4PhysicalConstants.hh"
 
+#include "G4VisAttributes.hh"
+
 MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
 
     //Split by '::'
@@ -177,6 +179,9 @@ G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix){
 
     G4LogicalVolume* newMainLV = new G4LogicalVolume(mainBox,vacuumMaterial,
                                                      magnetName+"_"+name_postfix+"LV");
+
+    // Make the bounding volume invisible by default
+    newMainLV->SetVisAttributes(G4VisAttributes(false));
 
     return newMainLV;
 }

@@ -31,6 +31,8 @@
 #include "G4PVPlacement.hh"
 #include "G4PVParameterised.hh"
 
+#include "G4VisAttributes.hh"
+
 #include "G4GeometryManager.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4PhysicalVolumeStore.hh"
@@ -257,6 +259,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                    false,           //pMany not used
                                    0,               //copy number
                                    true);           //Check for overlaps
+
+    logicWorld->SetVisAttributes(G4VisAttributes(false));
 
     //constructing the target
     if (TargetThickness > 0.0) {
