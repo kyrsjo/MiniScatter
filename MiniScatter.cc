@@ -26,6 +26,14 @@
 #include "G4PhysListFactory.hh"
 #include "G4ParallelWorldPhysics.hh"
 
+#include "G4Version.hh"
+#if G4VERSION_NUMBER >= 1060
+//These macros were removed in version 10.6;
+// from what I can see it looks like they are are no longer needed
+#define G4VIS_USE
+#define G4UI_USE
+#endif
+
 #include "RootFileWriter.hh"
 
 #include "G4SystemOfUnits.hh"
@@ -33,6 +41,7 @@
 #include <string> //C++11 std::stoi
 
 #include "TROOT.h"
+
 
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
@@ -693,6 +702,9 @@ int main(int argc,char** argv) {
         if (ui->IsGUI())
             ui->SessionStart(); //Returns when GUI is closed.
         delete ui;
+#else
+        G4cout << "ERROR in initialization: GUI is turned on (-g), but G4UI_USE is not set!" << G4endl;
+        exit(1);
 #endif
     }
 
