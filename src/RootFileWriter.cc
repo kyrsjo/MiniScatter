@@ -193,7 +193,7 @@ void RootFileWriter::initializeRootFile(){
         targetEdep_IEL->GetXaxis()->SetTitle("Total ionizing energy deposit/event [MeV]");
 
         if(edep_dens_dz != 0.0) {
-            G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
+            G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/fabs(this->edep_dens_dz));
             G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
 
             if ( this->edep_dens_dz > 0.0 ) {
@@ -521,7 +521,7 @@ void RootFileWriter::initializeRootFile(){
                                         1000,0,beamEnergy) );
         magnet_edep.back()->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
 
-        G4int mag_edep_nbins_dz = (int) ceil((mag->GetLength()/mm) / abs(this->edep_dens_dz));
+        G4int mag_edep_nbins_dz = (int) ceil((mag->GetLength()/mm) / fabs(this->edep_dens_dz));
         if(edep_dens_dz != 0.0) {
             G4cout << "NBINS_DZ for " << magName << "_edep_dens = " << mag_edep_nbins_dz << G4endl;
 
@@ -725,7 +725,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     if (target_edep_rdens != NULL) {
                         G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
                         G4double edepStepLen = edepStep.mag();
-                        int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
+                        int numSamples = (int) ceil(2*(edepStepLen/mm)/fabs(edep_dens_dz));
                         for (int j = 0; j < numSamples; j++){
                             G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
                             G4double sample_z = posSample.z() + detCon->getTargetThickness()/2.0;
@@ -1015,7 +1015,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     if (magnet_edep_rdens[magIdx] != NULL) {
                         G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
                         G4double edepStepLen = edepStep.mag();
-                        int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
+                        int numSamples = (int) ceil(2*(edepStepLen/mm)/fabs(edep_dens_dz));
                         for (int j = 0; j < numSamples; j++){
                             G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
                             G4double sample_z = posSample.z() + mag->GetLength()/2.0;
