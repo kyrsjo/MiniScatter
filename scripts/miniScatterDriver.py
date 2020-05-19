@@ -326,6 +326,8 @@ def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryloa
         ROOTfilename = simSetup["OUTNAME"]+".root"
     if "OUTFOLDER" in simSetup:
         ROOTfilename = os.path.join(simSetup["OUTFOLDER"],ROOTfilename)
+        if not os.path.isdir(simSetup["OUTFOLDER"]):
+            os.mkdir(simSetup["OUTFOLDER"])
     else:
         runFolder = os.path.dirname(os.path.abspath(__file__))
         ROOTfilename = os.path.join(runFolder,"plots",ROOTfilename)
