@@ -156,7 +156,7 @@ void MagnetPLASMA1::Construct() {
     G4VSolid* crystalSolid    = new G4SubtractionSolid(magnetName+"_crystalS",
                                                        crystalBox, crystalCylinder);
 
-    G4Material* sapphireMaterial = G4Material::GetMaterial("Sapphire");
+    sapphireMaterial = G4Material::GetMaterial("Sapphire");
     if (not sapphireMaterial) {
         G4cerr << "Internal error -- material Sapphire not found in MagnetPLASMA1::Construct()!" << G4endl;
         exit(1);

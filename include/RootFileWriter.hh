@@ -156,6 +156,9 @@ private:
 
     // Magnet histograms
     std::vector<TH1D*> magnet_edep;
+    std::vector<TH3D*> magnet_edep_dens;
+    std::vector<TH2D*> magnet_edep_rdens;
+
     std::vector<std::map<G4int,TH1D*>> magnet_exit_Rpos;
     std::vector<std::map<G4int,TH1D*>> magnet_exit_Rpos_cutoff;
     std::vector<TH2D*> magnet_exit_phasespaceX;
@@ -233,7 +236,7 @@ private:
     static const G4double phasespacehist_posLim;
     static const G4double phasespacehist_angLim;
 
-    //Delta z for the energy deposition density TH3Ds [mm, 0 => Disable]
+    //Delta z for the energy deposition density radial TH2Ds and TH3Ds [mm, 0 => Disable; < 0 => TH2Ds only]
     G4double edep_dens_dz = 0.0;
 
     //Energy deposition and energy-remaining number of bins

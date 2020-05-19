@@ -194,17 +194,22 @@ void RootFileWriter::initializeRootFile(){
 
         if(edep_dens_dz != 0.0) {
             G4int target_edep_nbins_dz = (int) ceil((detCon->getTargetThickness()/mm)/this->edep_dens_dz);
-
             G4cout << "NBINS_DZ for target_edep_dens = " << target_edep_nbins_dz << G4endl;
-            target_edep_dens = new TH3D("target_edep_dens",
-                                        "Target energy deposition density [MeV/bin]",
-                                        100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                        100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                                        target_edep_nbins_dz, 0.0, detCon->getTargetThickness()/mm
-                                        );
-            target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
-            target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
-            target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+
+            if ( this->edep_dens_dz > 0.0 ) {
+                target_edep_dens = new TH3D("target_edep_dens",
+                                            "Target energy deposition density [MeV/bin]",
+                                            100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                            100, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                            target_edep_nbins_dz, 0.0, detCon->getTargetThickness()/mm
+                                            );
+                target_edep_dens->GetXaxis()->SetTitle("X position [mm]");
+                target_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
+                target_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+            }
+            else {
+                target_edep_dens = NULL;
+            }
 
             target_edep_rdens = new TH2D("target_edep_rdens",
                                         "Target radial energy deposition density [MeV/bin]",
@@ -516,6 +521,41 @@ void RootFileWriter::initializeRootFile(){
                                         1000,0,beamEnergy) );
         magnet_edep.back()->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
 
+        G4int mag_edep_nbins_dz = (int) ceil((mag->GetLength()/mm) / abs(this->edep_dens_dz));
+        if(edep_dens_dz != 0.0) {
+            G4cout << "NBINS_DZ for " << magName << "_edep_dens = " << mag_edep_nbins_dz << G4endl;
+
+            if (this->edep_dens_dz > 0.0 ) {
+               TH3D* mag_edep_dens = new TH3D((magName + "_edep_dens").c_str(),
+                                              (magName + " energy deposition density [MeV/bin]").c_str(),
+                                              100,-phasespacehist_posLim/mm, phasespacehist_posLim/mm,
+                                              100,-phasespacehist_posLim/mm, phasespacehist_posLim/mm,
+                                              mag_edep_nbins_dz, 0.0, mag->GetLength()/mm);
+                mag_edep_dens->GetXaxis()->SetTitle("X position [mm]");
+                mag_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
+                mag_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+            
+                magnet_edep_dens.push_back(mag_edep_dens);
+            }
+            else {
+                magnet_edep_dens.push_back(NULL);
+            }
+
+            TH2D* mag_edep_rdens = new TH2D((magName + "_edep_rdens").c_str(),
+                                            (magName + " radial energy deposition density [MeV/bin]").c_str(),
+                                            mag_edep_nbins_dz, 0.0, mag->GetLength()/mm,
+                                            1000, 0.0, 2*phasespacehist_posLim / mm );
+
+            mag_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
+            mag_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
+
+            magnet_edep_rdens.push_back(mag_edep_rdens);
+        }
+        else {
+            magnet_edep_dens.push_back(NULL);
+            magnet_edep_rdens.push_back(NULL);
+        }
+
         //G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
         magnet_exit_Rpos.push_back(std::map<G4int,TH1D*>());
         magnet_exit_Rpos.back()[11]  = new TH1D((magName + "_rpos_PDG11").c_str(),
@@ -662,7 +702,7 @@ void RootFileWriter::doEvent(const G4Event* event){
     G4HCofThisEvent* HCE=event->GetHCofThisEvent();
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
-    //**Data from TargetSD**
+    // *** Data from TargetSD ***
     if (detCon->GetHasTarget()) {
         G4int myTargetEdep_CollID = SDman->GetCollectionID("target_edep");
         if (myTargetEdep_CollID>=0){
@@ -675,24 +715,26 @@ void RootFileWriter::doEvent(const G4Event* event){
                 G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
                 for (G4int i = 0; i < nEntries; i++){
                     MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
+                    if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
 
                     edep      += edepHit->GetDepositedEnergy();
                     edep_NIEL += edepHit->GetDepositedEnergy_NIEL();
                     edep_IEL  += edepHit->GetDepositedEnergy() - edepHit->GetDepositedEnergy_NIEL();
 
                     //Randomly spread the energy deposits over the step
-                    if (target_edep_dens != NULL) {
+                    if (target_edep_rdens != NULL) {
                         G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
                         G4double edepStepLen = edepStep.mag();
                         int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
                         for (int j = 0; j < numSamples; j++){
                             G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
                             G4double sample_z = posSample.z() + detCon->getTargetThickness()/2.0;
-                            target_edep_dens->Fill(posSample.x()/mm,
-                                                posSample.y()/mm,
-                                                sample_z/mm,
-                                                edepHit->GetDepositedEnergy()/numSamples/MeV);
-
+                            if ( this->edep_dens_dz > 0.0 ) {
+                                target_edep_dens->Fill(posSample.x()/mm,
+                                                       posSample.y()/mm,
+                                                       sample_z/mm,
+                                                       edepHit->GetDepositedEnergy()/numSamples/MeV);
+                            }
                             G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
                             target_edep_rdens->Fill(sample_z/mm, sample_r/mm, edepHit->GetDepositedEnergy()/numSamples/MeV);
                         }
@@ -949,7 +991,7 @@ void RootFileWriter::doEvent(const G4Event* event){
     init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
     init_E->Fill(genAct->E/MeV);
 
-    //**Data from Magnets, which use a TargetSD**
+    // *** Data from Magnets, which use a TargetSD ***
     size_t magIdx = -1;
     for (auto mag : detCon->magnets) {
         const G4String magName = mag->magnetName;
@@ -964,10 +1006,51 @@ void RootFileWriter::doEvent(const G4Event* event){
                 G4int nEntries = magnetEdepHitsCollection->entries();
                 G4double edep      = 0.0;
                 for (G4int i = 0; i < nEntries; i++){
-                    edep      += (*magnetEdepHitsCollection)[i]->GetDepositedEnergy();
+                    MyEdepHit* edepHit = (*magnetEdepHitsCollection)[i];
+                    if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
+
+                    edep      += edepHit->GetDepositedEnergy();
+
+                    //Randomly spread the energy deposits over the step
+                    if (magnet_edep_rdens[magIdx] != NULL) {
+                        G4ThreeVector edepStep = edepHit->GetPostStepPoint() - edepHit->GetPreStepPoint();
+                        G4double edepStepLen = edepStep.mag();
+                        int numSamples = (int) ceil(2*(edepStepLen/mm)/edep_dens_dz);
+                        for (int j = 0; j < numSamples; j++){
+                            G4ThreeVector posSample = edepHit->GetPreStepPoint() + RNG->Uniform(edepStepLen)*edepStep;
+                            G4double sample_z = posSample.z() + mag->GetLength()/2.0;
+                            if (this->edep_dens_dz > 0.0 ) {
+                                magnet_edep_dens[magIdx]->Fill(posSample.x()/mm,
+                                                              posSample.y()/mm,
+                                                              sample_z/mm,
+                                                              edepHit->GetDepositedEnergy()/numSamples/MeV);
+                            }
+
+                            G4double sample_r = sqrt(posSample.x()*posSample.x() + posSample.y()*posSample.y());
+                            magnet_edep_rdens[magIdx]->Fill(sample_z/mm,
+                                                            sample_r/mm,
+                                                            edepHit->GetDepositedEnergy()/numSamples/MeV);
+
+                            //Debug
+                            /*
+                            G4cout << eventCounter << " : " << j << "/" << numSamples << ", " << mag->magnetName << " : "
+                                   << posSample.x()/mm << ", " << posSample.y()/mm << ", " << sample_z/mm << ", "
+                                   << edepHit->GetDepositedEnergy()/numSamples/MeV << G4endl;
+                            */
+                        }
+
+                        //DEBUG
+                        if (edepHit->GetPreStepPoint().z() < -mag->GetLength()/2.0 || edepHit->GetPostStepPoint().z() < -mag->GetLength()/2.0) {
+                            G4cout << eventCounter << ", " << mag->magnetName << " : "
+                                   << edepHit->GetPreStepPoint() << " -> " << edepHit->GetPreStepPoint() 
+                                   << ", " << edepHit->GetDepositedEnergy()/MeV << G4endl;
+                        }
+                    }
                 }
+
                 magnet_edep[magIdx]->Fill(edep/MeV);
 
+                //TTree, for event-by-event analysis
                 if (not miniFile){
                     magnetEdepsBuffer[magIdx] = edep/MeV;
                 }
@@ -1067,7 +1150,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     }
 
                     /*
-                    //Fill the TTree
+                    //Fill the TTree (TODO: Use correct buffer etc.)
                     if (not miniFile) {
                         targetExitBuffer.x = hitPos.x()/mm;
                         targetExitBuffer.y = hitPos.x()/mm;
@@ -1218,6 +1301,14 @@ void RootFileWriter::finalizeRootFile() {
     }
     metadataVector.Write("metadata");
     G4cout << G4endl;
+
+    // Magnet metadata
+    for (auto mag : detCon->magnets) {
+        TVectorD magnetMetadataVector(1);
+        magnetMetadataVector[0] = double(mag->GetTypicalDensity()*cm3/g);
+        magnetMetadataVector.Write((mag->magnetName + "_metadata").c_str());
+    }
+    
 
     //Compute Twiss parameters
     PrintTwissParameters(init_phasespaceX);
@@ -1371,6 +1462,9 @@ void RootFileWriter::finalizeRootFile() {
         tracker_phasespaceX_cutoff->Write();
         tracker_phasespaceY_cutoff->Write();
 
+        for (auto it : magnet_edep_rdens) {
+            it->Write();
+        }
         for (auto it : magnet_exit_phasespaceX) {
             it->Write();
         }
@@ -1389,6 +1483,11 @@ void RootFileWriter::finalizeRootFile() {
         if (detCon->GetHasTarget()) {
             if (target_edep_dens != NULL) {
                 target_edep_dens->Write();
+            }
+        }
+        if (this->edep_dens_dz > 0.0 ) {
+            for (auto it : magnet_edep_dens) {
+                it->Write();
             }
         }
 
@@ -1470,7 +1569,18 @@ void RootFileWriter::finalizeRootFile() {
         target_exitangle_hist->Write();
     }
 
+    // Clear magnet 3D hists
+    if (this->edep_dens_dz > 0.0 ) {
+        for (auto it : magnet_edep_dens) {
+            delete it;
+        }
+    }
+    magnet_edep_dens.clear();
     // Clear magnet 2D hists
+    for (auto it : magnet_edep_rdens) {
+        delete it;
+    }
+    magnet_edep_rdens.clear();
     for (auto it : magnet_exit_phasespaceX) {
         delete it;
     }

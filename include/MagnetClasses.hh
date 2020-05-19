@@ -84,6 +84,8 @@ public:
     G4double GetXOffset()   const { return xOffset; };
     G4double GetYOffset()   const { return yOffset; };
 
+    virtual G4double GetTypicalDensity() const = 0;
+
 protected:
     G4double zPos;     // [G4 units]
     G4bool   doRelPos;
@@ -146,11 +148,15 @@ public:
                   G4String magnetName_in);
 
     virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return sapphireMaterial->GetDensity(); };
 private:
     G4double plasmaTotalCurrent; // [A]
     G4double capRadius;          // [G4 length units]
     G4double cryWidth;           // [G4 length units]
     G4double cryHeight;          // [G4 length units]
+
+    G4Material* sapphireMaterial = NULL;
 };
 
 class FieldPLASMA1 : public FieldBase {
@@ -172,6 +178,9 @@ public:
                       std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                       G4String magnetName_in);
     virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return absorberMaterial->GetDensity(); };
+
 private:
     G4String absorberMaterialName;
     G4Material* absorberMaterial = NULL;
@@ -187,6 +196,9 @@ public:
                       std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                       G4String magnetName_in);
     virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
+
 private:
     G4String targetMaterialName;
     G4Material* targetMaterial = NULL;
@@ -201,6 +213,9 @@ public:
                     std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                     G4String magnetName_in);
     virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
+
 private:
     G4String targetMaterialName;
     G4Material* targetMaterial = NULL;

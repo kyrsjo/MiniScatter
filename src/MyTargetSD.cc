@@ -20,6 +20,7 @@
 #include "G4SDManager.hh"
 #include "G4Step.hh"
 #include "G4Track.hh"
+#include "G4AffineTransform.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
 
@@ -64,10 +65,12 @@ void MyTargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
 
     //Always do the energy deposit
+    const G4AffineTransform& topTransform = aStep->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform();
     MyEdepHit* aHit_edep = new MyEdepHit(aStep->GetTotalEnergyDeposit(),
                                          aStep->GetNonIonizingEnergyDeposit(),
-                                         aStep->GetPreStepPoint()->GetPosition(),
-                                         aStep->GetPostStepPoint()->GetPosition());
+                                         topTransform.TransformPoint( aStep->GetPreStepPoint()->GetPosition()  ),
+                                         topTransform.TransformPoint( aStep->GetPostStepPoint()->GetPosition() )
+                                         );
     fHitsCollection_edep->insert(aHit_edep);
 
     //Only use outgoing tracks

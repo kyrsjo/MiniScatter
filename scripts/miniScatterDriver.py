@@ -21,9 +21,14 @@ import subprocess
 import os
 import ROOT
 import ROOT.TFile, ROOT.TVector
+import datetime
 
-def runScatter(simSetup, quiet=False):
+def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
+
+    if quiet and allOutput:
+        raise AssertionError("Setting both 'quiet' and 'alloutput' makes no sense")
+
 
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
@@ -158,18 +163,73 @@ def runScatter(simSetup, quiet=False):
         cmdline += c + " "
 
     runFolder = os.path.dirname(os.path.abspath(__file__))
+
+    if logName is None:
+        logName = os.path.join(runFolder,"MiniScatterLog_" + datetime.datetime.now().isoformat()+".txt")
+    logFile = open(logName, 'w')
+
     if not quiet:
         print ("Running command line: '" + cmdline[:-1] + "'")
-        print ("RunFolder = '"+ runFolder +"'")
+        print ("RunFolder = '" + runFolder + "'")
+        print ("logName   = '" + logName   + "'")
 
-    runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE, cwd=runFolder)
-    #print (runResults)
+    # runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE, cwd=runFolder)
+    # #print (runResults)
+
+    #Inspired by https://stackoverflow.com/questions/52545512/realtime-output-from-a-shell-command-in-jupyter-notebook
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, close_fds=True, cwd=runFolder)
+    linebuff = ""
+    spinnerState = None # 0=/, 1=-, 2=\, 3=| (cycle); None: Last printout was an event, so issue a newline not a carriage return
+    for line in iter(process.stdout.readline, b''):
+        if allOutput:
+            print(line.rstrip().decode('utf-8'))
+            logFile.write(line.rstrip().decode('utf-8')+"\n")
+
+        elif not quiet:
+            # Collect data untill we have a whole line,
+            # then print it if AND ONLY IF it is a progress report.
+            ls = line.decode('utf-8').split('\n')
+            lsl = len(ls)
+            assert lsl <= 2
+            linebuff += ls[0]
+            if len(ls) > 1:
+                logFile.write(ls[0]+'\n')
+                logFile.flush()
+
+                if linebuff.startswith("Event#"):
+                    if not spinnerState is None:
+                        print('',end='\n')
+                    print(linebuff)
+                    spinnerState = None
+
+                else:
+                    if spinnerState is None:
+                        spinnerState = 0
+                    print('',end='\r')
+                    spinnerState = (spinnerState+1) % 4
+                    if spinnerState == 0:
+                        print ('/', end='')
+                    elif spinnerState == 1:
+                        print ('-', end='')
+                    elif spinnerState == 2:
+                        print ("\\", end='')
+                    elif spinnerState == 3:
+                        print ('|', end='')
+                    else:
+                        print("WTF?")
+                linebuff = ls[1]
+    process.stdout.close()
+    process.wait()
+
+    logFile.close()
+
     if not quiet:
+        print('',end='\n')
         print ("Done!")
 
 #Names of the planes in which the twiss parameters / number of particles of each type
 # have been extracted
-twissDets    = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
+twissDets   = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
 numPartDets = ("tracker", "tracker_cutoff", "target", "target_cutoff")
 
 def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=None):
@@ -249,7 +309,7 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
         dataFile.Close()
         return(twiss, numPart, objects)
 
-def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryload=True):
+def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryload=True, allOutput=False):
     """
     Checks if the ROOT file given by the parameters in simsetup exists;
     if it does then load.
@@ -270,13 +330,17 @@ def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryloa
         runFolder = os.path.dirname(os.path.abspath(__file__))
         ROOTfilename = os.path.join(runFolder,"plots",ROOTfilename)
 
+    logName = ROOTfilename[:-5]+".txt"
+
     if not os.path.exists(ROOTfilename):
         print("Did not find any pre-computed data at '"+ROOTfilename+"', computing now.")
-        runScatter(simSetup,quiet)
+        runScatter(simSetup, quiet=quiet, allOutput=allOutput, logName=logName)
     elif tryload==False:
-        print("TryLoad is False, computing now.")
-        runScatter(simSetup,quiet)
+        if not quiet:
+            print("TryLoad is False, computing now.")
+        runScatter(simSetup, quiet=quiet, allOutput=allOutput, logName=logName)
     else:
-        print("Found a file at '"+ROOTfilename+"', loading!")
+        if not quiet:
+            print("Found a file at '"+ROOTfilename+"', loading!")
 
     return getData(ROOTfilename, quiet=quiet, getRaw=getRaw, getObjects=getObjects)

@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False):
+def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False,magnetName=None):
     """
     Scale an RZ histogram (produced by MiniScatter) to Gray (J/kg).
 
@@ -34,8 +34,14 @@ def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False):
     """
 
     # Copy and normalize the histogram
-    rzScaled = ROOT.TH2D(objects['target_edep_rdens']) #[MeV/bin]
-    density  = objects['metadata'][2] #[g/cm^3]
+    rzScaled = None
+    density  = None
+    if magnetName is None:
+        rzScaled = ROOT.TH2D(objects['target_edep_rdens']) #[MeV/bin]
+        density  = objects['metadata'][2] #[g/cm^3]
+    else:
+        rzScaled = ROOT.TH2D(objects[magnetName +'_edep_rdens']) #[MeV/bin]
+        density  = objects[magnetName + '_metadata'][0] #[g/cm^3]
 
     scaleFactor_energyUnit = 1.6021766e-13; #J/MeV
     scaleFactor_nPart = nparts_actual/nevents_simulated
