@@ -43,7 +43,7 @@ def plotRZgray(objects, nevents_simulated, nparts_actual,forcePython=False,magne
         rzScaled = ROOT.TH2D(objects[magnetName +'_edep_rdens']) #[MeV/bin]
         density  = objects[magnetName + '_metadata'][0] #[g/cm^3]
 
-    scaleFactor_energyUnit = 1.6021766e-13; #J/MeV
+    scaleFactor_energyUnit = 1.6021766e-13  #J/MeV
     scaleFactor_nPart = nparts_actual/nevents_simulated
 
     #Try to use the C++ implementation of the algorithm, for the speeds
