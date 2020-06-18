@@ -256,6 +256,13 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     else:
         _twissDets   = twissDets
         _numPartDets = numPartDets
+    i = 1
+    while dataFile.GetListOfKeys().Contains("magnet_{}_x_TWISS".format(i)):
+        print("found magnet_{}".format(i))
+        _twissDets   = _twissDets   + ("magnet_{}".format(i), "magnet_{}_cutoff".format(i))
+        _numPartDets = _numPartDets + ("magnet_{}".format(i), "magnet_{}_cutoff".format(i))
+
+        i = i+1
 
     twiss = {}
     for det in _twissDets:
@@ -285,7 +292,7 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
         numPart_PDG = dataFile.Get(det+"_ParticleTypes_PDG")
         numPart_num = dataFile.Get(det+"_ParticleTypes_numpart")
         for i in range(len(numPart_PDG)):
-            numPart[det][int(numPart_PDG[i])] = numPart_num[i]
+            numPart[det][int(numPart_PDG[i])] = int(numPart_num[i])
 
     objects = None
     if getObjects:
