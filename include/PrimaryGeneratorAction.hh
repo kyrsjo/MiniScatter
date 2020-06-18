@@ -63,7 +63,7 @@ private:
     G4ParticleGun*           particleGun;  //pointer a to G4 class
     DetectorConstruction*    Detector;     //pointer to the geometry
 
-    G4double beam_energy;    // Beam energy [MeV]
+    G4double beam_energy;    // Beam kinetic energy [MeV]
 
     G4String beam_type;      // Beam particle type
     G4double beam_offset;    // Beam offset (x) [mm]

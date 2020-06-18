@@ -135,8 +135,8 @@ void PrimaryGeneratorAction::setupCovariance() {
     }
 
     //Compute the geometrical emittance
-    G4cout << "beam_energy       = " << beam_energy/MeV << G4endl;
-    G4double beam_total_energy = beam_energy + particle->GetPDGMass();
+    G4cout << "beam_energy       = " << beam_energy << " [MeV]" << G4endl;
+    G4double beam_total_energy = beam_energy*MeV + particle->GetPDGMass();
     G4cout << "beam_total_energy = " << beam_total_energy/MeV << G4endl;
     G4double gamma_rel = beam_total_energy/particle->GetPDGMass();
     G4cout << "gamma_rel         = " << gamma_rel << G4endl;

@@ -1717,7 +1717,7 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
 
     G4RunManager*           run    = G4RunManager::GetRunManager();
     PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
-    double gamma_rel = (genAct->get_beam_energy() * MeV) / genAct->get_beam_particlemass();
+    double gamma_rel = 1 + ( genAct->get_beam_energy() * MeV / genAct->get_beam_particlemass() );
     double beta_rel = sqrt(gamma_rel*gamma_rel - 1.0) / gamma_rel;
 
     double det = posVar*angVar - coVar*coVar;
@@ -1726,10 +1726,10 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     double beta = posVar/epsG; // [mm]
     double alpha = -coVar/epsG;
 
-    G4cout << "Geometrical emittance  = " << epsG*1e3 << " [um]" << G4endl;
-    G4cout << "Normalized emittance   = " << epsN*1e3 << " [um]"
-           << ", assuming beam energy = " << genAct->get_beam_energy() << " [MeV]"
-           << ", and mass = " << genAct->get_beam_particlemass()/MeV << " [MeV/c]"
+    G4cout << "Geometrical emittance          = " << epsG*1e3 << " [um]" << G4endl;
+    G4cout << "Normalized emittance           = " << epsN*1e3 << " [um]"
+           << ", assuming beam kinetic energy = " << genAct->get_beam_energy() << " [MeV]"
+           << ", and mass = " << genAct->get_beam_particlemass()/MeV << " [MeV/c^2]"
            << G4endl;
     G4cout << "Twiss beta  = " << beta*1e-3  << " [m]" << G4endl
            << "Twiss alpha = " << alpha << " [-]"  << G4endl;
