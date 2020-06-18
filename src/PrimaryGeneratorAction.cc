@@ -135,10 +135,13 @@ void PrimaryGeneratorAction::setupCovariance() {
     }
 
     //Compute the geometrical emittance
-    G4double gamma_rel = beam_energy*MeV/particle->GetPDGMass();
-    G4cout << "gamma_rel = " << gamma_rel << G4endl;
+    G4cout << "beam_energy       = " << beam_energy << " [MeV]" << G4endl;
+    G4double beam_total_energy = beam_energy*MeV + particle->GetPDGMass();
+    G4cout << "beam_total_energy = " << beam_total_energy/MeV << G4endl;
+    G4double gamma_rel = beam_total_energy/particle->GetPDGMass();
+    G4cout << "gamma_rel         = " << gamma_rel << G4endl;
     G4double beta_rel = sqrt(gamma_rel*gamma_rel - 1.0) / gamma_rel;
-    G4cout << "beta_rel = " << beta_rel << G4endl;
+    G4cout << "beta_rel          = " << beta_rel << G4endl;
 
     epsG_x = epsN_x / (beta_rel*gamma_rel);
     epsG_y = epsN_y / (beta_rel*gamma_rel);
@@ -337,6 +340,6 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     else {
         E = beam_energy*MeV;
     }
-    particleGun->SetParticleEnergy(E);
+    particleGun->SetParticleEnergy(E); //Setting the kinetic energy (E>0 is valid)
     particleGun->GeneratePrimaryVertex(anEvent);
 }
