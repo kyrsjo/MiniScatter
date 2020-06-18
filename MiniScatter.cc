@@ -106,7 +106,7 @@ int main(int argc,char** argv) {
 
     G4double world_size          = 0.0;       // World size X/Y [mm]
 
-    G4double beam_energy = 200;               // Beam energy [MeV]
+    G4double beam_energy = 200;               // Beam kinetic energy [MeV]
     G4double beam_eFlat_min = -1.0;           // For flat-spectrum energy distribution,
     G4double beam_eFlat_max = -1.0;           //  set these to min/max, both > 0.0.
 
@@ -315,7 +315,7 @@ int main(int argc,char** argv) {
                 beam_energy = std::stod(string(optarg));
             }
             catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading beam energy" << G4endl
+                G4cout << "Invalid argument when reading beam kinetic energy" << G4endl
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
@@ -805,10 +805,10 @@ void printHelp(G4double target_thick,
             G4cout << "-n <int>    : Run a given number of events automatically"
                    << G4endl;
 
-            G4cout << "-e <double> : Beam energy [MeV],      default/current value = "
+            G4cout << "-e <double> : Beam kinetic energy [MeV],      default/current value = "
                    << beam_energy << G4endl;
 
-            G4cout << "--energyDistFlat <double>[MeV]:<double>[MeV] : Use a flat energy distribution, "
+            G4cout << "--energyDistFlat <double>[MeV]:<double>[MeV] : Use a flat kinetic energy distribution, "
                    << "between the two limits. If used, -e will just be reference energy. Current min/max: "
                    << beam_eFlat_min << ", " << beam_eFlat_max << G4endl;
 
