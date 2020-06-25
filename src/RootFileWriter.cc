@@ -1875,7 +1875,7 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     twissVector[5] = posVar;    // [mm^2]
     twissVector[6] = angVar;    // [rad^2]
     twissVector[7] = coVar;     // [mm*rad]
-    twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
+    twissVector.Write( (G4String(phaseSpaceHist->GetName())+"_TWISS").c_str() );
 }
 
 void RootFileWriter::PrintParticleTypes(particleTypesCounter& pt, G4String name) {
