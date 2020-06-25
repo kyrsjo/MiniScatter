@@ -68,7 +68,7 @@ void RootFileWriter::initializeRootFile(){
         G4cerr << "Error: filename_out not set." << G4endl;
         exit(1);
     }
-    G4String rootFileName = foldername_out + "/" + filename_out + ".root";
+    rootFileName = foldername_out + "/" + filename_out + ".root";
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
 
     //Create folder if it does not exist
@@ -163,6 +163,7 @@ void RootFileWriter::initializeRootFile(){
         G4cerr << "Opening TFile '" << rootFileName << "' failed; quitting." << G4endl;
         exit(1);
     }
+    G4cout << G4endl;
 
     eventCounter = 0;
 
@@ -359,12 +360,16 @@ void RootFileWriter::initializeRootFile(){
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX->Sumw2();
+    tracker_phasespaceX->GetXaxis()->SetTitle("X [mm]");
+    tracker_phasespaceX->GetYaxis()->SetTitle("X' [rad]");
     tracker_phasespaceY   =
         new TH2D("tracker_y",
                  "Tracker phase space (y)",
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY->Sumw2();
+    tracker_phasespaceY->GetXaxis()->SetTitle("X [mm]");
+    tracker_phasespaceY->GetYaxis()->SetTitle("X' [rad]");
 
     tracker_phasespaceX_cutoff   =
         new TH2D("tracker_cutoff_x",
@@ -372,12 +377,16 @@ void RootFileWriter::initializeRootFile(){
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceX_cutoff->Sumw2();
+    tracker_phasespaceX_cutoff->GetXaxis()->SetTitle("X [mm]");
+    tracker_phasespaceX_cutoff->GetYaxis()->SetTitle("X' [rad]");
     tracker_phasespaceY_cutoff   =
         new TH2D("tracker_cutoff_y",
                  "Tracker phase space (y) (charged, energy > Ecut, r < Rcut)",
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //tracker_phasespaceY_cutoff->Sumw2();
+    tracker_phasespaceY_cutoff->GetXaxis()->SetTitle("Y [mm]");
+    tracker_phasespaceY_cutoff->GetYaxis()->SetTitle("Y' [rad]");
 
     init_phasespaceX   =
         new TH2D("init_x",
@@ -385,12 +394,16 @@ void RootFileWriter::initializeRootFile(){
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceX->Sumw2();
+    init_phasespaceX->GetXaxis()->SetTitle("X [mm]");
+    init_phasespaceX->GetYaxis()->SetTitle("X' [rad]");
     init_phasespaceY   =
         new TH2D("init_y",
                  "Initial phase space (y)",
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
     //init_phasespaceY->Sumw2();
+    init_phasespaceY->GetXaxis()->SetTitle("Y [mm]");
+    init_phasespaceY->GetYaxis()->SetTitle("Y' [rad]");
     init_phasespaceXY   =
         new TH2D("init_xy",
                  "Initial phase space (x,y)",
@@ -400,6 +413,7 @@ void RootFileWriter::initializeRootFile(){
         new TH1D("init_E",
                  "Initial particle energy",
                  1000, 0.0, max(beamEnergy*1.1,genAct->get_beam_energy_flatMax()));
+    init_E->GetXaxis()->SetTitle("Energy [MeV]");
 
     // Limit for radial histograms
     G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
@@ -604,7 +618,7 @@ void RootFileWriter::initializeRootFile(){
                        1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
               );
         magnet_exit_phasespaceX.back()->GetXaxis()->SetTitle("X [mm]");
-        magnet_exit_phasespaceX.back()->GetYaxis()->SetTitle("X'");
+        magnet_exit_phasespaceX.back()->GetYaxis()->SetTitle("X' [rad]");
 
         magnet_exit_phasespaceY.push_back
             ( new TH2D((magName+"_y").c_str(),
@@ -613,7 +627,7 @@ void RootFileWriter::initializeRootFile(){
                        1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
               );
         magnet_exit_phasespaceY.back()->GetXaxis()->SetTitle("Y [mm]");
-        magnet_exit_phasespaceY.back()->GetYaxis()->SetTitle("Y'");
+        magnet_exit_phasespaceY.back()->GetYaxis()->SetTitle("Y' [rad]");
 
         magnet_exit_phasespaceX_cutoff.push_back
             ( new TH2D((magName+"_cutoff_x").c_str(),
@@ -622,7 +636,7 @@ void RootFileWriter::initializeRootFile(){
                        1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
               );
         magnet_exit_phasespaceX_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
-        magnet_exit_phasespaceX_cutoff.back()->GetYaxis()->SetTitle("X'");
+        magnet_exit_phasespaceX_cutoff.back()->GetYaxis()->SetTitle("X' [rad]");
 
         magnet_exit_phasespaceY_cutoff.push_back
             ( new TH2D((magName+"_cutoff_y").c_str(),
@@ -631,7 +645,61 @@ void RootFileWriter::initializeRootFile(){
                        1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad)
               );
         magnet_exit_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
-        magnet_exit_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y'");
+        magnet_exit_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y' [rad]");
+
+        magnet_exit_phasespaceX_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        magnet_exit_phasespaceY_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+
+        magnet_exit_phasespaceX_cutoff_PDG.back()[11]  = new TH2D((magName+"_cutoff_x_PDG11").c_str(),
+                                                                  (magName+" phase space (x) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceX_cutoff_PDG.back()[-11]  = new TH2D((magName+"_cutoff_x_PDG-11").c_str(),
+                                                                  (magName+" phase space (x) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceX_cutoff_PDG.back()[22]  = new TH2D((magName+"_cutoff_x_PDG22").c_str(),
+                                                                  (magName+" phase space (x) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceX_cutoff_PDG.back()[2212]  = new TH2D((magName+"_cutoff_x_PDG2212").c_str(),
+                                                                  (magName+" phase space (x) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceX_cutoff_PDG.back()[0]  = new TH2D((magName+"_cutoff_x_PDGother").c_str(),
+                                                                  (magName+" phase space (x) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : magnet_exit_phasespaceX_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("X [mm]");
+            PDG.second->GetYaxis()->SetTitle("X' [rad]");
+        }
+
+
+        magnet_exit_phasespaceY_cutoff_PDG.back()[11]  = new TH2D((magName+"_cutoff_y_PDG11").c_str(),
+                                                                  (magName+" phase space (y) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceY_cutoff_PDG.back()[-11]  = new TH2D((magName+"_cutoff_y_PDG-11").c_str(),
+                                                                  (magName+" phase space (y) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceY_cutoff_PDG.back()[22]  = new TH2D((magName+"_cutoff_y_PDG22").c_str(),
+                                                                  (magName+" phase space (y) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceY_cutoff_PDG.back()[2212]  = new TH2D((magName+"_cutoff_y_PDG2212").c_str(),
+                                                                  (magName+" phase space (y) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        magnet_exit_phasespaceY_cutoff_PDG.back()[0]  = new TH2D((magName+"_cutoff_y_PDGother").c_str(),
+                                                                  (magName+" phase space (y) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : magnet_exit_phasespaceY_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("Y [mm]");
+            PDG.second->GetYaxis()->SetTitle("Y' [rad]");
+        }
 
         typeCounter[magName]             = particleTypesCounter();
         typeCounter[magName + "_cutoff"] = particleTypesCounter();
@@ -1102,14 +1170,30 @@ void RootFileWriter::doEvent(const G4Event* event){
                         magnet_exit_phasespaceY[magIdx]->
                             Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                        if ( charge != 0 and
-                             energy/MeV > beamEnergy*beamEnergy_cutoff and
+                        if ( energy/MeV > beamEnergy*beamEnergy_cutoff and
                              hitR/mm < position_cutoffR
                              ) {
-                            magnet_exit_phasespaceX_cutoff[magIdx]->
-                                Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                            magnet_exit_phasespaceY_cutoff[magIdx]->
-                                Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                            if(charge != 0) {
+                                // All charged particles passing the cutoff
+                                magnet_exit_phasespaceX_cutoff[magIdx]->
+                                    Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                                magnet_exit_phasespaceY_cutoff[magIdx]->
+                                    Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                            }
+
+                            //Also separated by species
+                            if(magnet_exit_phasespaceX_cutoff_PDG[magIdx].find(PDG) != magnet_exit_phasespaceX_cutoff_PDG[magIdx].end()) {
+                                magnet_exit_phasespaceX_cutoff_PDG[magIdx][PDG]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                            }
+                            else {
+                                magnet_exit_phasespaceX_cutoff_PDG[magIdx][0]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                            }
+                            if(magnet_exit_phasespaceY_cutoff_PDG[magIdx].find(PDG) != magnet_exit_phasespaceY_cutoff_PDG[magIdx].end()) {
+                                magnet_exit_phasespaceY_cutoff_PDG[magIdx][PDG]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                            }
+                            else {
+                                magnet_exit_phasespaceY_cutoff_PDG[magIdx][0]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                            }
                         }
 
                         //R position
@@ -1324,6 +1408,12 @@ void RootFileWriter::finalizeRootFile() {
         PrintTwissParameters(magnet_exit_phasespaceY[magIdx]);
         PrintTwissParameters(magnet_exit_phasespaceX_cutoff[magIdx]);
         PrintTwissParameters(magnet_exit_phasespaceY_cutoff[magIdx]);
+        for (auto PDG : magnet_exit_phasespaceX_cutoff_PDG[magIdx]) {
+            PrintTwissParameters(PDG.second);
+        }
+        for (auto PDG : magnet_exit_phasespaceY_cutoff_PDG[magIdx]) {
+            PrintTwissParameters(PDG.second);
+        }
     }
     PrintTwissParameters(tracker_phasespaceX);
     PrintTwissParameters(tracker_phasespaceY);
@@ -1477,6 +1567,16 @@ void RootFileWriter::finalizeRootFile() {
         for (auto it : magnet_exit_phasespaceY_cutoff) {
             it->Write();
         }
+        for (auto mag : magnet_exit_phasespaceX_cutoff_PDG) {
+            for (auto PDG : mag) {
+                PDG.second->Write();
+            }
+        }
+        for (auto mag : magnet_exit_phasespaceY_cutoff_PDG) {
+            for (auto PDG : mag) {
+                PDG.second->Write();
+            }
+        }
 
         // Write the 3D histograms to the root file (slower)
         G4cout << "Writing 3D histograms..." << G4endl;
@@ -1598,6 +1698,21 @@ void RootFileWriter::finalizeRootFile() {
     }
     magnet_exit_phasespaceY_cutoff.clear();
 
+    for (auto mag : magnet_exit_phasespaceX_cutoff_PDG) {
+        for (auto PDG : mag) {
+            delete PDG.second;
+        }
+        mag.clear();
+    }
+    magnet_exit_phasespaceX_cutoff_PDG.clear();
+    for (auto mag : magnet_exit_phasespaceY_cutoff_PDG) {
+        for (auto PDG : mag) {
+            delete PDG.second;
+        }
+        mag.clear();
+    }
+    magnet_exit_phasespaceY_cutoff_PDG.clear();
+
     // Write and clear magnet 1D hists
     for (auto it : magnet_edep) {
         it->Write();
@@ -1693,14 +1808,28 @@ void RootFileWriter::finalizeRootFile() {
     histFile->Write();
     histFile->Close();
     delete histFile; histFile = NULL;
+    G4cout << "Results written to ROOT file '" + rootFileName +"'." << G4endl;
+    G4cout << G4endl;
 }
 
 void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     G4cout << "Stats for '" << phaseSpaceHist->GetTitle() << "':"  << G4endl;
     double stats[7];
     phaseSpaceHist->GetStats(stats);
+    /* From docs: https://root.cern.ch/doc/master/classTH2.html#a7836d201c7ab24717a65a38779d2f243
+     * Note: Here all weights = 1
+     * stats[0] = sumw    (number of fills)
+     * stats[1] = sumw2   (number of fills 1^1 = 1)
+     * stats[2] = sumwx   (sum of X in fills)
+     * stats[3] = sumwx2  (sum of X^2 in fills)
+     * stats[4] = sumwy   (sum of Y^2 in fills)
+     * stats[5] = sumwy2  (sum of Y^2 in fills)
+     * stats[6] = sumwxy  (sum of X*Y in fills)
+     */
 
-    // Fill used [mm] and [rad]
+    // Fill used [mm] and [rad].
+    // These variance formulas are susceptible to catastrophic cancellation if mean far off-center compared to sigma,
+    // but mean should be close to zero so we should be OK
     double posAve   = stats[2]/stats[0];
     double angAve   = stats[4]/stats[0];
     double posVar   = (stats[3] - stats[2]*stats[2]/stats[0]) / (stats[0]-1.0) ;
@@ -1720,32 +1849,32 @@ void RootFileWriter::PrintTwissParameters(TH2D* phaseSpaceHist) {
     double gamma_rel = 1 + ( genAct->get_beam_energy() * MeV / genAct->get_beam_particlemass() );
     double beta_rel = sqrt(gamma_rel*gamma_rel - 1.0) / gamma_rel;
 
-    double det = posVar*angVar - coVar*coVar;
-    double epsG = sqrt(det);
-    double epsN = epsG*beta_rel*gamma_rel;  //[mm*rad]
-    double beta = posVar/epsG; // [mm]
-    double alpha = -coVar/epsG;
+    double det = posVar*angVar - coVar*coVar; // [mm^2 * rad^2]
+    double epsG = sqrt(det);                  // [mm*rad]
+    double epsN = epsG*beta_rel*gamma_rel;    // [mm*rad]
+    double beta = posVar/epsG;                // [mm]
+    double alpha = -coVar/epsG;               // [-]
 
-    G4cout << "Geometrical emittance          = " << epsG*1e3 << " [um]" << G4endl;
-    G4cout << "Normalized emittance           = " << epsN*1e3 << " [um]"
+    G4cout << "Geometrical emittance          = " << epsG*1e3 << " [um = mm*mrad]" << G4endl;
+    G4cout << "Normalized emittance           = " << epsN*1e3 << " [um = mm*mrad]"
            << ", assuming beam kinetic energy = " << genAct->get_beam_energy() << " [MeV]"
            << ", and mass = " << genAct->get_beam_particlemass()/MeV << " [MeV/c^2]"
            << G4endl;
     G4cout << "Twiss beta  = " << beta*1e-3  << " [m]" << G4endl
-           << "Twiss alpha = " << alpha << " [-]"  << G4endl;
+           << "Twiss alpha = " << alpha      << " [-]"  << G4endl;
 
     G4cout << G4endl;
 
     // Write to root file
     TVectorD twissVector (8);
-    twissVector[0] = epsN*1e3;
-    twissVector[1] = beta*1e-3;
-    twissVector[2] = alpha;
-    twissVector[3] = posAve;
-    twissVector[4] = angAve;
-    twissVector[5] = posVar;
-    twissVector[6] = angVar;
-    twissVector[7] = coVar;
+    twissVector[0] = epsN*1e3;  // [um = mm*mrad]
+    twissVector[1] = beta*1e-3; // [m]
+    twissVector[2] = alpha;     // [-]
+    twissVector[3] = posAve;    // [mm]
+    twissVector[4] = angAve;    // [rad]
+    twissVector[5] = posVar;    // [mm^2]
+    twissVector[6] = angVar;    // [rad^2]
+    twissVector[7] = coVar;     // [mm*rad]
     twissVector.Write((G4String(phaseSpaceHist->GetName())+"_TWISS").c_str());
 }
 
