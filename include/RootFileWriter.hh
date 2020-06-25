@@ -165,6 +165,8 @@ private:
     std::vector<TH2D*> magnet_exit_phasespaceY;
     std::vector<TH2D*> magnet_exit_phasespaceX_cutoff;
     std::vector<TH2D*> magnet_exit_phasespaceY_cutoff;
+    std::vector<std::map<G4int,TH2D*>> magnet_exit_phasespaceX_cutoff_PDG;
+    std::vector<std::map<G4int,TH2D*>> magnet_exit_phasespaceY_cutoff_PDG;
     std::vector<std::map<G4int,TH1D*>> magnet_exit_energy;
     std::vector<std::map<G4int,TH1D*>> magnet_exit_cutoff_energy;
 
@@ -221,6 +223,8 @@ private:
     G4bool has_filename_out;
 
     G4String foldername_out = "plots";
+
+    G4String rootFileName = "!ROOTFILENAME_NOT_INITIALIZED!";
 
     G4bool quickmode      = false;
     G4bool anaScatterTest = false;

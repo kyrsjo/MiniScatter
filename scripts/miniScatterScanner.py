@@ -558,7 +558,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
     if getObjects:
         objectsFileName = loadFileName[:-3] + ".root" #remove the .h5
         saveFile.attrs["objectsFileName"] = objectsFileName
-        objectsFile = ROOT.TFile(objectsFileName,'RECREATE');
+        objectsFile = ROOT.TFile(objectsFileName,'RECREATE')
         for objName in getObjects:
             for i in range(len(scanVarRange)):
                 #thisObjName = objects[objName][i].GetName() + "-fileClone"

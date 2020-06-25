@@ -219,13 +219,19 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
                         print("WTF?")
                 linebuff = ls[1]
     process.stdout.close()
-    process.wait()
-
+    returncode = process.wait()
     logFile.close()
 
     if not quiet:
         print('',end='\n')
         print ("Done!")
+    
+    if returncode != 0:
+        print("Errors encountered during simulation")
+        print("Please check logfile '"+logName+"'")
+        print("Command line: '" +cmdline[:-1] +"'")
+
+        raise SimulationError(returncode,logName,cmdline)
 
 #Names of the planes in which the twiss parameters / number of particles of each type
 # have been extracted
@@ -353,3 +359,15 @@ def getData_tryLoad(simSetup, quiet=False, getRaw=False, getObjects=None, tryloa
             print("Found a file at '"+ROOTfilename+"', loading!")
 
     return getData(ROOTfilename, quiet=quiet, getRaw=getRaw, getObjects=getObjects)
+
+class SimulationError(Exception):
+    "Base class for simulation crashes"
+    def __init__(self,returncode,logName,cmdline):
+        self.returncode = returncode
+        self.logName = logName
+        self.cmdline = cmdline
+        super().__init__("Simulation crashed with returncode = " + str(self.returncode) + ", see log file '" +self.logName + "' for more info.")
+
+    returncode  = None
+    logName = None
+    returncode  = None
