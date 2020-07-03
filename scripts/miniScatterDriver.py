@@ -177,18 +177,19 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
     # #print (runResults)
 
     #Inspired by https://stackoverflow.com/questions/52545512/realtime-output-from-a-shell-command-in-jupyter-notebook
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, close_fds=True, cwd=runFolder)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, close_fds=True, cwd=runFolder, text=True)
     linebuff = ""
     spinnerState = None # 0=/, 1=-, 2=\, 3=| (cycle); None: Last printout was an event, so issue a newline not a carriage return
-    for line in iter(process.stdout.readline, b''):
+
+    for line in iter(process.stdout.readline, ''):
         if allOutput:
-            print(line.rstrip().decode('utf-8'))
-            logFile.write(line.rstrip().decode('utf-8')+"\n")
+            print(line.rstrip())
+            logFile.write(line.rstrip()+"\n")
 
         elif not quiet:
-            # Collect data untill we have a whole line,
+            # Collect data until we have a whole line,
             # then print it if AND ONLY IF it is a progress report.
-            ls = line.decode('utf-8').split('\n')
+            ls = line.split('\n')
             lsl = len(ls)
             assert lsl <= 2
             linebuff += ls[0]
