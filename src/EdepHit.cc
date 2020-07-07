@@ -15,6 +15,6 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "MyTrackerHit.hh"
+#include "EdepHit.hh"
 
-G4Allocator<MyTrackerHit> MyTrackerHitAllocator;
+G4Allocator<EdepHit> EdepHitAllocator;

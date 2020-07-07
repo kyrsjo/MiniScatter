@@ -14,8 +14,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MyEdepHit_HH
-#define MyEdepHit_HH
+#ifndef EdepHit_HH
+#define EdepHit_HH
 
 #include "G4Allocator.hh"
 #include "G4THitsCollection.hh"
@@ -25,21 +25,21 @@
 class G4AttDef;
 class G4AttValue;
 
-class MyEdepHit : public G4VHit {
+class EdepHit : public G4VHit {
 
 public:
 
     // Constructors
-    MyEdepHit() :
+    EdepHit() :
         fDepositedEnergy(0.0), fDepositedEnergy_NIEL(0.0),
         preStepPoint(0,0,0), postStepPoint(0,0,0) {};
-    MyEdepHit(G4double Edep, G4double Edep_NIEL,
+    EdepHit(G4double Edep, G4double Edep_NIEL,
               G4ThreeVector preStepPoint_in,G4ThreeVector postStepPoint_in) :
         fDepositedEnergy(Edep), fDepositedEnergy_NIEL(Edep_NIEL),
         preStepPoint(preStepPoint_in), postStepPoint(postStepPoint_in) {};
 
     // Destructor
-    virtual ~MyEdepHit() {};
+    virtual ~EdepHit() {};
     inline void *operator new(size_t);
     inline void operator delete(void *aHit);
 
@@ -67,18 +67,18 @@ private:
     G4ThreeVector postStepPoint;
 };
 
-typedef G4THitsCollection<MyEdepHit> MyEdepHitsCollection;
+typedef G4THitsCollection<EdepHit> EdepHitsCollection;
 
-extern G4Allocator<MyEdepHit> MyEdepHitAllocator;
+extern G4Allocator<EdepHit> EdepHitAllocator;
 
-inline void* MyEdepHit::operator new(size_t) {
+inline void* EdepHit::operator new(size_t) {
     void* aHit;
-    aHit = (void*)MyEdepHitAllocator.MallocSingle();
+    aHit = (void*)EdepHitAllocator.MallocSingle();
     return aHit;
 }
 
-inline void MyEdepHit::operator delete(void* aHit) {
-    MyEdepHitAllocator.FreeSingle((MyEdepHit*) aHit);
+inline void EdepHit::operator delete(void* aHit) {
+    EdepHitAllocator.FreeSingle((EdepHit*) aHit);
 }
 
 #endif

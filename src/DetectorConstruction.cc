@@ -16,8 +16,8 @@
  */
 
 #include "DetectorConstruction.hh"
-#include "MyTargetSD.hh"
-#include "MyTrackerSD.hh"
+#include "TargetSD.hh"
+#include "TrackerSD.hh"
 
 #include "MagnetClasses.hh"
 
@@ -329,11 +329,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
 
     if (logicTarget != NULL) {
-        G4VSensitiveDetector* targetSD = new MyTargetSD("target");
+        G4VSensitiveDetector* targetSD = new TargetSD("target");
         SDman->AddNewDetector(targetSD);
         logicTarget->SetSensitiveDetector(targetSD);
     }
-    G4VSensitiveDetector* detectorSD = new MyTrackerSD("tracker");
+    G4VSensitiveDetector* detectorSD = new TrackerSD("tracker");
     SDman->AddNewDetector(detectorSD);
     logicDetector->SetSensitiveDetector(detectorSD);
 

@@ -24,8 +24,8 @@
 
 #include "TRandom1.h"
 
-#include "MyEdepHit.hh"
-#include "MyTrackerHit.hh"
+#include "EdepHit.hh"
+#include "TrackerHit.hh"
 
 #include "G4SDManager.hh"
 
@@ -772,17 +772,17 @@ void RootFileWriter::doEvent(const G4Event* event){
 
     // *** Data from TargetSD ***
     if (detCon->GetHasTarget()) {
-        G4int myTargetEdep_CollID = SDman->GetCollectionID("target_edep");
-        if (myTargetEdep_CollID>=0){
-            MyEdepHitsCollection* targetEdepHitsCollection = NULL;
-            targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
+        G4int TargetEdep_CollID = SDman->GetCollectionID("target_edep");
+        if (TargetEdep_CollID>=0){
+            EdepHitsCollection* targetEdepHitsCollection = NULL;
+            targetEdepHitsCollection = (EdepHitsCollection*) (HCE->GetHC(TargetEdep_CollID));
             if (targetEdepHitsCollection != NULL) {
                 G4int nEntries = targetEdepHitsCollection->entries();
                 G4double edep      = 0.0; // G4 units, normalized before Fill()
                 G4double edep_NIEL = 0.0; // G4 units, normalized before Fill()
                 G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
                 for (G4int i = 0; i < nEntries; i++){
-                    MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
+                    EdepHit* edepHit = (*targetEdepHitsCollection)[i];
                     if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
 
                     edep      += edepHit->GetDepositedEnergy();
@@ -818,13 +818,13 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
+            G4cout << "TargetEdep_CollID was " << TargetEdep_CollID << " < 0!"<<G4endl;
         }
 
-        G4int myTargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
-        if (myTargetExitpos_CollID>=0) {
-            MyTrackerHitsCollection* targetExitposHitsCollection = NULL;
-            targetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTargetExitpos_CollID));
+        G4int TargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
+        if (TargetExitpos_CollID>=0) {
+            TrackerHitsCollection* targetExitposHitsCollection = NULL;
+            targetExitposHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(TargetExitpos_CollID));
             if (targetExitposHitsCollection != NULL) {
                 G4int nEntries = targetExitposHitsCollection->entries();
 
@@ -930,15 +930,15 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myTargetExitpos_CollID was " << myTargetExitpos_CollID << " < 0!"<<G4endl;
+            G4cout << "TargetExitpos_CollID was " << TargetExitpos_CollID << " < 0!"<<G4endl;
         }
     }
 
     //**Data from detectorTrackerSD**
-    G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
-    if (myTrackerSD_CollID>=0) {
-        MyTrackerHitsCollection* trackerHitsCollection = NULL;
-        trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
+    G4int TrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
+    if (TrackerSD_CollID>=0) {
+        TrackerHitsCollection* trackerHitsCollection = NULL;
+        trackerHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(TrackerSD_CollID));
         if (trackerHitsCollection != NULL) {
             G4int nEntries = trackerHitsCollection->entries();
 
@@ -1050,7 +1050,7 @@ void RootFileWriter::doEvent(const G4Event* event){
         }
     }
     else{
-        G4cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<G4endl;
+        G4cout << "TrackerSD_CollID was " << TrackerSD_CollID << "<0!"<<G4endl;
     }
 
     // Initial particle distribution
@@ -1066,15 +1066,15 @@ void RootFileWriter::doEvent(const G4Event* event){
         magIdx++;
 
         //Edep data collection
-        G4int myMagnetEdep_CollID = SDman->GetCollectionID(magName+"_edep");
-        if (myMagnetEdep_CollID>=0){
-            MyEdepHitsCollection* magnetEdepHitsCollection = NULL;
-            magnetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myMagnetEdep_CollID));
+        G4int MagnetEdep_CollID = SDman->GetCollectionID(magName+"_edep");
+        if (MagnetEdep_CollID>=0){
+            EdepHitsCollection* magnetEdepHitsCollection = NULL;
+            magnetEdepHitsCollection = (EdepHitsCollection*) (HCE->GetHC(MagnetEdep_CollID));
             if (magnetEdepHitsCollection != NULL) {
                 G4int nEntries = magnetEdepHitsCollection->entries();
                 G4double edep      = 0.0;
                 for (G4int i = 0; i < nEntries; i++){
-                    MyEdepHit* edepHit = (*magnetEdepHitsCollection)[i];
+                    EdepHit* edepHit = (*magnetEdepHitsCollection)[i];
                     if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
 
                     edep      += edepHit->GetDepositedEnergy();
@@ -1128,15 +1128,15 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myMagnetEdep_CollID was " << myMagnetEdep_CollID << " < 0 for '" << magName << "'!"<<G4endl;
+            G4cout << "MagnetEdep_CollID was " << MagnetEdep_CollID << " < 0 for '" << magName << "'!"<<G4endl;
         }
 
 
         // Exitpos data collection
-        G4int myMagnetExitpos_CollID = SDman->GetCollectionID(magName + "_exitpos");
-        if (myMagnetExitpos_CollID>=0) {
-            MyTrackerHitsCollection* magnetExitposHitsCollection = NULL;
-            magnetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myMagnetExitpos_CollID));
+        G4int MagnetExitpos_CollID = SDman->GetCollectionID(magName + "_exitpos");
+        if (MagnetExitpos_CollID>=0) {
+            TrackerHitsCollection* magnetExitposHitsCollection = NULL;
+            magnetExitposHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(MagnetExitpos_CollID));
             if (magnetExitposHitsCollection != NULL) {
                 G4int nEntries = magnetExitposHitsCollection->entries();
 
@@ -1261,7 +1261,7 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myMagnetExitpos_CollID was " << myMagnetExitpos_CollID << " < 0 for '" << magName << "'!"<<G4endl;
+            G4cout << "MagnetExitpos_CollID was " << MagnetExitpos_CollID << " < 0 for '" << magName << "'!"<<G4endl;
         }
     } // END loop over magnets
     if (not miniFile) {

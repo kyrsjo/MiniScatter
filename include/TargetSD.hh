@@ -14,24 +14,23 @@
  *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
+#ifndef TargetSD_hh
+#define TargetSD_hh 1
 
-#ifndef TrackerSD
-#define TrackerSD
-
-#include "DetectorConstruction.hh"
 #include "G4VSensitiveDetector.hh"
-#include "MyTrackerHit.hh"
+#include "EdepHit.hh"
+#include "TrackerHit.hh"
 
 class G4HCofThisEvent;
 class G4TouchableHistory;
 class G4Step;
 
-class MyTrackerSD : public G4VSensitiveDetector {
+class TargetSD : public G4VSensitiveDetector {
 
 public:
 
-    MyTrackerSD (const G4String& name);
-    virtual ~MyTrackerSD();
+    TargetSD (const G4String& name);
+    virtual ~TargetSD();
 
     // Methods
     virtual void Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent);
@@ -41,11 +40,12 @@ public:
     virtual void EndOfEvent(G4HCofThisEvent*) {};
 private:
 
-    DetectorConstruction* detectorConstruction;
-
     // Data members
-    MyTrackerHitsCollection* fHitsCollection;
-    G4int fHitsCollectionID;
+    EdepHitsCollection* fHitsCollection_edep;
+    G4int fHitsCollectionID_edep;
+
+    TrackerHitsCollection* fHitsCollection_exitpos;
+    G4int fHitsCollectionID_exitpos;
 };
 
 #endif
