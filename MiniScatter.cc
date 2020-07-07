@@ -18,7 +18,7 @@
 #include "G4UImanager.hh"
 
 #include "DetectorConstruction.hh"
-#include "ParallelWorldConstruction.hh"
+#include "MagnetSensorWorldConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -622,8 +622,8 @@ int main(int argc,char** argv) {
                                                                world_size,
                                                                magnetDefinitions);
 
-    ParallelWorldConstruction* magnetSensorWorld =
-        new ParallelWorldConstruction("MagnetSensorWorld",physWorld);
+    MagnetSensorWorldConstruction* magnetSensorWorld =
+        new MagnetSensorWorldConstruction("MagnetSensorWorld",physWorld);
     physWorld->RegisterParallelWorld(magnetSensorWorld);
     physlist->RegisterPhysics(new G4ParallelWorldPhysics("MagnetSensorWorld"));
 
