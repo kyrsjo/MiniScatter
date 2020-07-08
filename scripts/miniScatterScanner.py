@@ -398,7 +398,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             simSetup["OUTFOLDER"] = tmpFolder
 
         ##RUN THE SIMULATION!
-        miniScatterDriver.runScatter(simSetup,quiet=QUIET)
+        miniScatterDriver.runScatter(simSetup,quiet=QUIET, showProgress=False)
         ##SIMULATION COMPLETE!
 
         filenameROOTfile = None
