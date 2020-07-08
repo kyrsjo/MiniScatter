@@ -26,8 +26,8 @@
 
 #include <vector>
 
-class MagnetBase; // Forward declaration
-
+// Forward declarations
+class MagnetBase; 
 //--------------------------------------------------------------------------------
 
 class DetectorConstruction : public G4VUserDetectorConstruction {
@@ -35,12 +35,9 @@ class DetectorConstruction : public G4VUserDetectorConstruction {
 public:
     DetectorConstruction(G4double TargetThickness_in,
                          G4String TargetMaterial_in,
-                         G4double DetectorDistance_in,
-                         G4double DetectorAngle_in,
-                         G4bool   DetectorRotated_in,
                          G4double TargetAngle_in,
-                         G4bool   TargetRotated_in,
                          G4double WorldSize_in,
+                         G4double WorldMinLength_in,
                          std::vector <G4String> &magnetDefinitions_in);
     ~DetectorConstruction(){};
 
@@ -62,19 +59,15 @@ public:
     const G4VPhysicalVolume* getphysiWorld() {return physiWorld;};
     const G4VPhysicalVolume* getTargetPV()   {return physiTarget;};
 
+    //All in G4 units
     inline G4double getTargetThickness() const {return TargetThickness;};
     inline G4double getTargetSizeX()     const {return TargetSizeX;};
     inline G4double getTargetSizeY()     const {return TargetSizeY;};
-
-    inline G4double getDetectorDistance() const {return DetectorDistance;};
-    inline G4double getDetectorSizeX()    const {return TargetSizeX;};
-    inline G4double getDetectorSizeY()    const {return TargetSizeY;};
 
     inline G4double getWorldSizeZ()       const {return WorldSizeZ;};
     inline G4double getWorldSizeX()       const {return WorldSizeX;};
     inline G4double getWorldSizeY()       const {return WorldSizeY;};
 
-    static constexpr G4double WorldSizeZ_buffer = 5*CLHEP::cm;
 private:
     G4Material*        vacuumMaterial = NULL;
 
@@ -103,6 +96,7 @@ private:
     G4Material*        gasNe          = NULL;
     G4Material*        gasAr          = NULL;
 
+    //These are all in G4 units
     G4double           WorldSizeX;
     G4double           WorldSizeY;
     G4double           WorldSizeZ;
@@ -111,18 +105,10 @@ private:
     G4double           TargetSizeY;
     G4double           TargetThickness;
 
-    G4double           TargetAngle;   //[rad]
-    G4bool             TargetRotated;
+    G4double           TargetAngle;
 
     G4bool             HasTarget      = false;
     G4Material*        TargetMaterial = NULL;
-
-    G4double           DetectorSizeX;
-    G4double           DetectorSizeY;
-    // Distance from center of target to center of detector:
-    G4double           DetectorThickness;
-    G4double           DetectorAngle; //[rad]
-    G4bool             DetectorRotated;
 
     G4double           DetectorDistance;
     G4Material*        DetectorMaterial;
@@ -134,11 +120,11 @@ private:
     G4Box*             solidTarget; //pointer to the solid target
     G4LogicalVolume*   logicTarget; //pointer to the logical target
     G4VPhysicalVolume* physiTarget; //pointer to the physical target
+private:
+    void DefineMaterials();
+    G4Material* DefineGas(G4String TargetMaterial_in);
 
-    G4Box*             solidDetector; //pointer to the solid detector
-    G4LogicalVolume*   logicDetector; //pointer to the logical detector
-    G4VPhysicalVolume* physiDetector; //pointer to the physical detector
-
+private:
     std::vector <G4String> &magnetDefinitions;
 public:
     // This one needs to be accessed by e.g. the rootFileWriter
@@ -146,9 +132,6 @@ public:
 private:
     std::vector <G4VPhysicalVolume*> magnetPVs;
 
-private:
-    void DefineMaterials();
-    G4Material* DefineGas(G4String TargetMaterial_in);
 };
 
 //--------------------------------------------------------------------------------

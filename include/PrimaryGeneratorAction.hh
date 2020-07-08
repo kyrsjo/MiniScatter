@@ -59,6 +59,13 @@ public:
     G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
 
+    static G4double GetDefaultZpos(G4double targetThickness_in) {
+        G4double beam_zpos = targetThickness_in / 2.0;
+        // Round up to nearest 10 mm
+        beam_zpos = ceil(beam_zpos/10.0)*10.0;
+
+        return -beam_zpos; //Negative!
+    }
 private:
     G4ParticleGun*           particleGun;  //pointer a to G4 class
     DetectorConstruction*    Detector;     //pointer to the geometry

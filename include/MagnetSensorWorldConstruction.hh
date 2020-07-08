@@ -16,7 +16,7 @@
  */
 
 #ifndef MagnetSensorWorldConstruction_hh
-#define ParallelWolrdConstruction_hh 1
+#define MagnetSensorWorldConstruction_hh 1
 
 #include "G4VUserParallelWorld.hh"
 

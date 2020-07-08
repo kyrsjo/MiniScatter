@@ -31,7 +31,7 @@ TrackerSD::TrackerSD(const G4String& name) :
   G4VSensitiveDetector(name) {
 
   fHitsCollection = NULL; //Note: The HitsCollection objects are deleted by Geant4.
-  collectionName.insert("TrackerCollection");
+  collectionName.insert(name+"_exitpos");
   fHitsCollectionID = -1;
 
   G4RunManager*     run= G4RunManager::GetRunManager();

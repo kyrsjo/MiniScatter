@@ -61,8 +61,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     particleGun  = new G4ParticleGun(n_particle);
 
     if (beam_zpos == 0.0) {
-        beam_zpos = - ( Detector->getTargetThickness() / 2.0 +
-                        Detector->WorldSizeZ_buffer    / 2.0   );
+        beam_zpos = PrimaryGeneratorAction::GetDefaultZpos(Detector->getTargetThickness()/mm);
     }
     else {
         beam_zpos *= mm;
