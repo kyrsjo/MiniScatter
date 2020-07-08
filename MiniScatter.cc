@@ -134,11 +134,11 @@ int main(int argc,char** argv) {
 
     G4int    rngSeed        = 0;              // RNG seed
 
-    G4double cutoff_energyFraction = 0.95;    // [fraction]
-    G4double cutoff_radius         = 1.0;     // [mm]
+    G4double cutoff_energyFraction = 0.95;       // [fraction]
+    G4double cutoff_radius         = world_size; // [mm]
 
-    G4double edep_dens_dz          = 0.0;     // Z bin width for energy deposit histograms [mm]
-    G4int    engNbins              = 0;       // Number of bins for the 1D energy histograms
+    G4double edep_dens_dz          = 0.0;        // Z bin width for energy deposit histograms [mm]
+    G4int    engNbins              = 0;          // Number of bins for the 1D energy histograms
 
     std::vector<G4String> magnetDefinitions;
 
