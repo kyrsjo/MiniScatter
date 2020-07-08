@@ -23,11 +23,13 @@ import ROOT
 import ROOT.TFile, ROOT.TVector
 import datetime
 
-def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
+def runScatter(simSetup, quiet=False,allOutput=False, logName=None, showProgress=True):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
 
     if quiet and allOutput:
         raise AssertionError("Setting both 'quiet' and 'alloutput' makes no sense")
+    if quiet and showProgress:
+        raise AssertionError("Setting both 'quiet' and 'showProgress' makes no sense")
 
 
     for key in simSetup.keys():
@@ -55,7 +57,15 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
             raise ValueError("Found PRESS="+str(simSetup["PRESS"]) + " but no MAT. This makes no sense.")
 
     if "DIST" in simSetup:
-        cmd += ["-d", str(simSetup["DIST"])]
+        if type(simSetup["DIST"]) == float:
+            cmd += ["-d", str(simSetup["DIST"])]
+        else: # It's a list of distances
+            distStr = ""
+            for d in simSetup["DIST"]:
+                distStr = distStr + str(d) + ":"
+            distStr = distStr[0:-1]
+            print("distStr=",distStr)
+            cmd += ["-d", distStr]
 
     if "ANG" in simSetup:
         cmd += ["-a", str(simSetup["ANG"])]
@@ -186,7 +196,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
             print(line.rstrip())
             logFile.write(line.rstrip()+"\n")
 
-        elif not quiet:
+        elif not quiet and showProgress:
             # Collect data until we have a whole line,
             # then print it if AND ONLY IF it is a progress report.
             ls = line.split('\n')
@@ -236,7 +246,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None):
 
 #Names of the planes in which the twiss parameters / number of particles of each type
 # have been extracted
-twissDets   = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
+#twissDets   = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
 numPartDets = ("tracker", "tracker_cutoff", "target", "target_cutoff")
 
 def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=None):
@@ -249,44 +259,49 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
     if not dataFile.GetListOfKeys().Contains("target_exit_x_TWISS"):
         if not quiet:
             print ("No target twiss data in this file!")
-        _twissDets = []
-        for det in twissDets:
-            if not det.startswith("target"):
-                _twissDets.append(det)
-        _twissDets = tuple(_twissDets)
-
+        #Remove the "target" stuff from the twissDets and numPartsDets
         _numPartDets = []
         for det in numPartDets:
             if not det.startswith("target"):
                 _numPartDets.append(det)
         _numPartDets = tuple(_numPartDets)
     else:
-        _twissDets   = twissDets
         _numPartDets = numPartDets
-    i = 1
-    while dataFile.GetListOfKeys().Contains("magnet_{}_x_TWISS".format(i)):
-        print("found magnet_{}".format(i))
-        _twissDets   = _twissDets   + ("magnet_{}".format(i), "magnet_{}_cutoff".format(i))
-        _numPartDets = _numPartDets + ("magnet_{}".format(i), "magnet_{}_cutoff".format(i))
 
-        i = i+1
-
+    #Load TWISS data
     twiss = {}
-    for det in _twissDets:
-        twiss[det] = {}
-        for pla in ("x","y"):
-            dataName = det + "_" + pla + "_TWISS"
-            if not dataFile.GetListOfKeys().Contains(dataName):
-                raise KeyError("Object {} not found in file {}".format(dataName,filename))
-            twissData = dataFile.Get(dataName)
-            twiss[det][pla] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
-            if len(twissData) > 3:
-                twiss[det][pla]['posAve'] = twissData[3]
-                twiss[det][pla]['angAve'] = twissData[4]
-            if len(twissData) > 4:
-                twiss[det][pla]['posVar'] = twissData[5]
-                twiss[det][pla]['angVar'] = twissData[6]
-                twiss[det][pla]['coVar']  = twissData[7]
+    for key in dataFile.GetListOfKeys():
+        keyName = key.GetName()
+        if not keyName.endswith("_TWISS"):
+            continue #Skip this one
+
+        xy = None
+        if '_x_' in keyName:
+            xy = 'x'
+        elif '_y_' in keyName:
+            xy = 'y'
+        else:
+            raise AssertionError("Could not determine 'xy' for TwissDet '"+key+"'")
+
+        key_short = keyName.replace('_'+xy+'_','')
+        if '_TWISS' in key_short:
+            key_short = key_short.replace('_TWISS','')
+        else:
+            #Some are named like ..._x_TWISS e.g. init_x_TWISS, and one arm of the "_x_" is already deleted.
+            key_short = key_short.replace('TWISS','')
+
+        if not key_short in twiss:
+            twiss[key_short] = {}
+
+        twissData = dataFile.Get(keyName)
+        twiss[key_short][xy] = {'eps':twissData[0], 'beta':twissData[1], 'alpha':twissData[2]}
+        if len(twissData) > 3:
+            twiss[key_short][xy]['posAve'] = twissData[3]
+            twiss[key_short][xy]['angAve'] = twissData[4]
+        if len(twissData) > 4:
+            twiss[key_short][xy]['posVar'] = twissData[5]
+            twiss[key_short][xy]['angVar'] = twissData[6]
+            twiss[key_short][xy]['coVar']  = twissData[7]
 
     numPart = {}
     for det in _numPartDets:
@@ -301,6 +316,7 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
         for i in range(len(numPart_PDG)):
             numPart[det][int(numPart_PDG[i])] = int(numPart_num[i])
 
+    #Load the requested objects
     objects = None
     if getObjects:
         objects = {}
