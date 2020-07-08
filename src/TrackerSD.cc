@@ -58,7 +58,7 @@ void TrackerSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 G4bool TrackerSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   //Only use incoming tracks
   if (aStep->GetPreStepPoint()->GetStepStatus()!=fGeomBoundary) {
-    G4cout << "TrackerSD::ProcessHits(): SKIP!" << G4endl;
+    //G4cout << "TrackerSD::ProcessHits(): SKIP!" << G4endl;
     return false;
   }
 
