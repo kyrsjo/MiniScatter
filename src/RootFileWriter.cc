@@ -404,6 +404,58 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
         tracker_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y' [rad]");
 
+        tracker_phasespaceX_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        tracker_phasespaceY_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        tracker_phasespaceX_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_x_PDG11").c_str(),
+                                                                  (trackerName+" phase space (x) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[-11]  = new TH2D((trackerName+"_cutoff_x_PDG-11").c_str(),
+                                                                  (trackerName+" phase space (x) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[22]  = new TH2D((trackerName+"_cutoff_x_PDG22").c_str(),
+                                                                  (trackerName+" phase space (x) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[2212]  = new TH2D((trackerName+"_cutoff_x_PDG2212").c_str(),
+                                                                  (trackerName+" phase space (x) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[0]  = new TH2D((trackerName+"_cutoff_x_PDGother").c_str(),
+                                                                  (trackerName+" phase space (x) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("X [mm]");
+            PDG.second->GetYaxis()->SetTitle("X' [rad]");
+        }
+        tracker_phasespaceY_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_y_PDG11").c_str(),
+                                                                  (trackerName+" phase space (y) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[-11]  = new TH2D((trackerName+"_cutoff_y_PDG-11").c_str(),
+                                                                  (trackerName+" phase space (y) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[22]  = new TH2D((trackerName+"_cutoff_y_PDG22").c_str(),
+                                                                  (trackerName+" phase space (y) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[2212]  = new TH2D((trackerName+"_cutoff_y_PDG2212").c_str(),
+                                                                  (trackerName+" phase space (y) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[0]  = new TH2D((trackerName+"_cutoff_y_PDGother").c_str(),
+                                                                  (trackerName+" phase space (y) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("Y [mm]");
+            PDG.second->GetYaxis()->SetTitle("Y' [rad]");
+        }
+
+
         // Tracker R position
         tracker_Rpos.push_back(std::map<G4int,TH1D*>());
         tracker_Rpos.back()[11]  = new TH1D((trackerName+"_rpos_PDG11").c_str(),
@@ -991,9 +1043,26 @@ void RootFileWriter::doEvent(const G4Event* event){
                     tracker_phasespaceX[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     tracker_phasespaceY[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                        tracker_phasespaceX_cutoff[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                        tracker_phasespaceY_cutoff[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        if (charge != 0) {
+                            // All charged particles passing the cutoff
+                            tracker_phasespaceX_cutoff[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                            tracker_phasespaceY_cutoff[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
+
+                        //Also separated by species
+                        if(tracker_phasespaceX_cutoff_PDG[idx].find(PDG) != tracker_phasespaceX_cutoff_PDG[idx].end()) {
+                            tracker_phasespaceX_cutoff_PDG[idx][PDG]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        }
+                        else {
+                            tracker_phasespaceX_cutoff_PDG[idx][0]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        }
+                        if(tracker_phasespaceY_cutoff_PDG[idx].find(PDG) != tracker_phasespaceY_cutoff_PDG[idx].end()) {
+                            tracker_phasespaceY_cutoff_PDG[idx][PDG]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
+                        else {
+                            tracker_phasespaceY_cutoff_PDG[idx][0]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
                     }
 
                     //Particle type counting
@@ -1386,6 +1455,12 @@ void RootFileWriter::finalizeRootFile() {
         PrintTwissParameters(tracker_phasespaceY[idx]);
         PrintTwissParameters(tracker_phasespaceX_cutoff[idx]);
         PrintTwissParameters(tracker_phasespaceY_cutoff[idx]);
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+            PrintTwissParameters(PDG.second);
+        }
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+            PrintTwissParameters(PDG.second);
+        }
     }
 
     if (anaScatterTest and detCon->GetHasTarget()) {
@@ -1492,8 +1567,8 @@ void RootFileWriter::finalizeRootFile() {
     }
 
 
-    if (not quickmode) {
-        //Write the 2D histograms to the ROOT file (slow)
+    if (not quickmode) { //Write the 2D and 3D histograms to the ROOT file (slow)
+
         G4cout << "Writing 2D histograms..." << G4endl;
         init_phasespaceX->Write();
         init_phasespaceY->Write();
@@ -1520,6 +1595,13 @@ void RootFileWriter::finalizeRootFile() {
 
             tracker_phasespaceX_cutoff[idx]->Write();
             tracker_phasespaceY_cutoff[idx]->Write();
+
+            for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+                PDG.second->Write();
+            }
+            for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+                PDG.second->Write();
+            }
         }
 
         for (auto it : magnet_edep_rdens) {
@@ -1770,6 +1852,16 @@ void RootFileWriter::finalizeRootFile() {
 
         delete tracker_hitPos[idx]; tracker_hitPos[idx] = NULL;
         delete tracker_hitPos_cutoff[idx]; tracker_hitPos_cutoff[idx] = NULL;
+
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+            delete PDG.second;
+        }
+        tracker_phasespaceX_cutoff_PDG[idx].clear();
+
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+            delete PDG.second;
+        }
+        tracker_phasespaceY_cutoff_PDG[idx].clear();
     }
     tracker_phasespaceX.clear();
     tracker_phasespaceY.clear();
@@ -1777,6 +1869,8 @@ void RootFileWriter::finalizeRootFile() {
     tracker_phasespaceY_cutoff.clear();
     tracker_hitPos.clear();
     tracker_hitPos_cutoff.clear();
+    tracker_phasespaceX_cutoff_PDG.clear();
+    tracker_phasespaceY_cutoff_PDG.clear();
 
     if (detCon->GetHasTarget()) {
         if (target_edep_dens != NULL) {

@@ -15,8 +15,8 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ROOTFILEWRITER_HH_
-#define ROOTFILEWRITERANALYSIS_HH_
+#ifndef ROOTFILEWRITER_HH
+#define ROOTFILEWRITER_HH 1
 #include "G4Event.hh"
 
 #include "TFile.h"
@@ -181,6 +181,8 @@ private:
     std::vector<TH2D*> tracker_phasespaceY;
     std::vector<TH2D*> tracker_phasespaceX_cutoff;
     std::vector<TH2D*> tracker_phasespaceY_cutoff;
+    std::vector<std::map<G4int,TH2D*>> tracker_phasespaceX_cutoff_PDG;
+    std::vector<std::map<G4int,TH2D*>> tracker_phasespaceY_cutoff_PDG;
 
     std::vector<std::map<G4int,TH1D*>> tracker_Rpos;
     std::vector<std::map<G4int,TH1D*>> tracker_Rpos_cutoff;
