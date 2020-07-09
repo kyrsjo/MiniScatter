@@ -23,14 +23,11 @@ import ROOT
 import ROOT.TFile, ROOT.TVector
 import datetime
 
-def runScatter(simSetup, quiet=False,allOutput=False, logName=None, showProgress=True):
+def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
 
     if quiet and allOutput:
         raise AssertionError("Setting both 'quiet' and 'alloutput' makes no sense")
-    if quiet and showProgress:
-        raise AssertionError("Setting both 'quiet' and 'showProgress' makes no sense")
-
 
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
@@ -180,8 +177,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, showProgress
 
     if not quiet:
         print ("Running command line: '" + cmdline[:-1] + "'")
-        print ("RunFolder = '" + runFolder + "'")
-        print ("logName   = '" + logName   + "'")
+        if not onlyCommand:
+            print ("RunFolder = '" + runFolder + "'")
+            print ("logName   = '" + logName   + "'")
 
     # runResults = subprocess.run(cmd, close_fds=True, stdout=subprocess.PIPE, cwd=runFolder)
     # #print (runResults)
@@ -196,7 +194,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, showProgress
             print(line.rstrip())
             logFile.write(line.rstrip()+"\n")
 
-        elif not quiet and showProgress:
+        elif not quiet and not onlyCommand:
             # Collect data until we have a whole line,
             # then print it if AND ONLY IF it is a progress report.
             ls = line.split('\n')
@@ -244,29 +242,12 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, showProgress
 
         raise SimulationError(returncode,logName,cmdline)
 
-#Names of the planes in which the twiss parameters / number of particles of each type
-# have been extracted
-#twissDets   = ("init","target_exit","target_exit_cutoff","tracker","tracker_cutoff")
-numPartDets = ("tracker", "tracker_cutoff", "target", "target_cutoff")
-
 def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=None):
     """
     Collects data from the ROOT file, and optionally returns the file for looping over the ttrees.
     If the file is returned, the caller is responsible for closing it.
     """
     dataFile = ROOT.TFile(filename,'READ')
-
-    if not dataFile.GetListOfKeys().Contains("target_exit_x_TWISS"):
-        if not quiet:
-            print ("No target twiss data in this file!")
-        #Remove the "target" stuff from the twissDets and numPartsDets
-        _numPartDets = []
-        for det in numPartDets:
-            if not det.startswith("target"):
-                _numPartDets.append(det)
-        _numPartDets = tuple(_numPartDets)
-    else:
-        _numPartDets = numPartDets
 
     #Load TWISS data
     twiss = {}
@@ -303,18 +284,22 @@ def getData(filename="plots/output.root", quiet=False, getRaw=False, getObjects=
             twiss[key_short][xy]['angVar'] = twissData[6]
             twiss[key_short][xy]['coVar']  = twissData[7]
 
+    #Load the NumPart data
     numPart = {}
-    for det in _numPartDets:
-        numPart[det] = {}
-        if not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_PDG") or \
-           not dataFile.GetListOfKeys().Contains(det+"_ParticleTypes_numpart"):
-            if not quiet:
-                print("No particles found for det={}".format(det))
-            continue
-        numPart_PDG = dataFile.Get(det+"_ParticleTypes_PDG")
-        numPart_num = dataFile.Get(det+"_ParticleTypes_numpart")
+    for key in dataFile.GetListOfKeys():
+        keyName = key.GetName()
+        if not keyName.endswith("_ParticleTypes_PDG"):
+            continue #Skip
+        keyBase = keyName[0:-18]
+        if not (dataFile.GetListOfKeys().Contains(keyBase+"_ParticleTypes_numpart")):
+            raise AssertionError("Found PDG IDs but not numpart for '"+keyBase+"'")
+        numPart[keyBase] = {}
+
+        numPart_PDG = dataFile.Get(keyBase+"_ParticleTypes_PDG")
+        numPart_num = dataFile.Get(keyBase+"_ParticleTypes_numpart")
+
         for i in range(len(numPart_PDG)):
-            numPart[det][int(numPart_PDG[i])] = int(numPart_num[i])
+            numPart[keyBase][int(numPart_PDG[i])] = int(numPart_num[i])
 
     #Load the requested objects
     objects = None
