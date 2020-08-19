@@ -32,9 +32,9 @@ import os
 
 SEED = 1
 
-#Used for particle-type countings, what to return
+#Used for particle-type countings and twiss, what to return
 PDG_keep    = (11,-11,22,2212,2112,'other')
-
+twissVar    = ('eps','beta','alpha', 'posAve','angAve', 'posVar','angVar','coVar')
 def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     NUM_THREADS=4, tryLoad=False, COMMENT=None, QUIET=True, \
                     detailedAnalysisRoutine=None, detailedAnalysisRoutine_names=None, \
@@ -56,20 +56,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         assert len(scanVarMagnet) > 1
 
     ### Create the output arrays ###
-
-    twiss = {}
-    for det in miniScatterDriver.twissDets:
-        twiss[det] = {}
-        for p in ('x','y'):
-            twiss[det][p] = {}
-            for t in ('eps','beta','alpha', 'posAve','angAve', 'posVar','angVar','coVar'):
-                twiss[det][p][t] = np.zeros_like(scanVarRange,dtype=float)
-
-    numPart = {}
-    for det in miniScatterDriver.numPartDets:
-        numPart[det] = {}
-        for pdg in PDG_keep:
-            numPart[det][pdg] = np.zeros_like(scanVarRange,dtype=float)
+    
+    twiss   = {} #Initialize on load
+    numPart = {} #Initialize on load
 
     analysis_output = None
     if detailedAnalysisRoutine:
@@ -281,25 +270,85 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
             print ("Scan variable ranges match, let's load!")
 
-            for det in miniScatterDriver.twissDets:
-                for p in ('x','y'):
-                    for t in ('eps','beta','alpha', 'posAve','angAve', 'posVar','angVar','coVar'):
-                        dataName = "twiss_"+det+"_"+p+"_"+t
-                        if not dataName in loadFile:
-                            raise KeyError(("Did not find array '{}' for"+\
-                                            " twissDet={} in the loaded file.").\
-                                             format(dataName,det))
-                        twiss[det][p][t] = np.asarray(loadFile[dataName])
+            #Load Twiss data
+            for key in loadFile:
+                #key format: twiss_DET_XY_VAR, where DET is e.g. 'tracker_cutoff', XY is 'x' or 'y', and VAR is one of twissVar
+                if not key.startswith('twiss_'):
+                    continue
 
-            for det in miniScatterDriver.numPartDets:
+                xy = None
+                if '_x_' in key:
+                    xy = 'x'
+                elif '_y_' in key:
+                    xy = 'y'
+                else:
+                    loadFile.close()
+                    raise AssertionError("Found neither _x_ or _y_ in key='"+key+"' while loading twiss data from file")
+                
+                key_short = key[6:]
+                key_split = key_short.split("_"+xy+"_")
+                assert len(key_split) == 2, "Got: '" + key + ", " + key_short + ", " + str(key_split)
+                det = key_split[0]
+                var = key_split[1]
+
+                if not det in twiss:
+                    twiss[det] = {}
+                    twiss[det]['x'] = {}
+                    twiss[det]['y'] = {}
+
+                if(var in twiss[det][xy]):
+                    loadFile.close()
+                    raise KeyError('Variable {} was already loaded for output plane {}, xy={}'.format(var,det,xy))
+
+                twiss[det][xy][var] = np.asarray(loadFile[key])
+
+            #TWISS: Check that we got everything (but not more) for every output plane and and x/y
+            for det in twiss:
+                for xy in twiss[det]:
+                    for var in twissVar:
+                        if not var in twiss[det][xy]:
+                            loadFile.close()
+                            raise KeyError("Did not successfully load variable '"+var+"' from det='"+det+"', xy='"+xy+"'")
+                    for var in twiss[det][xy]:
+                        if not var in twissVar:
+                            loadFile.close()
+                            raise KeyError("Loaded unknown variable '"+var+"' from det='"+det+"', xy='"+xy+"'")
+
+            #Load numPart data
+            for key in loadFile:
+                #key format: numPart_DET_PDG, where DET is e.g. target_cutoff and VAR is one of the ID's in PDG_keep
+                if not key.startswith('numPart_'):
+                    continue
+
+                key_short = key[8:]
+
+                PDG_wasfound = False
                 for pdg in PDG_keep:
-                    arrayName = "numPart_"+det+"_"+str(pdg)
-                    if not arrayName in loadFile:
-                        print ("Could not find numPart for {}, PDG={} in the file. Please recompute.".format(det,pdg))
-                        loadFile.close()
-                        raise ValueError("NumPart for det={}, PDG={} was not found in the file".format(det,pdg))
+                    if not key_short.endswith("_"+str(pdg)):
+                        continue
+                    PDG_wasfound = True
+                    det = key_short[:-(len(str(pdg))+1)] #Remove the PDG id from the key_short to find the detector name
+                    if not det in numPart:
+                        #Initialize numpart[det]
+                        numPart[det] = {}
+                        for p in PDG_keep:
+                            numPart[det][p] = None
 
-                    numPart[det][pdg] = np.asarray(loadFile[arrayName])
+                    numPart[det][pdg]=np.asarray(loadFile[key])
+                    break
+                if not PDG_wasfound:
+                    loadFile.close()
+                    raise KeyError("numPart PDG not recognized in key='{}' from the file".format(key))
+
+            #NumPart: Check that we got everything for every output plane
+            for det in numPart:
+                for PDG in PDG_keep:
+                    if not PDG in numPart[det]:
+                        loadFile.close()
+                        raise AssertionError("Internal error, PDG={} not initialized for numPart[{}]".format(PDG,det))
+                    if numPart[det] is None:
+                        loadFile.close()
+                        raise KeyError("Did not successfully load PDG={} for det={}".format(PDG,det))
 
             if detailedAnalysisRoutine:
                 for name in detailedAnalysisRoutine_names:
@@ -356,9 +405,9 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             print ("File not found. Computing...")
 
     ### Build the job queue ###
-    def computeOnePoint(var,i,lock):
+    def computeOnePoint(var,simIdx,lock):
         with lock:
-            print ("{} = {} ({}/{})".format(scanVar, var, i+1, len(scanVarRange)))
+            print ("{} = {} ({}/{})".format(scanVar, var, simIdx+1, len(scanVarRange)))
 
         #Run the simulation -- this MUST be done in parallel
         filenameROOT = 'output_'+scanVar+"="+str(var)
@@ -385,7 +434,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             simSetup[scanVar]   = var
 
         if sameSeedValue == None:
-            simSetup["SEED"]    = SEED + i
+            simSetup["SEED"]    = SEED + simIdx
         else:
             assert type(sameSeedValue) == int
             simSetup["SEED"]    = sameSeedValue
@@ -398,7 +447,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             simSetup["OUTFOLDER"] = tmpFolder
 
         ##RUN THE SIMULATION!
-        miniScatterDriver.runScatter(simSetup,quiet=QUIET)
+        miniScatterDriver.runScatter(simSetup,quiet=QUIET, onlyCommand=True)
         ##SIMULATION COMPLETE!
 
         filenameROOTfile = None
@@ -412,7 +461,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
         ## Extract the data
         # grab the lock since root histograms tend to have identical standard names
-        # when fresh off the file => occational crashes
+        # when fresh off the file => occational crashes.
+        # Also we are manpulating the twiss and numPart arrays.
         with lock:
             if os.path.isfile(filenameROOTfile):
                 #Always getRaw, and handle the cleanup here in Scanner.
@@ -423,47 +473,63 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 print ("Did not find file '{}', simulation crashed?".format(filenameROOTfile))
                 badSim=True
 
-            #Fill the emittance arrays
+            
             if not badSim:
-                for det in twiss_singleSim.keys():
-                    for p in ('x','y'):
-                        for t in twiss_singleSim[det][p].keys():
-                            twiss[det][p][t][i] = twiss_singleSim[det][p][t]
+
+                #Fill the twiss array
+                for det in twiss_singleSim:
+                    #Initialize the detector if needed
+                    if not det in twiss:
+                        twiss[det] = {}
+                        twiss[det]['x'] = {}
+                        twiss[det]['y'] = {}
+                        for var in twissVar:
+                            twiss[det]['x'][var] = np.zeros_like(scanVarRange,dtype=float)
+                            twiss[det]['y'][var] = np.zeros_like(scanVarRange,dtype=float)
+                    #Load data from this simulation
+                    for xy in ('x','y'):
+                        for var in twiss_singleSim[det][xy]:
+                            twiss[det][xy][var][simIdx] = twiss_singleSim[det][xy][var]
 
                 #Fill the NumPart array
-                for detDictKey in numPart_singleSim.keys():
-                    for pdg in numPart_singleSim[detDictKey].keys():
+                for det in numPart_singleSim:
+                    #Initialize the detector if needed
+                    if not det in numPart:
+                        numPart[det] = {}
+                        for pdg in PDG_keep:
+                            numPart[det][pdg] = np.zeros_like(scanVarRange,dtype=int)
+                    #Load data from this simulation
+                    for pdg in numPart_singleSim[det].keys():
                         if pdg in PDG_keep:
-                            numPart[detDictKey][pdg][i] = numPart_singleSim[detDictKey][pdg]
+                            numPart[det][pdg][simIdx] = numPart_singleSim[det][pdg]
                         else:
-                            numPart[detDictKey]['other'][i] += numPart_singleSim[detDictKey][pdg]
-                            #with lock:
-                            print ("Found pdg={} for detector={}".format(pdg,detDictKey))
+                            numPart[det]['other'][simIdx] += numPart_singleSim[det][pdg]
+                            print ("Found pdg={} for detector={}".format(pdg,det))
 
-                #File the objects in the appropriate positions
+                #File the objects into the appropriate positions
                 if getObjects:
                     for objName in getObjects:
                         thisObj = objects_singleSim[objName]
                         #thisObjName = thisObj.GetName()
-                        thisObjName = objName + "_" + scanVar + "_" + str(i) + "_" + COMMENT
+                        thisObjName = objName + "_" + scanVar + "_" + str(simIdx) + "_" + COMMENT
                         try:
                             thisObj.SetName(thisObjName)
                         except AttributeError:
                             #Doesn't work on TVectorT etc.
                             print("WARNING while retrieving object from single-sim ROOT file {}: Can't SetName() on object '{}'.".format(filenameROOTfile,objName))
 
-                        objects[objName][i]     = thisObj
-                        objectNames[objName][i] = thisObjName
-                #Do special analysis over the TTrees
+                        objects[objName][simIdx]     = thisObj
+                        objectNames[objName][simIdx] = thisObjName
+
+                #If requested: do special analysis over the TTrees
                 if detailedAnalysisRoutine:
                     #Put the call to the external routine in a try/catch,
                     # so that the thread will actually finish correctly in case of a user error.
                     try:
                         detailedData = detailedAnalysisRoutine(datafile)
                         for k in detailedData.keys():
-                            analysis_output[k][i]=detailedData[k]
+                            analysis_output[k][simIdx]=detailedData[k]
                     except Exception as err:
-                        #with lock:
                         traceback.print_tb(err.__traceback__)
 
                 # Cleanup the ROOT file
@@ -476,15 +542,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
 
     def threadWorker(jobQueue_local,lock):
         while not jobQueue_local.empty():
-            (var,i) = jobQueue_local.get()
-            computeOnePoint(var,i,lock)
+            (var,simIdx) = jobQueue_local.get()
+            computeOnePoint(var,simIdx,lock)
             jobQueue_local.task_done()
 
     jobQueue = Queue(0)
-    i=0 # Array index where the jobs should write their data
+    simIdx=0 # Array index where the jobs should write their data
     for var in scanVarRange:
-        jobQueue.put((var,i))
-        i = i+1
+        jobQueue.put((var,simIdx))
+        simIdx = simIdx+1
     lock = threading.Lock() # Shared lock to synchronize output
     for i in range(NUM_THREADS):
         worker = threading.Thread(target=threadWorker, args=(jobQueue,lock))
@@ -540,15 +606,14 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
             value = baseSimSetup[key]
             saveFile.attrs[key] = value
 
-    for det in miniScatterDriver.twissDets:
-        for p in ('x','y'):
-            for t in twiss[det][p].keys():
-                saveFile["twiss_"+det+"_"+p+"_"+t] = twiss[det][p][t]
+    for det in twiss:
+        for xy in twiss[det]:
+            for var in twiss[det][xy]:
+                saveFile["twiss_"+det+"_"+xy+"_"+var] = twiss[det][xy][var]
 
-    for det in miniScatterDriver.numPartDets:
-        for pdg in PDG_keep:
-            arrayName = "numPart_"+det+"_"+str(pdg)
-            saveFile[arrayName] = numPart[det][pdg]
+    for det in numPart:
+        for pdg in numPart[det]: #Save'em all, don't rely on PDGkeep
+            saveFile["numPart_"+det+"_"+str(pdg)] = numPart[det][pdg]
 
     if detailedAnalysisRoutine:
         for name in detailedAnalysisRoutine_names:

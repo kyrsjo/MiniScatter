@@ -15,19 +15,19 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "ParallelWorldConstruction.hh"
+#include "MagnetSensorWorldConstruction.hh"
 #include "MagnetClasses.hh"
 
 #include "G4PVPlacement.hh"
 
-ParallelWorldConstruction::ParallelWorldConstruction(G4String worldName, DetectorConstruction* mainGeometryConstruction_in)  :
+MagnetSensorWorldConstruction::MagnetSensorWorldConstruction(G4String worldName, DetectorConstruction* mainGeometryConstruction_in)  :
     G4VUserParallelWorld(worldName), mainGeometryConstruction(mainGeometryConstruction_in) {
 
 }
 
-ParallelWorldConstruction::~ParallelWorldConstruction() {}
+MagnetSensorWorldConstruction::~MagnetSensorWorldConstruction() {}
 
-void ParallelWorldConstruction::Construct() {
+void MagnetSensorWorldConstruction::Construct() {
     //Define the parallel geometries of the magnets
 
     G4VPhysicalVolume* ghostWorld        = GetWorld();
@@ -48,7 +48,7 @@ void ParallelWorldConstruction::Construct() {
     }
 }
 
-void ParallelWorldConstruction::ConstructSD() {
+void MagnetSensorWorldConstruction::ConstructSD() {
 
     for (auto magnet : mainGeometryConstruction->magnets) {
         magnet->AddSD();

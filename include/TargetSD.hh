@@ -14,28 +14,38 @@
  *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
+#ifndef TargetSD_hh
+#define TargetSD_hh 1
 
-#ifndef ParallelWorldConstruction_hh
-#define ParallelWolrdConstruction_hh 1
+#include "G4VSensitiveDetector.hh"
+#include "EdepHit.hh"
+#include "TrackerHit.hh"
 
-#include "G4VUserParallelWorld.hh"
+class G4HCofThisEvent;
+class G4TouchableHistory;
+class G4Step;
 
-#include "DetectorConstruction.hh"
+class TargetSD : public G4VSensitiveDetector {
 
-// Parallel geometry in which the magnet sensitive detectors are defined;
-// this gets around the problem of how to attach the SDs correctly onto complex magnet geometries.
-
-class ParallelWorldConstruction : public G4VUserParallelWorld {
 public:
-    ParallelWorldConstruction(G4String worldName, DetectorConstruction* mainGeometryConstruction_in);
-    virtual ~ParallelWorldConstruction();
 
-    virtual void Construct();
-    virtual void ConstructSD();
+    TargetSD (const G4String& name);
+    virtual ~TargetSD();
 
+    // Methods
+    virtual void Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent);
+
+    virtual G4bool ProcessHits(G4Step* aStep,G4TouchableHistory* history);
+
+    virtual void EndOfEvent(G4HCofThisEvent*) {};
 private:
-    DetectorConstruction* mainGeometryConstruction = NULL;
-    std::vector <G4VPhysicalVolume*> magnetDetectorPVs;
+
+    // Data members
+    EdepHitsCollection* fHitsCollection_edep;
+    G4int fHitsCollectionID_edep;
+
+    TrackerHitsCollection* fHitsCollection_exitpos;
+    G4int fHitsCollectionID_exitpos;
 };
 
 #endif

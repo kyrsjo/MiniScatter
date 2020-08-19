@@ -26,7 +26,7 @@
 
 #include "G4PVPlacement.hh"
 
-#include "MyTargetSD.hh"
+#include "TargetSD.hh"
 #include "G4SDManager.hh"
 
 #include "G4TransportationManager.hh"
@@ -223,7 +223,7 @@ void MagnetBase::AddSD(){
 
     // Get pointer to detector manager
     G4SDManager* SDman = G4SDManager::GetSDMpointer();
-    magnetSD = new MyTargetSD(magnetName);
+    magnetSD = new TargetSD(magnetName);
     SDman->AddNewDetector(magnetSD);
     this->detectorLV->SetSensitiveDetector(magnetSD);
 }

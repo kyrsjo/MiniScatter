@@ -18,7 +18,9 @@
 #include "G4UImanager.hh"
 
 #include "DetectorConstruction.hh"
-#include "ParallelWorldConstruction.hh"
+#include "MagnetSensorWorldConstruction.hh"
+#include "VirtualTrackerWorldConstruction.hh"
+
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -56,7 +58,7 @@
 
 void printHelp(G4double target_thick,
                G4String target_material,
-               G4double detector_distance,
+               std::vector<G4double>* detector_distances,
                G4double detector_angle,
                G4double target_angle,
                G4double world_size,
@@ -98,13 +100,12 @@ int main(int argc,char** argv) {
     G4double target_thick        = 1.0;       // Target thickness [mm]; 0.0 for no target slab (only magnets)
     G4String target_material     = "G4_Al";   // Name of target material to use
     G4double target_angle        = 0.0;       // Target angle around y-axis [deg]
-    G4bool   target_rotate       = false;
 
-    G4double detector_distance   = 50.0;      // Detector distance at x=y=0  [mm]
+    std::vector<G4double> detector_distances; // Detector distances at x=y=0  [mm]
+    detector_distances.push_back(50.0);
     G4double detector_angle      = 0.0;       // Detectector angle around y-axis [deg]
-    G4bool   detector_rotate     = false;
 
-    G4double world_size          = 0.0;       // World size X/Y [mm]
+    G4double world_size          = 50.0;      // World size X/Y [mm]
 
     G4double beam_energy = 200;               // Beam kinetic energy [MeV]
     G4double beam_eFlat_min = -1.0;           // For flat-spectrum energy distribution,
@@ -133,11 +134,11 @@ int main(int argc,char** argv) {
 
     G4int    rngSeed        = 0;              // RNG seed
 
-    G4double cutoff_energyFraction = 0.95;    // [fraction]
-    G4double cutoff_radius         = 1.0;     // [mm]
+    G4double cutoff_energyFraction = 0.95;       // [fraction]
+    G4double cutoff_radius         = world_size; // [mm]
 
-    G4double edep_dens_dz          = 0.0;     // Z bin width for energy deposit histograms [mm]
-    G4int    engNbins              = 0;       // Number of bins for the 1D energy histograms
+    G4double edep_dens_dz          = 0.0;        // Z bin width for energy deposit histograms [mm]
+    G4int    engNbins              = 0;          // Number of bins for the 1D energy histograms
 
     std::vector<G4String> magnetDefinitions;
 
@@ -182,7 +183,7 @@ int main(int argc,char** argv) {
         case 'h': //Help
             printHelp(target_thick,
                       target_material,
-                      detector_distance,
+                      &detector_distances,
                       detector_angle,
                       target_angle,
                       world_size,
@@ -227,14 +228,34 @@ int main(int argc,char** argv) {
             break;
 
         case 'd': //Detector distance
-            try {
-                detector_distance = std::stod(string(optarg));
-            }
-            catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading detector distance" << G4endl
-                       << "Got: '" << optarg << "'" << G4endl
-                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-                exit(1);
+            { //Scope to avoid spilling temp variables
+                detector_distances.clear();
+                G4String detectorString = std::string(optarg);
+                if (detectorString == "NONE") break; //Just clear it
+
+                //Split by :
+                str_size startPos = 0;
+                str_size endPos = 0;
+                do {
+                    endPos          = detectorString.index(":",startPos);
+                    G4String detStr = detectorString(startPos,endPos-startPos);
+
+                    G4double dist;
+                    try {
+                        dist = std::stod(detStr);
+                    }
+                    catch (const std::invalid_argument& ia) {
+                        G4cout << "Invalid argument when reading detector distance" << G4endl
+                            << "Got: '" << detStr << "'" << G4endl
+                            << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                        exit(1);
+                    }
+                    detector_distances.push_back(dist);
+
+                    startPos = endPos+1;
+
+                } while (endPos != std::string::npos);
+
             }
             break;
 
@@ -248,7 +269,6 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
-            detector_rotate = true;
             break;
 
         case 'A': //Target angle
@@ -260,9 +280,6 @@ int main(int argc,char** argv) {
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
-            }
-            if (target_angle != 0.0) {
-                target_rotate = true;
             }
             break;
 
@@ -532,7 +549,7 @@ int main(int argc,char** argv) {
     //Print the gotten/default arguments
     printHelp(target_thick,
               target_material,
-              detector_distance,
+              &detector_distances,
               detector_angle,
               target_angle,
               world_size,
@@ -572,7 +589,7 @@ int main(int argc,char** argv) {
 
     G4cout << "Starting Geant4..." << G4endl << G4endl;
 
-    G4RunManager * runManager = new G4RunManager;
+    G4RunManager* runManager = new G4RunManager;
 
     //Set the initial seed
     if (rngSeed == 0) {
@@ -582,8 +599,9 @@ int main(int argc,char** argv) {
         G4Random::setTheSeed(rngSeed);
     }
 
-    // Set mandatory initialization classes
+    // ** Set mandatory initialization classes **
 
+    // Physics
     G4int verbose=0;
     G4PhysListFactory plFactory;
     G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
@@ -612,25 +630,42 @@ int main(int argc,char** argv) {
     //physlist->SetDefaultCutValue( 0.00001*mm);
     physlist->SetDefaultCutValue( physCutoffDist*mm);
 
+    // Geometry and detectors
+    
+    G4double world_min_length_detectors = 
+        VirtualTrackerWorldConstruction::ComputeMaxAbsZ(&detector_distances, detector_angle, world_size) * 2.0;
+
+    G4double world_min_length_beam = fabs(PrimaryGeneratorAction::GetDefaultZpos(target_thick)) * 2.0;
+    if (beam_zpos != 0.0) {
+        world_min_length_beam = fabs(beam_zpos) * 2.0;
+    }
+
+    G4double world_min_length = world_min_length_detectors;
+    if (world_min_length_beam > world_min_length) {
+        world_min_length = world_min_length_beam;
+    }
+
     DetectorConstruction* physWorld = new DetectorConstruction(target_thick,
                                                                target_material,
-                                                               detector_distance,
-                                                               detector_angle,
-                                                               detector_rotate,
                                                                target_angle,
-                                                               target_rotate,
                                                                world_size,
+                                                               world_min_length,
                                                                magnetDefinitions);
 
-    ParallelWorldConstruction* magnetSensorWorld =
-        new ParallelWorldConstruction("MagnetSensorWorld",physWorld);
+    MagnetSensorWorldConstruction* magnetSensorWorld =
+        new MagnetSensorWorldConstruction("MagnetSensorWorld",physWorld);
     physWorld->RegisterParallelWorld(magnetSensorWorld);
     physlist->RegisterPhysics(new G4ParallelWorldPhysics("MagnetSensorWorld"));
 
+    VirtualTrackerWorldConstruction* virtualTrackerWorld = 
+        new VirtualTrackerWorldConstruction("VirtualTrackerWorld",physWorld, &detector_distances, detector_angle);
+    physWorld->RegisterParallelWorld(virtualTrackerWorld);
+    physlist->RegisterPhysics(new G4ParallelWorldPhysics("VirtualTrackerWorld"));
+
     runManager->SetUserInitialization(physWorld);
 
-    // Set user action classes:
-    //
+    // ** Set user action classes **
+
     PrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(physWorld,
                                                                     beam_energy,
                                                                     beam_type,
@@ -650,12 +685,14 @@ int main(int argc,char** argv) {
     EventAction* event_action = new EventAction(run_action);
     runManager->SetUserAction(event_action);
 
-    // Initialize G4 kernel
-    runManager->Initialize();
+    // ** Final initializations **
 
+    //Initialize G4 kernel
+    runManager->Initialize();
+    //Initialize magnetic fields
     physWorld->PostInitialize();
 
-    //Set root file output filename
+    //Configure ROOT output
     RootFileWriter::GetInstance()->setFilename(filename_out);
     RootFileWriter::GetInstance()->setFoldername(foldername_out);
     RootFileWriter::GetInstance()->setQuickmode(quickmode);
@@ -678,6 +715,8 @@ int main(int argc,char** argv) {
 
     // Get the pointer to the User Interface manager
     G4UImanager* UImanager = G4UImanager::GetUIpointer();
+
+    // ** Start the run **
 
     if (argc_effective != 1) { // batch mode
         if (useGUI) {
@@ -716,7 +755,8 @@ int main(int argc,char** argv) {
 
     G4cout <<"Done." << G4endl;
 
-    // Job termination
+    // ** Job termination and cleanup **
+
     // Free the store: user actions, physics_list and detector_description are
     //                 owned and deleted by the run manager, so they should not
     //                 be deleted in the main() program !
@@ -735,6 +775,8 @@ int main(int argc,char** argv) {
     delete magnetSensorWorld;
     magnetSensorWorld = NULL;
 
+    G4cout << "MiniScatter is finished" << G4endl;
+
     return 0;
 }
 
@@ -742,7 +784,7 @@ int main(int argc,char** argv) {
 
 void printHelp(G4double target_thick,
                G4String target_material,
-               G4double detector_distance,
+               std::vector<G4double>* detector_distances,
                G4double detector_angle,
                G4double target_angle,
                G4double world_size,
@@ -784,8 +826,16 @@ void printHelp(G4double target_thick,
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)." << G4endl;
 
-            G4cout << "-d <double> : Detector distance [mm], default/current value = "
-                   << detector_distance << G4endl;
+            G4cout << "-d <double>(:<double>:<double>:...) or NONE : Detector distance(s) [mm], default/current value = ";
+            if (detector_distances->size() == 0) {
+                G4cout << "NONE" << G4endl;
+            }
+            else {
+                for (int i = 0; i < ((int)detector_distances->size())-1; i++) {
+                    G4cout << detector_distances->at(i) << ":";
+                }
+                G4cout << detector_distances->back() << G4endl;
+            }
 
             G4cout << "-a <double> : Detector angle [deg],   default/current value = "
                    << detector_angle << G4endl;

@@ -15,37 +15,27 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TrackerSD
-#define TrackerSD
+#ifndef MagnetSensorWorldConstruction_hh
+#define MagnetSensorWorldConstruction_hh 1
+
+#include "G4VUserParallelWorld.hh"
 
 #include "DetectorConstruction.hh"
-#include "G4VSensitiveDetector.hh"
-#include "MyTrackerHit.hh"
 
-class G4HCofThisEvent;
-class G4TouchableHistory;
-class G4Step;
+// Parallel geometry in which the magnet sensitive detectors are defined;
+// this gets around the problem of how to attach the SDs correctly onto complex magnet geometries.
 
-class MyTrackerSD : public G4VSensitiveDetector {
-
+class MagnetSensorWorldConstruction : public G4VUserParallelWorld {
 public:
+    MagnetSensorWorldConstruction(G4String worldName, DetectorConstruction* mainGeometryConstruction_in);
+    virtual ~MagnetSensorWorldConstruction();
 
-    MyTrackerSD (const G4String& name);
-    virtual ~MyTrackerSD();
+    virtual void Construct();
+    virtual void ConstructSD();
 
-    // Methods
-    virtual void Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent);
-
-    virtual G4bool ProcessHits(G4Step* aStep,G4TouchableHistory* history);
-
-    virtual void EndOfEvent(G4HCofThisEvent*) {};
 private:
-
-    DetectorConstruction* detectorConstruction;
-
-    // Data members
-    MyTrackerHitsCollection* fHitsCollection;
-    G4int fHitsCollectionID;
+    DetectorConstruction* mainGeometryConstruction = NULL;
+    std::vector <G4VPhysicalVolume*> magnetDetectorPVs;
 };
 
 #endif

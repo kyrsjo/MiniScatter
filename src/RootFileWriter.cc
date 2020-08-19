@@ -24,8 +24,8 @@
 
 #include "TRandom1.h"
 
-#include "MyEdepHit.hh"
-#include "MyTrackerHit.hh"
+#include "EdepHit.hh"
+#include "TrackerHit.hh"
 
 #include "G4SDManager.hh"
 
@@ -34,6 +34,7 @@
 
 #include "DetectorConstruction.hh"
 #include "MagnetClasses.hh"
+#include "VirtualTrackerWorldConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
 
 #include "G4SystemOfUnits.hh"
@@ -166,6 +167,9 @@ void RootFileWriter::initializeRootFile(){
     G4cout << G4endl;
 
     eventCounter = 0;
+
+    // Limit for radial histograms
+    G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
 
     RNG = new TRandom1((UInt_t) rngSeed);
 
@@ -303,90 +307,196 @@ void RootFileWriter::initializeRootFile(){
     }
 
     // Tracker histograms
-    tracker_numParticles = new TH1D("numParticles","numParticles",1001,-0.5,1000.5);
-    tracker_numParticles->GetXaxis()->SetTitle("Number of particles / event");
+    VirtualTrackerWorldConstruction* traCon = VirtualTrackerWorldConstruction::getInstance();
+    for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
 
-    tracker_energy       = new TH1D("energy","Energy of all particles hitting the tracker",10000,0,beamEnergy);
-    tracker_energy->GetXaxis()->SetTitle("Energy per particle [MeV]");
+        std::string trackerName;
+        if (traCon->getNumTrackers() == 1) { trackerName = "tracker"; }
+        else                               { trackerName = std::string("tracker_") + std::to_string(idx+1); }
 
-    tracker_type_energy[11]  = new TH1D("tracker_energy_PDG11",
-                                      "Particle energy when hitting tracker (electrons)",
-                                      engNbins,0,beamEnergy);
-    tracker_type_energy[-11] = new TH1D("tracker_energy_PDG-11",
-                                      "Particle energy when hitting tracker (positrons)",
-                                      engNbins,0,beamEnergy);
-    tracker_type_energy[22]  = new TH1D("tracker_energy_PDG22",
-                                      "Particle energy when hitting tracker (photons)",
-                                      engNbins,0,beamEnergy);
-    tracker_type_energy[2212]= new TH1D("tracker_energy_PDG2212",
-                                      "Particle energy when hitting tracker (protons)",
-                                      engNbins,0,beamEnergy);
-    tracker_type_energy[0]   = new TH1D("tracker_energy_PDGother",
-                                      "Particle energy when hitting tracker (other)",
-                                      engNbins,0,beamEnergy);
-    for (auto it : tracker_type_energy) {
-        it.second->GetXaxis()->SetTitle("Energy [MeV]");
+        typeCounter[trackerName]             = particleTypesCounter();
+        typeCounter[trackerName + "_cutoff"] = particleTypesCounter();
+
+        tracker_numParticles.push_back(new TH1D((trackerName+"_numParticles").c_str(),(trackerName+" numParticles").c_str(),1001,-0.5,1000.5));
+        tracker_numParticles.back()->GetXaxis()->SetTitle("Number of particles / event");
+
+        tracker_energy.push_back( new TH1D((trackerName+"_energy").c_str(),("Energy of all particles hitting "+trackerName).c_str(),10000,0,beamEnergy));
+        tracker_energy.back()->GetXaxis()->SetTitle("Energy per particle [MeV]");
+
+        tracker_type_energy.push_back(std::map<G4int,TH1D*>());
+        tracker_type_energy.back()[11]  = new TH1D((trackerName+"_energy_PDG11").c_str(),
+                                                   ("Particle energy when hitting "+trackerName+" (electrons)").c_str(),
+                                                   engNbins,0,beamEnergy);
+        tracker_type_energy.back()[-11] = new TH1D((trackerName+"_energy_PDG-11").c_str(),
+                                                   ("Particle energy when hitting "+trackerName+" (positrons)").c_str(),
+                                                   engNbins,0,beamEnergy);
+        tracker_type_energy.back()[22]  = new TH1D((trackerName+"_energy_PDG22").c_str(),
+                                                   ("Particle energy when hitting "+trackerName+" (photons)").c_str(),
+                                                   engNbins,0,beamEnergy);
+        tracker_type_energy.back()[2212]= new TH1D((trackerName+"_energy_PDG2212").c_str(),
+                                                   ("Particle energy when hitting "+trackerName+" (protons)").c_str(),
+                                                   engNbins,0,beamEnergy);
+        tracker_type_energy.back()[0]   = new TH1D((trackerName+"_energy_PDGother").c_str(),
+                                                   ("Particle energy when hitting "+trackerName+" (other)").c_str(),
+                                                   engNbins,0,beamEnergy);
+        for (auto it : tracker_type_energy.back()) {
+            it.second->GetXaxis()->SetTitle("Energy [MeV]");
+        }
+
+        tracker_type_cutoff_energy.push_back(std::map<G4int,TH1D*>());
+        tracker_type_cutoff_energy.back()[11]  = new TH1D((trackerName+"_cutoff_energy_PDG11").c_str(),
+                                                          ("Particle energy when hitting "+trackerName+" (electrons) (r < Rcut)").c_str(),
+                                                          engNbins,0,beamEnergy);
+        tracker_type_cutoff_energy.back()[-11] = new TH1D((trackerName+"_cutoff_energy_PDG-11").c_str(),
+                                                          ("Particle energy when hitting "+trackerName+" (positrons) (r < Rcut)").c_str(),
+                                                          engNbins,0,beamEnergy);
+        tracker_type_cutoff_energy.back()[22]  = new TH1D((trackerName+"_cutoff_energy_PDG22").c_str(),
+                                                          ("Particle energy when hitting "+trackerName+" (photons) (r < Rcut)").c_str(),
+                                                          engNbins,0,beamEnergy);
+        tracker_type_cutoff_energy.back()[2212]= new TH1D((trackerName+"_cutoff_energy_PDG2212").c_str(),
+                                                          ("Particle energy when hitting "+trackerName+" (protons) (r < Rcut)").c_str(),
+                                                          engNbins,0,beamEnergy);
+        tracker_type_cutoff_energy.back()[0]   = new TH1D((trackerName+"_cutoff_energy_PDGother").c_str(),
+                                                          ("Particle energy when hitting "+trackerName+" (other) (r < Rcut)").c_str(),
+                                                          engNbins,0,beamEnergy);
+        for (auto it : tracker_type_cutoff_energy.back()) {
+            it.second->GetXaxis()->SetTitle("Energy [MeV]");
+        }
+
+        tracker_hitPos.push_back(        new TH2D((trackerName+"_hitpos").c_str(),
+                                                  (trackerName+" hit position").c_str(),
+                                                  1000,-traCon->getTrackerSizeX()/2.0/mm,traCon->getTrackerSizeX()/2.0/mm,
+                                                  1000,-traCon->getTrackerSizeY()/2.0/mm,traCon->getTrackerSizeY()/2.0/mm) );
+        tracker_hitPos_cutoff.push_back( new TH2D((trackerName+"_hitpos_cutoff").c_str(),
+                                                  (trackerName+" hit position (charged, energy > Ecut)").c_str(),
+                                                  1000,-position_cutoffR, position_cutoffR,
+                                                  1000,-position_cutoffR, position_cutoffR) );
+
+        tracker_phasespaceX.push_back(
+            new TH2D((trackerName+"_x").c_str(),
+                     (trackerName+" phase space (x)").c_str(),
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad) );
+        tracker_phasespaceX.back()->GetXaxis()->SetTitle("X [mm]");
+        tracker_phasespaceX.back()->GetYaxis()->SetTitle("X' [rad]");
+
+        tracker_phasespaceY.push_back(
+            new TH2D((trackerName+"_y").c_str(),
+                     (trackerName+" phase space (y)").c_str(),
+                    1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                    1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad) );
+        tracker_phasespaceY.back()->GetXaxis()->SetTitle("Y [mm]");
+        tracker_phasespaceY.back()->GetYaxis()->SetTitle("Y' [rad]");
+
+        tracker_phasespaceX_cutoff.push_back(
+            new TH2D((trackerName+"_cutoff_x").c_str(),
+                     (trackerName+" phase space (x) (charged, energy > Ecut, r < Rcut)").c_str(),
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad) );
+        tracker_phasespaceX_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
+        tracker_phasespaceX_cutoff.back()->GetYaxis()->SetTitle("X' [rad]");
+        
+        tracker_phasespaceY_cutoff.push_back(
+            new TH2D((trackerName+"_cutoff_y").c_str(),
+                     (trackerName+" phase space (y) (charged, energy > Ecut, r < Rcut)").c_str(),
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                     1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad) );
+        tracker_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
+        tracker_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y' [rad]");
+
+        tracker_phasespaceX_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        tracker_phasespaceY_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        tracker_phasespaceX_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_x_PDG11").c_str(),
+                                                                  (trackerName+" phase space (x) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[-11]  = new TH2D((trackerName+"_cutoff_x_PDG-11").c_str(),
+                                                                  (trackerName+" phase space (x) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[22]  = new TH2D((trackerName+"_cutoff_x_PDG22").c_str(),
+                                                                  (trackerName+" phase space (x) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[2212]  = new TH2D((trackerName+"_cutoff_x_PDG2212").c_str(),
+                                                                  (trackerName+" phase space (x) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceX_cutoff_PDG.back()[0]  = new TH2D((trackerName+"_cutoff_x_PDGother").c_str(),
+                                                                  (trackerName+" phase space (x) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("X [mm]");
+            PDG.second->GetYaxis()->SetTitle("X' [rad]");
+        }
+        tracker_phasespaceY_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_y_PDG11").c_str(),
+                                                                  (trackerName+" phase space (y) (electrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[-11]  = new TH2D((trackerName+"_cutoff_y_PDG-11").c_str(),
+                                                                  (trackerName+" phase space (y) (positrons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[22]  = new TH2D((trackerName+"_cutoff_y_PDG22").c_str(),
+                                                                  (trackerName+" phase space (y) (photons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[2212]  = new TH2D((trackerName+"_cutoff_y_PDG2212").c_str(),
+                                                                  (trackerName+" phase space (y) (protons, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        tracker_phasespaceY_cutoff_PDG.back()[0]  = new TH2D((trackerName+"_cutoff_y_PDGother").c_str(),
+                                                                  (trackerName+" phase space (y) (other, energy > Ecut, r < Rcut)").c_str(),
+                                                                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                                                                  1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG.back()) {
+            PDG.second->GetXaxis()->SetTitle("Y [mm]");
+            PDG.second->GetYaxis()->SetTitle("Y' [rad]");
+        }
+
+
+        // Tracker R position
+        tracker_Rpos.push_back(std::map<G4int,TH1D*>());
+        tracker_Rpos.back()[11]  = new TH1D((trackerName+"_rpos_PDG11").c_str(),
+                                            (trackerName+" rpos (electrons)").c_str(),
+                                            1000,0,minR);
+        tracker_Rpos.back()[-11] = new TH1D((trackerName+"_rpos_PDG-11").c_str(),
+                                            (trackerName+" rpos (positrons)").c_str(),
+                                            1000,0,minR);
+        tracker_Rpos.back()[22]  = new TH1D((trackerName+"_rpos_PDG22").c_str(),
+                                            (trackerName+" rpos (photons)").c_str(),
+                                            1000,0,minR);
+        tracker_Rpos.back()[2212]= new TH1D((trackerName+"_rpos_PDG2212").c_str(),
+                                            (trackerName+" rpos (protons)").c_str(),
+                                            1000,0,minR);
+        tracker_Rpos.back()[0]   = new TH1D((trackerName+"_rpos_PDGother").c_str(),
+                                            (trackerName+" rpos (other)").c_str(),
+                                            1000,0,minR);
+        for (auto hist : tracker_Rpos.back()) {
+            hist.second->GetXaxis()->SetTitle("R [mm]");
+        }
+
+        tracker_Rpos_cutoff.push_back(std::map<G4int,TH1D*>());
+        tracker_Rpos_cutoff.back()[11]  = new TH1D((trackerName+"_rpos_cutoff_PDG11").c_str(),
+                                                   (trackerName+" rpos (electrons, energy > E_cut)").c_str(),
+                                                   1000,0,minR);
+        tracker_Rpos_cutoff.back()[-11] = new TH1D((trackerName+"_rpos_cutoff_PDG-11").c_str(),
+                                                   (trackerName+" rpos (positrons, energy > E_cut)").c_str(),
+                                                   1000,0,minR);
+        tracker_Rpos_cutoff.back()[22]  = new TH1D((trackerName+"_rpos_cutoff_PDG22").c_str(),
+                                                   (trackerName+" rpos (photos, energy > E_cut)").c_str(),
+                                                   1000,0,minR);
+        tracker_Rpos_cutoff.back()[2212]= new TH1D((trackerName+"_rpos_cutoff_PDG2212").c_str(),
+                                                   (trackerName+" rpos (protons, energy > E_cut)").c_str(),
+                                                   1000,0,minR);
+        tracker_Rpos_cutoff.back()[0]   = new TH1D((trackerName+"_rpos_cutoff_PDGother").c_str(),
+                                                   (trackerName+" rpos (other, energy > E_cut)").c_str(),
+                                                   1000,0,minR);
+        for (auto hist : tracker_Rpos_cutoff.back()) {
+            hist.second->GetXaxis()->SetTitle("R [mm]");
+        }
     }
-
-    tracker_type_cutoff_energy[11]  = new TH1D("tracker_cutoff_energy_PDG11",
-                                              "Particle energy when hitting tracker (electrons) (r < Rcut)",
-                                              engNbins,0,beamEnergy);
-    tracker_type_cutoff_energy[-11] = new TH1D("tracker_cutoff_energy_PDG-11",
-                                              "Particle energy when hitting tracker (positrons) (r < Rcut)",
-                                              engNbins,0,beamEnergy);
-    tracker_type_cutoff_energy[22]  = new TH1D("tracker_cutoff_energy_PDG22",
-                                              "Particle energy when hitting tracker (photons) (r < Rcut)",
-                                              engNbins,0,beamEnergy);
-    tracker_type_cutoff_energy[2212]= new TH1D("tracker_cutoff_energy_PDG2212",
-                                              "Particle energy when hitting tracker (protons) (r < Rcut)",
-                                              engNbins,0,beamEnergy);
-    tracker_type_cutoff_energy[0]   = new TH1D("tracker_cutoff_energy_PDGother",
-                                              "Particle energy when hitting tracker (other) (r < Rcut)",
-                                              engNbins,0,beamEnergy);
-    for (auto it : tracker_type_cutoff_energy) {
-        it.second->GetXaxis()->SetTitle("Energy [MeV]");
-    }
-
-    tracker_hitPos        = new TH2D("trackerHitpos", "Tracker Hit position",
-               1000,-detCon->getDetectorSizeX()/2.0/mm,detCon->getDetectorSizeX()/2.0/mm,
-               1000,-detCon->getDetectorSizeY()/2.0/mm,detCon->getDetectorSizeY()/2.0/mm);
-    tracker_hitPos_cutoff = new TH2D("trackerHitpos_cutoff", "Tracker Hit position (charged, energy > Ecut)",
-               1000,-position_cutoffR, position_cutoffR,
-               1000,-position_cutoffR, position_cutoffR);
-
-    tracker_phasespaceX   =
-        new TH2D("tracker_x",
-                 "Tracker phase space (x)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    //tracker_phasespaceX->Sumw2();
-    tracker_phasespaceX->GetXaxis()->SetTitle("X [mm]");
-    tracker_phasespaceX->GetYaxis()->SetTitle("X' [rad]");
-    tracker_phasespaceY   =
-        new TH2D("tracker_y",
-                 "Tracker phase space (y)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    //tracker_phasespaceY->Sumw2();
-    tracker_phasespaceY->GetXaxis()->SetTitle("X [mm]");
-    tracker_phasespaceY->GetYaxis()->SetTitle("X' [rad]");
-
-    tracker_phasespaceX_cutoff   =
-        new TH2D("tracker_cutoff_x",
-                 "Tracker phase space (x) (charged, energy > Ecut, r < Rcut)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    //tracker_phasespaceX_cutoff->Sumw2();
-    tracker_phasespaceX_cutoff->GetXaxis()->SetTitle("X [mm]");
-    tracker_phasespaceX_cutoff->GetYaxis()->SetTitle("X' [rad]");
-    tracker_phasespaceY_cutoff   =
-        new TH2D("tracker_cutoff_y",
-                 "Tracker phase space (y) (charged, energy > Ecut, r < Rcut)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_angLim/rad,phasespacehist_angLim/rad);
-    //tracker_phasespaceY_cutoff->Sumw2();
-    tracker_phasespaceY_cutoff->GetXaxis()->SetTitle("Y [mm]");
-    tracker_phasespaceY_cutoff->GetYaxis()->SetTitle("Y' [rad]");
 
     init_phasespaceX   =
         new TH2D("init_x",
@@ -414,9 +524,6 @@ void RootFileWriter::initializeRootFile(){
                  "Initial particle energy",
                  1000, 0.0, max(beamEnergy*1.1,genAct->get_beam_energy_flatMax()));
     init_E->GetXaxis()->SetTitle("Energy [MeV]");
-
-    // Limit for radial histograms
-    G4double minR = min(detCon->getWorldSizeX(),detCon->getWorldSizeY())/mm;
 
     // Target R position
     if (detCon->GetHasTarget()) {
@@ -458,64 +565,11 @@ void RootFileWriter::initializeRootFile(){
         }
     }
 
-    // Tracker R position
-    tracker_Rpos[11]  = new TH1D("tracker_rpos_PDG11",
-                                 "tracker rpos (electrons)",
-                                 1000,0,minR);
-    tracker_Rpos[-11] = new TH1D("tracker_rpos_PDG-11",
-                                 "tracker rpos (positrons)",
-                                 1000,0,minR);
-    tracker_Rpos[22]  = new TH1D("tracker_rpos_PDG22",
-                                 "tracker rpos (photons)",
-                                 1000,0,minR);
-    tracker_Rpos[2212]= new TH1D("tracker_rpos_PDG2212",
-                                 "tracker rpos (protons)",
-                                 1000,0,minR);
-    tracker_Rpos[0]   = new TH1D("tracker_rpos_PDGother",
-                                 "tracker rpos (other)",
-                                 1000,0,minR);
-    for (auto hist : tracker_Rpos) {
-        hist.second->GetXaxis()->SetTitle("R [mm]");
-    }
-    tracker_Rpos_cutoff[11]  = new TH1D("tracker_rpos_cutoff_PDG11",
-                                        "tracker rpos (electrons, energy > E_cut)",
-                                        1000,0,minR);
-    tracker_Rpos_cutoff[-11] = new TH1D("tracker_rpos_cutoff_PDG-11",
-                                        "tracker rpos (positrons, energy > E_cut)",
-                                        1000,0,minR);
-    tracker_Rpos_cutoff[22]  = new TH1D("tracker_rpos_cutoff_PDG22",
-                                        "tracker rpos (photons, energy > E_cut)",
-                                        1000,0,minR);
-    tracker_Rpos_cutoff[2212]= new TH1D("tracker_rpos_cutoff_PDG2212",
-                                        "tracker rpos (protons, energy > E_cut)",
-                                        1000,0,minR);
-    tracker_Rpos_cutoff[0]   = new TH1D("tracker_rpos_cutoff_PDGother",
-                                        "tracker rpos (other, energy > E_cut)",
-                                        1000,0,minR);
-    for (auto hist : tracker_Rpos_cutoff) {
-        hist.second->GetXaxis()->SetTitle("R [mm]");
-    }
-
     //For counting the types of particles hitting the detectors (for magnets it is defined elsewhere)
     if (detCon->GetHasTarget()){
-        typeCounter["tracker"]       = particleTypesCounter();
-        typeCounter["tracker_cutoff"] = particleTypesCounter();
+        typeCounter["target"]        = particleTypesCounter();
+        typeCounter["target_cutoff"] = particleTypesCounter();
     }
-    typeCounter["target"]        = particleTypesCounter();
-    typeCounter["target_cutoff"] = particleTypesCounter();
-
-    //Compute means and RMS of where they hit
-    tracker_particleHit_x  = 0.0;
-    tracker_particleHit_xx = 0.0;
-    tracker_particleHit_y  = 0.0;
-    tracker_particleHit_yy = 0.0;
-
-    //Compute means and RMS of where they hit (above cutoff particles only)
-    tracker_particleHit_x_cutoff  = 0.0;
-    tracker_particleHit_xx_cutoff = 0.0;
-    tracker_particleHit_y_cutoff  = 0.0;
-    tracker_particleHit_yy_cutoff = 0.0;
-    numParticles_cutoff = 0;
 
     //Compute RMS of target exit angle
     if (detCon->GetHasTarget()) {
@@ -772,17 +826,17 @@ void RootFileWriter::doEvent(const G4Event* event){
 
     // *** Data from TargetSD ***
     if (detCon->GetHasTarget()) {
-        G4int myTargetEdep_CollID = SDman->GetCollectionID("target_edep");
-        if (myTargetEdep_CollID>=0){
-            MyEdepHitsCollection* targetEdepHitsCollection = NULL;
-            targetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myTargetEdep_CollID));
+        G4int TargetEdep_CollID = SDman->GetCollectionID("target_edep");
+        if (TargetEdep_CollID>=0){
+            EdepHitsCollection* targetEdepHitsCollection = NULL;
+            targetEdepHitsCollection = (EdepHitsCollection*) (HCE->GetHC(TargetEdep_CollID));
             if (targetEdepHitsCollection != NULL) {
                 G4int nEntries = targetEdepHitsCollection->entries();
                 G4double edep      = 0.0; // G4 units, normalized before Fill()
                 G4double edep_NIEL = 0.0; // G4 units, normalized before Fill()
                 G4double edep_IEL  = 0.0; // G4 units, normalized before Fill()
                 for (G4int i = 0; i < nEntries; i++){
-                    MyEdepHit* edepHit = (*targetEdepHitsCollection)[i];
+                    EdepHit* edepHit = (*targetEdepHitsCollection)[i];
                     if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
 
                     edep      += edepHit->GetDepositedEnergy();
@@ -818,13 +872,13 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myTargetEdep_CollID was " << myTargetEdep_CollID << " < 0!"<<G4endl;
+            G4cout << "TargetEdep_CollID was " << TargetEdep_CollID << " < 0!"<<G4endl;
         }
 
-        G4int myTargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
-        if (myTargetExitpos_CollID>=0) {
-            MyTrackerHitsCollection* targetExitposHitsCollection = NULL;
-            targetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTargetExitpos_CollID));
+        G4int TargetExitpos_CollID = SDman->GetCollectionID("target_exitpos");
+        if (TargetExitpos_CollID>=0) {
+            TrackerHitsCollection* targetExitposHitsCollection = NULL;
+            targetExitposHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(TargetExitpos_CollID));
             if (targetExitposHitsCollection != NULL) {
                 G4int nEntries = targetExitposHitsCollection->entries();
 
@@ -930,127 +984,139 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myTargetExitpos_CollID was " << myTargetExitpos_CollID << " < 0!"<<G4endl;
+            G4cout << "TargetExitpos_CollID was " << TargetExitpos_CollID << " < 0!"<<G4endl;
         }
     }
 
     //**Data from detectorTrackerSD**
-    G4int myTrackerSD_CollID = SDman->GetCollectionID("TrackerCollection");
-    if (myTrackerSD_CollID>=0) {
-        MyTrackerHitsCollection* trackerHitsCollection = NULL;
-        trackerHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myTrackerSD_CollID));
-        if (trackerHitsCollection != NULL) {
-            G4int nEntries = trackerHitsCollection->entries();
+    VirtualTrackerWorldConstruction* traCon = VirtualTrackerWorldConstruction::getInstance();
+    for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
 
-            for (G4int i = 0; i < nEntries; i++) {
-                //Get the data from the event
-                const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
-                const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
-                const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
-                const G4String& type   = (*trackerHitsCollection)[i]->GetType();
-                const G4ThreeVector& hitPos   = (*trackerHitsCollection)[i]->GetPosition();
-                const G4ThreeVector& momentum = (*trackerHitsCollection)[i]->GetMomentum();
-                const G4double       hitR     = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
+        std::string trackerName;
+        if (traCon->getNumTrackers() == 1) { trackerName = "tracker"; }
+        else                               { trackerName = std::string("tracker_") + std::to_string(idx+1); }
+        
+        G4int TrackerSD_CollID = SDman->GetCollectionID(std::string("tracker_") + std::to_string(idx+1)+"_exitpos"); //Internal name is always tracker_<idx>_exitpos
 
-                //Overall histograms
-                tracker_energy->Fill(energy/MeV);
+        if (TrackerSD_CollID>=0) {
+            TrackerHitsCollection* trackerHitsCollection = NULL;
+            trackerHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(TrackerSD_CollID));
+            if (trackerHitsCollection != NULL) {
+                G4int nEntries = trackerHitsCollection->entries();
 
-                if (tracker_type_energy.find(PDG) != tracker_type_energy.end()) {
-                    tracker_type_energy[PDG]->Fill(energy/MeV);
-                }
-                else {
-                    tracker_type_energy[0]->Fill(energy/MeV);
-                }
+                for (G4int i = 0; i < nEntries; i++) {
+                    //Get the data from the event
+                    const G4double  energy = (*trackerHitsCollection)[i]->GetTrackEnergy();
+                    const G4int     PDG    = (*trackerHitsCollection)[i]->GetPDG();
+                    const G4int     charge = (*trackerHitsCollection)[i]->GetCharge();
+                    const G4String& type   = (*trackerHitsCollection)[i]->GetType();
+                    const G4ThreeVector& hitPos   = (*trackerHitsCollection)[i]->GetPosition();
+                    const G4ThreeVector& momentum = (*trackerHitsCollection)[i]->GetMomentum();
+                    const G4double       hitR     = sqrt(hitPos.x()*hitPos.x() + hitPos.y()*hitPos.y());
 
-                if (hitR/mm < position_cutoffR) {
-                    if (tracker_type_cutoff_energy.find(PDG) != tracker_type_cutoff_energy.end()) {
-                        tracker_type_cutoff_energy[PDG]->Fill(energy/MeV);
+                    //Overall histograms
+                    tracker_energy[idx]->Fill(energy/MeV);
+
+                    if (tracker_type_energy[idx].find(PDG) != tracker_type_energy[idx].end()) {
+                        tracker_type_energy[idx][PDG]->Fill(energy/MeV);
                     }
                     else {
-                        tracker_type_cutoff_energy[0]->Fill(energy/MeV);
+                        tracker_type_energy[idx][0]->Fill(energy/MeV);
                     }
-                }
 
-                //Hit position
-                tracker_hitPos->Fill(hitPos.x()/mm, hitPos.y()/mm);
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    tracker_hitPos_cutoff->Fill(hitPos.x()/mm, hitPos.y()/mm);
-                }
+                    if (hitR/mm < position_cutoffR) {
+                        if (tracker_type_cutoff_energy[idx].find(PDG) != tracker_type_cutoff_energy[idx].end()) {
+                            tracker_type_cutoff_energy[idx][PDG]->Fill(energy/MeV);
+                        }
+                        else {
+                            tracker_type_cutoff_energy[idx][0]->Fill(energy/MeV);
+                        }
+                    }
 
-                //Phase space
-                tracker_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                tracker_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                    //Hit position
+                    tracker_hitPos[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                    if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        tracker_hitPos_cutoff[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                    }
 
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    tracker_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
-                    tracker_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-                }
+                    //Phase space
+                    tracker_phasespaceX[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                    tracker_phasespaceY[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
 
-                //Particle type counting
-                FillParticleTypes(typeCounter["tracker"], PDG, type);
-                if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
-                    FillParticleTypes(typeCounter["tracker_cutoff"], PDG, type);
-                }
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        if (charge != 0) {
+                            // All charged particles passing the cutoff
+                            tracker_phasespaceX_cutoff[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                            tracker_phasespaceY_cutoff[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
 
-                //Hit positions
-                tracker_particleHit_x  +=  hitPos.x()/mm;
-                tracker_particleHit_xx += (hitPos.x()/mm)*(hitPos.x()/mm);
-                tracker_particleHit_y  +=  hitPos.y()/mm;
-                tracker_particleHit_yy += (hitPos.y()/mm)*(hitPos.y()/mm);
+                        //Also separated by species
+                        if(tracker_phasespaceX_cutoff_PDG[idx].find(PDG) != tracker_phasespaceX_cutoff_PDG[idx].end()) {
+                            tracker_phasespaceX_cutoff_PDG[idx][PDG]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        }
+                        else {
+                            tracker_phasespaceX_cutoff_PDG[idx][0]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
+                        }
+                        if(tracker_phasespaceY_cutoff_PDG[idx].find(PDG) != tracker_phasespaceY_cutoff_PDG[idx].end()) {
+                            tracker_phasespaceY_cutoff_PDG[idx][PDG]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
+                        else {
+                            tracker_phasespaceY_cutoff_PDG[idx][0]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
+                        }
+                    }
 
-                if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff) {
-                    tracker_particleHit_x_cutoff  +=  hitPos.x()/mm;
-                    tracker_particleHit_xx_cutoff += (hitPos.x()/mm)*(hitPos.x()/mm);
-                    tracker_particleHit_y_cutoff  +=  hitPos.y()/mm;
-                    tracker_particleHit_yy_cutoff += (hitPos.y()/mm)*(hitPos.y()/mm);
-                    numParticles_cutoff += 1;
-                }
+                    //Particle type counting
+                    FillParticleTypes(typeCounter[trackerName], PDG, type);
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
+                        FillParticleTypes(typeCounter[trackerName+"_cutoff"], PDG, type);
+                    }
 
-                //R position
-                if (tracker_Rpos.find(PDG) != tracker_Rpos.end()) {
-                    tracker_Rpos[PDG]->Fill(hitR/mm);
-                }
-                else {
-                    tracker_Rpos[0]->Fill(hitR/mm);
-                }
-                if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
-                    if (tracker_Rpos_cutoff.find(PDG) != tracker_Rpos_cutoff.end()) {
-                        tracker_Rpos_cutoff[PDG]->Fill(hitR/mm);
+                    //R position
+                    if (tracker_Rpos[idx].find(PDG) != tracker_Rpos[idx].end()) {
+                        tracker_Rpos[idx][PDG]->Fill(hitR/mm);
                     }
                     else {
-                        tracker_Rpos_cutoff[0]->Fill(hitR/mm);
+                        tracker_Rpos[idx][0]->Fill(hitR/mm);
+                    }
+                    if (energy/MeV > beamEnergy*beamEnergy_cutoff) {
+                        if (tracker_Rpos_cutoff[idx].find(PDG) != tracker_Rpos_cutoff[idx].end()) {
+                            tracker_Rpos_cutoff[idx][PDG]->Fill(hitR/mm);
+                        }
+                        else {
+                            tracker_Rpos_cutoff[idx][0]->Fill(hitR/mm);
+                        }
+                    }
+
+                    //Fill the TTree
+                    if (not miniFile) {
+                        trackerHitsBuffer.x = hitPos.x()/mm;
+                        trackerHitsBuffer.y = hitPos.x()/mm;
+                        trackerHitsBuffer.z = hitPos.z()/mm;
+
+                        trackerHitsBuffer.px = momentum.x()/MeV;
+                        trackerHitsBuffer.py = momentum.y()/MeV;
+                        trackerHitsBuffer.pz = momentum.z()/MeV;
+
+                        trackerHitsBuffer.E = energy / MeV;
+
+                        trackerHitsBuffer.PDG = PDG;
+                        trackerHitsBuffer.charge = charge;
+
+                        trackerHitsBuffer.eventID = eventCounter;
+
+                        trackerHits->Fill();
                     }
                 }
 
-                //Fill the TTree
-                if (not miniFile) {
-                    trackerHitsBuffer.x = hitPos.x()/mm;
-                    trackerHitsBuffer.y = hitPos.x()/mm;
-                    trackerHitsBuffer.z = hitPos.z()/mm;
-
-                    trackerHitsBuffer.px = momentum.x()/MeV;
-                    trackerHitsBuffer.py = momentum.y()/MeV;
-                    trackerHitsBuffer.pz = momentum.z()/MeV;
-
-                    trackerHitsBuffer.E = energy / MeV;
-
-                    trackerHitsBuffer.PDG = PDG;
-                    trackerHitsBuffer.charge = charge;
-
-                    trackerHitsBuffer.eventID = eventCounter;
-
-                    trackerHits->Fill();
-                }
+                tracker_numParticles[idx]->Fill(nEntries);
             }
-
-            tracker_numParticles->Fill(nEntries);
+            else{
+                G4cout << "trackerHitsCollection was NULL! for tracker '" + trackerName << "'" << G4endl;
+            }
         }
         else{
-            G4cout << "trackerHitsCollection was NULL!"<<G4endl;
+            G4cout << "TrackerSD_CollID was " << TrackerSD_CollID << " < 0 for tracker '" << trackerName << "'" << G4endl;
         }
-    }
-    else{
-        G4cout << "myTrackerSD_CollID was " << myTrackerSD_CollID << "<0!"<<G4endl;
     }
 
     // Initial particle distribution
@@ -1066,15 +1132,15 @@ void RootFileWriter::doEvent(const G4Event* event){
         magIdx++;
 
         //Edep data collection
-        G4int myMagnetEdep_CollID = SDman->GetCollectionID(magName+"_edep");
-        if (myMagnetEdep_CollID>=0){
-            MyEdepHitsCollection* magnetEdepHitsCollection = NULL;
-            magnetEdepHitsCollection = (MyEdepHitsCollection*) (HCE->GetHC(myMagnetEdep_CollID));
+        G4int MagnetEdep_CollID = SDman->GetCollectionID(magName+"_edep");
+        if (MagnetEdep_CollID>=0){
+            EdepHitsCollection* magnetEdepHitsCollection = NULL;
+            magnetEdepHitsCollection = (EdepHitsCollection*) (HCE->GetHC(MagnetEdep_CollID));
             if (magnetEdepHitsCollection != NULL) {
                 G4int nEntries = magnetEdepHitsCollection->entries();
                 G4double edep      = 0.0;
                 for (G4int i = 0; i < nEntries; i++){
-                    MyEdepHit* edepHit = (*magnetEdepHitsCollection)[i];
+                    EdepHit* edepHit = (*magnetEdepHitsCollection)[i];
                     if (edepHit->GetDepositedEnergy() < 1e-20*MeV) continue;
 
                     edep      += edepHit->GetDepositedEnergy();
@@ -1128,15 +1194,15 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myMagnetEdep_CollID was " << myMagnetEdep_CollID << " < 0 for '" << magName << "'!"<<G4endl;
+            G4cout << "MagnetEdep_CollID was " << MagnetEdep_CollID << " < 0 for '" << magName << "'!"<<G4endl;
         }
 
 
         // Exitpos data collection
-        G4int myMagnetExitpos_CollID = SDman->GetCollectionID(magName + "_exitpos");
-        if (myMagnetExitpos_CollID>=0) {
-            MyTrackerHitsCollection* magnetExitposHitsCollection = NULL;
-            magnetExitposHitsCollection = (MyTrackerHitsCollection*) (HCE->GetHC(myMagnetExitpos_CollID));
+        G4int MagnetExitpos_CollID = SDman->GetCollectionID(magName + "_exitpos");
+        if (MagnetExitpos_CollID>=0) {
+            TrackerHitsCollection* magnetExitposHitsCollection = NULL;
+            magnetExitposHitsCollection = (TrackerHitsCollection*) (HCE->GetHC(MagnetExitpos_CollID));
             if (magnetExitposHitsCollection != NULL) {
                 G4int nEntries = magnetExitposHitsCollection->entries();
 
@@ -1261,7 +1327,7 @@ void RootFileWriter::doEvent(const G4Event* event){
             }
         }
         else {
-            G4cout << "myMagnetExitpos_CollID was " << myMagnetExitpos_CollID << " < 0 for '" << magName << "'!"<<G4endl;
+            G4cout << "MagnetExitpos_CollID was " << MagnetExitpos_CollID << " < 0 for '" << magName << "'!"<<G4endl;
         }
     } // END loop over magnets
     if (not miniFile) {
@@ -1271,8 +1337,9 @@ void RootFileWriter::doEvent(const G4Event* event){
 void RootFileWriter::finalizeRootFile() {
 
     //Needed for some of the processing
-    G4RunManager*           run  = G4RunManager::GetRunManager();
-    DetectorConstruction* detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    G4RunManager*                      run  = G4RunManager::GetRunManager();
+    DetectorConstruction*            detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
+    VirtualTrackerWorldConstruction* traCon = VirtualTrackerWorldConstruction::getInstance();
 
     //Print out the particle types on all detector planes
     for (auto it : typeCounter) {
@@ -1280,16 +1347,6 @@ void RootFileWriter::finalizeRootFile() {
     }
 
     // ** Below cutoff **
-
-    //Tracker average position and RMS
-    double xave  = tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles);
-    double yave  = tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles);
-    double xrms  = ( tracker_particleHit_xx - (tracker_particleHit_x*tracker_particleHit_x / ((double)typeCounter["tracker"].numParticles)) ) /
-        (((double)typeCounter["tracker"].numParticles)-1.0);
-    xrms = sqrt(xrms);
-    double yrms  = ( tracker_particleHit_yy - (tracker_particleHit_y*tracker_particleHit_y / ((double)typeCounter["tracker"].numParticles)) ) /
-        (((double)typeCounter["tracker"].numParticles)-1.0);
-    yrms = sqrt(yrms);
 
     //Exitangle
     G4double exitangle_avg=NAN;
@@ -1303,11 +1360,6 @@ void RootFileWriter::finalizeRootFile() {
         exitangle_rms = sqrt(exitangle_rms);
     }
 
-    G4cout << G4endl
-           << "All particles (n=" << typeCounter["tracker"].numParticles << "):" << G4endl;
-
-    G4cout << "Average x = " << xave << " [mm], RMS = " << xrms << " [mm]" << G4endl
-           << "Average y = " << yave << " [mm], RMS = " << yrms << " [mm]" << G4endl;
 
     if (detCon->GetHasTarget()) {
         G4cout << G4endl
@@ -1316,20 +1368,6 @@ void RootFileWriter::finalizeRootFile() {
     }
 
     // ** Above cutoff **
-
-    // Average position and RMS
-    double xave_cutoff  = tracker_particleHit_x_cutoff / ((double)numParticles_cutoff);
-    double yave_cutoff  = tracker_particleHit_y_cutoff / ((double)numParticles_cutoff);
-    double xrms_cutoff  = ( tracker_particleHit_xx_cutoff -
-                            (tracker_particleHit_x_cutoff*tracker_particleHit_x_cutoff /
-                             ((double)numParticles_cutoff)) ) /
-        (((double)numParticles_cutoff)-1.0);
-    xrms_cutoff = sqrt(xrms_cutoff);
-    double yrms_cutoff  = ( tracker_particleHit_yy_cutoff -
-                            (tracker_particleHit_y_cutoff*tracker_particleHit_y_cutoff /
-                             ((double)numParticles_cutoff)) ) /
-        (((double)numParticles_cutoff)-1.0);
-    yrms_cutoff = sqrt(yrms_cutoff);
 
     //Exitangle
     G4double exitangle_avg_cutoff = NAN;
@@ -1346,11 +1384,8 @@ void RootFileWriter::finalizeRootFile() {
 
     G4cout << G4endl
            << "Above cutoff (charged, energy > "
-           << beamEnergy*beamEnergy_cutoff <<" [MeV], n=" << numParticles_cutoff
-           << ") only:" << G4endl << G4endl;
+           << beamEnergy*beamEnergy_cutoff <<" [MeV]) only:" << G4endl << G4endl;
 
-    G4cout << "Average x = " << xave_cutoff << " [mm], RMS = " << xrms_cutoff << " [mm]" << G4endl
-           << "Average y = " << yave_cutoff << " [mm], RMS = " << yrms_cutoff << " [mm]" << G4endl;
 
     if (detCon->GetHasTarget()) {
         G4cout << G4endl
@@ -1415,10 +1450,18 @@ void RootFileWriter::finalizeRootFile() {
             PrintTwissParameters(PDG.second);
         }
     }
-    PrintTwissParameters(tracker_phasespaceX);
-    PrintTwissParameters(tracker_phasespaceY);
-    PrintTwissParameters(tracker_phasespaceX_cutoff);
-    PrintTwissParameters(tracker_phasespaceY_cutoff);
+    for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+        PrintTwissParameters(tracker_phasespaceX[idx]);
+        PrintTwissParameters(tracker_phasespaceY[idx]);
+        PrintTwissParameters(tracker_phasespaceX_cutoff[idx]);
+        PrintTwissParameters(tracker_phasespaceY_cutoff[idx]);
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+            PrintTwissParameters(PDG.second);
+        }
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+            PrintTwissParameters(PDG.second);
+        }
+    }
 
     if (anaScatterTest and detCon->GetHasTarget()) {
         // Compute the analytical multiple scattering angle distribution
@@ -1524,8 +1567,8 @@ void RootFileWriter::finalizeRootFile() {
     }
 
 
-    if (not quickmode) {
-        //Write the 2D histograms to the ROOT file (slow)
+    if (not quickmode) { //Write the 2D and 3D histograms to the ROOT file (slow)
+
         G4cout << "Writing 2D histograms..." << G4endl;
         init_phasespaceX->Write();
         init_phasespaceY->Write();
@@ -1543,14 +1586,23 @@ void RootFileWriter::finalizeRootFile() {
             }
         }
 
-        tracker_hitPos->Write();
-        tracker_hitPos_cutoff->Write();
+        for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+            tracker_hitPos[idx]->Write();
+            tracker_hitPos_cutoff[idx]->Write();
 
-        tracker_phasespaceX->Write();
-        tracker_phasespaceY->Write();
+            tracker_phasespaceX[idx]->Write();
+            tracker_phasespaceY[idx]->Write();
 
-        tracker_phasespaceX_cutoff->Write();
-        tracker_phasespaceY_cutoff->Write();
+            tracker_phasespaceX_cutoff[idx]->Write();
+            tracker_phasespaceY_cutoff[idx]->Write();
+
+            for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+                PDG.second->Write();
+            }
+            for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+                PDG.second->Write();
+            }
+        }
 
         for (auto it : magnet_edep_rdens) {
             it->Write();
@@ -1614,11 +1666,18 @@ void RootFileWriter::finalizeRootFile() {
     G4cout << "Writing 1D histograms..." << G4endl;
 
     init_E->Write();
+    delete init_E; init_E = NULL;
 
     if (detCon->GetHasTarget()) {
         targetEdep->Write();
+        delete targetEdep;      targetEdep      = NULL;
         targetEdep_NIEL->Write();
+        delete targetEdep_NIEL; targetEdep_NIEL = NULL;
         targetEdep_IEL->Write();
+        delete targetEdep_IEL;  targetEdep_IEL  = NULL;
+
+        target_exitangle_hist->Write();
+        delete target_exitangle_hist; target_exitangle_hist = NULL;
 
         // (Loops over particle types)
         for (auto it : target_exit_energy) {
@@ -1643,31 +1702,41 @@ void RootFileWriter::finalizeRootFile() {
         target_exit_Rpos_cutoff.clear();
     }
 
-    for (auto it : tracker_type_energy) {
-        it.second->Write();
-        delete it.second;
+    for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+        tracker_numParticles[idx]->Write();
+        delete tracker_numParticles[idx]; tracker_numParticles[idx] = NULL;
+
+        tracker_energy[idx]->Write();
+        delete tracker_energy[idx]; tracker_energy[idx] = NULL;
+
+        for (auto it : tracker_type_energy[idx]) {
+            it.second->Write();
+            delete it.second;
+        }
+        tracker_type_energy[idx].clear();
+        for (auto it : tracker_type_cutoff_energy[idx]) {
+            it.second->Write();
+            delete it.second;
+        }
+        tracker_type_cutoff_energy[idx].clear();
+
+        for (auto it: tracker_Rpos[idx]) {
+            it.second->Write();
+            delete it.second;
+        }
+        tracker_Rpos[idx].clear();
+        for (auto it: tracker_Rpos_cutoff[idx]) {
+            it.second->Write();
+            delete it.second;
+        }   
+        tracker_Rpos_cutoff[idx].clear();
     }
+    tracker_numParticles.clear();
+    tracker_energy.clear();
     tracker_type_energy.clear();
-    for (auto it : tracker_type_cutoff_energy) {
-        it.second->Write();
-        delete it.second;
-    }
     tracker_type_cutoff_energy.clear();
-
-    for (auto it: tracker_Rpos) {
-        it.second->Write();
-        delete it.second;
-    }
     tracker_Rpos.clear();
-    for (auto it: tracker_Rpos_cutoff) {
-        it.second->Write();
-        delete it.second;
-    }
     tracker_Rpos_cutoff.clear();
-
-    if (detCon->GetHasTarget()) {
-        target_exitangle_hist->Write();
-    }
 
     // Clear magnet 3D hists
     if (this->edep_dens_dz > 0.0 ) {
@@ -1676,6 +1745,7 @@ void RootFileWriter::finalizeRootFile() {
         }
     }
     magnet_edep_dens.clear();
+
     // Clear magnet 2D hists
     for (auto it : magnet_edep_rdens) {
         delete it;
@@ -1756,17 +1826,13 @@ void RootFileWriter::finalizeRootFile() {
     }
     magnet_exit_cutoff_energy.clear();
 
-    //Now that we have plotted, delete stuff
+    //Now that we have plotted, delete 2D and 3D hists (even if we have disabled writing 2D and 3D histograms)
 
     delete init_phasespaceX; init_phasespaceX = NULL;
     delete init_phasespaceY; init_phasespaceY = NULL;
     delete init_phasespaceXY; init_phasespaceXY = NULL;
 
     if (detCon->GetHasTarget()) {
-        delete targetEdep; targetEdep = NULL;
-        delete targetEdep_NIEL; targetEdep_NIEL = NULL;
-        delete targetEdep_IEL; targetEdep_IEL = NULL;
-
         delete target_exitangle_hist; target_exitangle_hist = NULL;
 
         delete target_exit_phasespaceX; target_exit_phasespaceX = NULL;
@@ -1776,11 +1842,35 @@ void RootFileWriter::finalizeRootFile() {
         delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
     }
 
-    delete tracker_phasespaceX; tracker_phasespaceX = NULL;
-    delete tracker_phasespaceY; tracker_phasespaceY = NULL;
+    //2D tracker histos
+    for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+        delete tracker_phasespaceX[idx]; tracker_phasespaceX[idx] = NULL;
+        delete tracker_phasespaceY[idx]; tracker_phasespaceY[idx] = NULL;
 
-    delete tracker_phasespaceX_cutoff; tracker_phasespaceX_cutoff = NULL;
-    delete tracker_phasespaceY_cutoff; tracker_phasespaceY_cutoff = NULL;
+        delete tracker_phasespaceX_cutoff[idx]; tracker_phasespaceX_cutoff[idx] = NULL;
+        delete tracker_phasespaceY_cutoff[idx]; tracker_phasespaceY_cutoff[idx] = NULL;
+
+        delete tracker_hitPos[idx]; tracker_hitPos[idx] = NULL;
+        delete tracker_hitPos_cutoff[idx]; tracker_hitPos_cutoff[idx] = NULL;
+
+        for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+            delete PDG.second;
+        }
+        tracker_phasespaceX_cutoff_PDG[idx].clear();
+
+        for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+            delete PDG.second;
+        }
+        tracker_phasespaceY_cutoff_PDG[idx].clear();
+    }
+    tracker_phasespaceX.clear();
+    tracker_phasespaceY.clear();
+    tracker_phasespaceX_cutoff.clear();
+    tracker_phasespaceY_cutoff.clear();
+    tracker_hitPos.clear();
+    tracker_hitPos_cutoff.clear();
+    tracker_phasespaceX_cutoff_PDG.clear();
+    tracker_phasespaceY_cutoff_PDG.clear();
 
     if (detCon->GetHasTarget()) {
         if (target_edep_dens != NULL) {
@@ -1792,11 +1882,6 @@ void RootFileWriter::finalizeRootFile() {
 
         delete target_exitangle_hist_cutoff; target_exitangle_hist_cutoff = NULL;
     }
-
-    delete tracker_numParticles; tracker_numParticles = NULL;
-    delete tracker_energy; tracker_energy = NULL;
-    delete tracker_hitPos; tracker_hitPos = NULL;
-    delete tracker_hitPos_cutoff; tracker_hitPos_cutoff = NULL;
 
     if(not miniFile) {
         delete trackerHits; trackerHits = NULL;

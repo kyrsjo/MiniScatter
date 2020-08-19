@@ -15,7 +15,7 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "MyTargetSD.hh"
+#include "TargetSD.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4SDManager.hh"
 #include "G4Step.hh"
@@ -29,7 +29,7 @@
 //using namespace std;
 
 
-MyTargetSD::MyTargetSD(const G4String& name) :
+TargetSD::TargetSD(const G4String& name) :
     G4VSensitiveDetector(name) {
 
     fHitsCollection_edep = NULL; //Note: The HitsCollection objects are deleted by Geant4.
@@ -41,20 +41,20 @@ MyTargetSD::MyTargetSD(const G4String& name) :
     fHitsCollectionID_exitpos = -1;
 }
 
-MyTargetSD::~MyTargetSD() {}
+TargetSD::~TargetSD() {}
 
 // Called at the beginning of each event, making the hits collections
-void MyTargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
+void TargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 
     //Energy deposits
-    fHitsCollection_edep = new MyEdepHitsCollection(SensitiveDetectorName, collectionName[0]);
+    fHitsCollection_edep = new EdepHitsCollection(SensitiveDetectorName, collectionName[0]);
     if (fHitsCollectionID_edep < 0) {
         fHitsCollectionID_edep = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection_edep);
     }
     hitsCollectionOfThisEvent->AddHitsCollection(fHitsCollectionID_edep, fHitsCollection_edep);
 
     //Exit positions
-    fHitsCollection_exitpos = new MyTrackerHitsCollection(SensitiveDetectorName, collectionName[1]);
+    fHitsCollection_exitpos = new TrackerHitsCollection(SensitiveDetectorName, collectionName[1]);
     if (fHitsCollectionID_exitpos < 0) {
         fHitsCollectionID_exitpos = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection_exitpos);
     }
@@ -62,15 +62,15 @@ void MyTargetSD::Initialize(G4HCofThisEvent* hitsCollectionOfThisEvent) {
 }
 
 // Called each step in the scoring logical volume
-G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
+G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
 
     //Always do the energy deposit
     const G4AffineTransform& topTransform = aStep->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform();
-    MyEdepHit* aHit_edep = new MyEdepHit(aStep->GetTotalEnergyDeposit(),
-                                         aStep->GetNonIonizingEnergyDeposit(),
-                                         topTransform.TransformPoint( aStep->GetPreStepPoint()->GetPosition()  ),
-                                         topTransform.TransformPoint( aStep->GetPostStepPoint()->GetPosition() )
-                                         );
+    EdepHit* aHit_edep = new EdepHit(aStep->GetTotalEnergyDeposit(),
+                                     aStep->GetNonIonizingEnergyDeposit(),
+                                     topTransform.TransformPoint( aStep->GetPreStepPoint()->GetPosition()  ),
+                                     topTransform.TransformPoint( aStep->GetPostStepPoint()->GetPosition() )
+                                    );
     fHitsCollection_edep->insert(aHit_edep);
 
     //Only use outgoing tracks
@@ -84,7 +84,7 @@ G4bool MyTargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
         G4int particleID = particleType->GetPDGEncoding();
         G4int particleCharge = particleType->GetPDGCharge();
 
-        MyTrackerHit* aHit = new MyTrackerHit(hitPos, momentum, energy, particleID, particleCharge);
+        TrackerHit* aHit = new TrackerHit(hitPos, momentum, energy, particleID, particleCharge);
         aHit->SetType(particleType->GetParticleSubType());
         fHitsCollection_exitpos->insert(aHit);
     }

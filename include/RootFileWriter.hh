@@ -15,8 +15,8 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ROOTFILEWRITER_HH_
-#define ROOTFILEWRITERANALYSIS_HH_
+#ifndef ROOTFILEWRITER_HH
+#define ROOTFILEWRITER_HH 1
 #include "G4Event.hh"
 
 #include "TFile.h"
@@ -171,19 +171,21 @@ private:
     std::vector<std::map<G4int,TH1D*>> magnet_exit_cutoff_energy;
 
     //Tracker histograms
-    TH1D* tracker_numParticles;
-    TH1D* tracker_energy;
-    std::map<G4int,TH1D*> tracker_type_energy;
-    std::map<G4int,TH1D*> tracker_type_cutoff_energy;
-    TH2D* tracker_hitPos;
-    TH2D* tracker_hitPos_cutoff;
-    TH2D* tracker_phasespaceX;
-    TH2D* tracker_phasespaceY;
-    TH2D* tracker_phasespaceX_cutoff;
-    TH2D* tracker_phasespaceY_cutoff;
+    std::vector<TH1D*> tracker_numParticles;
+    std::vector<TH1D*> tracker_energy;
+    std::vector<std::map<G4int,TH1D*>> tracker_type_energy;
+    std::vector<std::map<G4int,TH1D*>> tracker_type_cutoff_energy;
+    std::vector<TH2D*> tracker_hitPos;
+    std::vector<TH2D*> tracker_hitPos_cutoff;
+    std::vector<TH2D*> tracker_phasespaceX;
+    std::vector<TH2D*> tracker_phasespaceY;
+    std::vector<TH2D*> tracker_phasespaceX_cutoff;
+    std::vector<TH2D*> tracker_phasespaceY_cutoff;
+    std::vector<std::map<G4int,TH2D*>> tracker_phasespaceX_cutoff_PDG;
+    std::vector<std::map<G4int,TH2D*>> tracker_phasespaceY_cutoff_PDG;
 
-    std::map<G4int,TH1D*> tracker_Rpos;
-    std::map<G4int,TH1D*> tracker_Rpos_cutoff;
+    std::vector<std::map<G4int,TH1D*>> tracker_Rpos;
+    std::vector<std::map<G4int,TH1D*>> tracker_Rpos_cutoff;
 
     //Initial distribution
     TH2D* init_phasespaceX;
@@ -195,19 +197,6 @@ private:
 
     // Count the number of each particle type that hits the tracker
     std::map<G4String,particleTypesCounter> typeCounter;
-
-    // Compute means and standard deviations of where the particles hit the tracker
-    G4double tracker_particleHit_x;
-    G4double tracker_particleHit_xx;
-    G4double tracker_particleHit_y;
-    G4double tracker_particleHit_yy;
-
-    G4double tracker_particleHit_x_cutoff;
-    G4double tracker_particleHit_xx_cutoff;
-    G4double tracker_particleHit_y_cutoff;
-    G4double tracker_particleHit_yy_cutoff;
-
-    G4int numParticles_cutoff;
 
     //Target exit angle RMS
     G4double target_exitangle;

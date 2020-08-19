@@ -15,8 +15,8 @@
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MyTrackerHit_HH
-#define MyTrackerHit_HH
+#ifndef TrackerHit_HH
+#define TrackerHit_HH
 
 #include "G4Allocator.hh"
 #include "G4THitsCollection.hh"
@@ -26,18 +26,18 @@
 class G4AttDef;
 class G4AttValue;
 
-class MyTrackerHit : public G4VHit {
+class TrackerHit : public G4VHit {
 
 public:
 
     // Constructors
-    MyTrackerHit() :
+    TrackerHit() :
         trackPosition(0,0,0), trackMomentum(0,0,0), trackEnergy(0.0), PDG(0), particleCharge(0.0) {};
-    MyTrackerHit(G4ThreeVector position, G4ThreeVector momentum, G4double energy, G4int id, G4int charge) :
+    TrackerHit(G4ThreeVector position, G4ThreeVector momentum, G4double energy, G4int id, G4int charge) :
         trackPosition(position), trackMomentum(momentum), trackEnergy(energy), PDG(id), particleCharge(charge) {};
 
     // Destructor
-    virtual ~MyTrackerHit() {};
+    virtual ~TrackerHit() {};
     inline void *operator new(size_t);
     inline void operator delete(void *aHit);
 
@@ -65,18 +65,18 @@ private:
     G4String particleType;
 };
 
-typedef G4THitsCollection<MyTrackerHit> MyTrackerHitsCollection;
+typedef G4THitsCollection<TrackerHit> TrackerHitsCollection;
 
-extern G4Allocator<MyTrackerHit> MyTrackerHitAllocator;
+extern G4Allocator<TrackerHit> TrackerHitAllocator;
 
-inline void* MyTrackerHit::operator new(size_t) {
+inline void* TrackerHit::operator new(size_t) {
     void* aHit;
-    aHit = (void*)MyTrackerHitAllocator.MallocSingle();
+    aHit = (void*)TrackerHitAllocator.MallocSingle();
     return aHit;
 }
 
-inline void MyTrackerHit::operator delete(void* aHit) {
-    MyTrackerHitAllocator.FreeSingle((MyTrackerHit*) aHit);
+inline void TrackerHit::operator delete(void* aHit) {
+    TrackerHitAllocator.FreeSingle((TrackerHit*) aHit);
 }
 
 #endif
