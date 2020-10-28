@@ -112,4 +112,3 @@ install(TARGETS MiniScatter DESTINATION bin)
 
 ## ROOT classes
 add_subdirectory(ROOTclasses)
-install(TARGETS MiniScatter_ROOTclasses DESTINATION bin)

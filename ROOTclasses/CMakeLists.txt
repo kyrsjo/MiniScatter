@@ -16,3 +16,5 @@ ROOT_GENERATE_DICTIONARY(MiniScatter_ROOTclasses_dict MiniScatter_ROOTclasses.h 
 set(MiniScatter_ROOTclasses_src MiniScatter_ROOTclasses.cpp MiniScatter_ROOTclasses_dict.cxx)
 add_library(MiniScatter_ROOTclasses SHARED ${MiniScatter_ROOTclasses_src})
 target_link_libraries(MiniScatter_ROOTclasses ${ROOT_LIBRARIES})
+
+install(TARGETS MiniScatter_ROOTclasses DESTINATION bin)
