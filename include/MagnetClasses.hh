@@ -14,8 +14,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
-#ifndef MagnetClasses_h$
-#define MagnetClasses_h$
+#ifndef MagnetClasses_h
+#define MagnetClasses_h
 
 #include "G4SystemOfUnits.hh"
 
