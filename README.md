@@ -10,6 +10,9 @@ This makes it very convenient to use MiniScatter for running scans and extractin
 Furthermore, the scan library provides behind-the-scenes saving of results, meaning that if you have previously ran a simulation and then restart the Jupyter notebook, running the same python call again will instantly return the same results as when running the simulation in the first round.
 This is implemented using ROOT and HDF5.
 
+If you have used MiniScatter, please cite [3]:
+K. Sjobak and H. Holmestad, _MiniScatter, a simple Geant4 wrapper_, in proceedings of IPAC 2019, Melbourne, Australia, May 2019.
+
 ## Installing MiniScatter
 
 *Note: If you have access to CERN computing resources, you can run MiniScatter through SWAN or LxPlus instead of installing MiniScatter on your local machine.
@@ -18,9 +21,9 @@ For more information, see [SWAN](SWAN.md).*
 
 To install MiniScatter, you must first install Geant4 and ROOT.
 
-For Geant4, build and install as described on the framework's webpage [3].
+For Geant4, build and install as described on the framework's webpage [4].
 Assuming that it is installed in e.g. `~/code/geant4/geant4.10.04.p02-install`, then load Geant4 in the current shell by running `source ~/code/geant4/geant4.10.04.p02-install/bin/geant4.sh`.
-If you intend to use MiniScatter with Jupyter [4], do this in the shell you plan to start Jupyter before launching `jupyter-notebook`.
+If you intend to use MiniScatter with Jupyter [5], do this in the shell you plan to start Jupyter before launching `jupyter-notebook`.
 You must also remember to load Geant4 before compiling and running MiniScatter.
 
 In order to use the graphical interface you need set the following Cmake options when installing GEANT4:
@@ -42,7 +45,7 @@ For ROOT, simply install it using your distribution's package manager, e.g. `dnf
 
 Then, clone MiniScatter into a new folder, e.g. from ~/code run `git clone https://github.com/kyrsjo/MiniScatter.git`.
 Enter `~/code/MiniScatter`, and create a build folder `~/code/MiniScatter/build`.
-In this folder, first configure the build system using CMAKE [5] by running `cmake ../.`, and then compile using `make -j N` where N is the number of CPUs to use; if for example you are running on a 16-core machine use `make -j 16`.
+In this folder, first configure the build system using CMAKE [6] by running `cmake ../.`, and then compile using `make -j N` where N is the number of CPUs to use; if for example you are running on a 16-core machine use `make -j 16`.
 If all goes well, you have now built the executable!
 
 Note that you may also change various build options, for example to enable debugging symbols to be written to the executable.
@@ -81,8 +84,10 @@ For examples of using the Python interface as well as running the code via Jupyt
 
 [2] : https://root.cern.ch/
 
-[3] : http://geant4-userdoc.web.cern.ch/geant4-userdoc/UsersGuides/InstallationGuide/html/
+[3] : https://accelconf.web.cern.ch/ipac2019/papers/wepts025.pdf
 
-[4] : http://jupyter.org/
+[4] : http://geant4-userdoc.web.cern.ch/geant4-userdoc/UsersGuides/InstallationGuide/html/
 
-[5] : https://cmake.org/
+[5] : http://jupyter.org/
+
+[6] : https://cmake.org/
