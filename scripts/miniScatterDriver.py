@@ -185,7 +185,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
     # #print (runResults)
 
     #Inspired by https://stackoverflow.com/questions/52545512/realtime-output-from-a-shell-command-in-jupyter-notebook
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, close_fds=True, cwd=runFolder, text=True)
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, close_fds=True, cwd=runFolder, universal_newlines=True)
     linebuff = ""
     spinnerState = None # 0=/, 1=-, 2=\, 3=| (cycle); None: Last printout was an event, so issue a newline not a carriage return
 

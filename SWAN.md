@@ -11,11 +11,11 @@ Furthermore, you need:
  * Access to SWAN
 
 ## First-time setup
-The easiest way to setup MiniScatter is to login to lxplus7 with SSH and compile it from there.
-This can be done by simply opening a terminal and running `ssh USERNAME@lxplus7.cern.ch` if you are on a Linux or Mac machine;
+The easiest way to setup MiniScatter is to login to lxplus with SSH and compile it from there.
+This can be done by simply opening a terminal and running `ssh USERNAME@lxplus.cern.ch` if you are on a Linux or Mac machine;
 from Windows a 3rd party program such as Putty [2] is required.
 
-Once connected to lxplus7, download and compile MiniScatter as follows:
+Once connected to lxplus, download and compile MiniScatter as follows:
  * Change folder to your CERNBOX:
    `cd /eos/user/first_letter_in_username/username/`
    (remember to use your actual username and the first letter in the username in this command)
@@ -36,7 +36,7 @@ Note that if a SSH client cannot be installed on your local machine, it is possi
 However this browser-based terminal will likely be significantly less confortable than a "real" SSH client.
 To do so, click on the  `>_` symbol in upper right part of screen, then follow the instructions above starting with cloning the GIT repository. 
 
-Logging in to LxPlus7 can also be a good way for debugging issues with MiniScatter, as it provides an already setup environment including the supporting libraries<sup>2</sup>.
+Logging in to LxPlus can also be a good way for debugging issues with MiniScatter, as it provides an already setup environment including the supporting libraries<sup>2</sup>.
 As an example, if you are standing in the `build_SWAN` folder you can run MiniScatter as follows:
 `./MiniScatter -n 100`
 Much output but no errors should be produced.
@@ -47,8 +47,8 @@ Assuming that you have compiled MiniScatter in CERNBOX as described above and th
 
  * Spin up a SWAN virtual machine.
    In the configuration dialog, make sure to select a software stack and platform which matches the one used in `setupLCG.sh` when compiling; currently this is:
-   - Software stack = `94 Python3`
-   - Platform = `x86_64_centos7-gcc7-opt`
+   - Software stack = `97 Python3`
+   - Platform = `x86_64_centos7-gcc9-opt`
    - Environment script = `geant4.sh`
  * Switch to tab `CERNBox`, then open the MiniScatter folder
  * Open one notebooks in the `examples` folder, and try to execute it step-by-step
@@ -77,6 +77,6 @@ For further information, see the documentation on the [Python Interface](PyInter
 
 ## Footnotes
 
-1: You can of course also clone MiniScatter from a fork or using the SSH url, if you are logged into GitHub on LxPlus7.
+1: You can of course also clone MiniScatter from a fork or using the SSH url, if you are logged into GitHub on LxPlus.
 
 2: But remember to `source setupLCG.sh`!

@@ -1605,7 +1605,9 @@ void RootFileWriter::finalizeRootFile() {
         }
 
         for (auto it : magnet_edep_rdens) {
-            it->Write();
+            if (it != NULL) {
+                it->Write();
+	    }
         }
         for (auto it : magnet_exit_phasespaceX) {
             it->Write();

@@ -847,7 +847,7 @@ void printHelp(G4double target_thick,
                    << world_size << G4endl;
 
             G4cout << "-p <string> : Physics list name,      default/current       = '"
-                   << physListName << G4endl;
+                   << physListName << "'" << G4endl;
 
             G4cout << "--physCutoffDist <double>: Standard physics cutoff distance [mm], default/current value = "
                    << physCutoffDist << G4endl;
@@ -907,7 +907,7 @@ void printHelp(G4double target_thick,
             G4cout << "-o <string : Output folder,           default/current value = "
                    << foldername_out << G4endl;
 
-            G4cout << "--cutoffEnergyfraction : Minimum of beam energy to require for 'cutoff' plots, "
+            G4cout << "--cutoffEnergyFraction : Minimum of beam energy to require for 'cutoff' plots, "
                    << "default/current value = " << cutoff_energyFraction << G4endl;
 
             G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
