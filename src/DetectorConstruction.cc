@@ -167,6 +167,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                    true);           //Check for overlaps
 
     //logicWorld->SetVisAttributes(G4VisAttributes(false));
+    logicWorld->SetVisAttributes(G4Colour(0.5,0.5,0.5,0.1));
 
     //constructing the target
     if (TargetThickness > 0.0) {
