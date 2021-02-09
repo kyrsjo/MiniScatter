@@ -54,7 +54,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
             raise ValueError("Found PRESS="+str(simSetup["PRESS"]) + " but no MAT. This makes no sense.")
 
     if "DIST" in simSetup:
-        if type(simSetup["DIST"]) == float:
+        if simSetup["DIST"] == "NONE":
+            cmd += ["-d", "NONE"]
+        elif type(simSetup["DIST"]) == float:
             cmd += ["-d", str(simSetup["DIST"])]
         else: # It's a list of distances
             distStr = ""
