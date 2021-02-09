@@ -119,40 +119,42 @@ private:
     static RootFileWriter* singleton;
 
     //The ROOT file
-    TFile *histFile;
+    TFile *histFile                                                             = NULL;
 
     // TTrees //
-    TTree* targetExit;
-    TTree* trackerHits;
+    TTree* targetExit                                                           = NULL;
+    TTree* trackerHits                                                          = NULL;
     trackerHitStruct targetExitBuffer;
     trackerHitStruct trackerHitsBuffer;
 
-    Double_t* magnetEdepsBuffer = NULL;
-    TTree* magnetEdeps;
+    Double_t* magnetEdepsBuffer                                                 = NULL;
+    TTree* magnetEdeps                                                          = NULL;
 
     // Histograms //
 
     // Target histograms
-    TH1D* targetEdep;
-    TH1D* targetEdep_NIEL;
-    TH1D* targetEdep_IEL;
+    TH1D* targetEdep                                                            = NULL;
+    TH1D* targetEdep_NIEL                                                       = NULL;
+    TH1D* targetEdep_IEL                                                        = NULL;
 
     std::map<G4int,TH1D*> target_exit_energy;
     std::map<G4int,TH1D*> target_exit_cutoff_energy;
 
-    TH1D* target_exitangle_hist;
-    TH1D* target_exitangle_hist_cutoff;
+    TH1D* target_exitangle_hist                                                 = NULL;
+    TH1D* target_exitangle_hist_cutoff                                          = NULL;
 
-    TH2D* target_exit_phasespaceX;
-    TH2D* target_exit_phasespaceY;
-    TH2D* target_exit_phasespaceX_cutoff;
-    TH2D* target_exit_phasespaceY_cutoff;
-
+    TH2D* target_exit_phasespaceX                                               = NULL;
+    TH2D* target_exit_phasespaceY                                               = NULL;
+    TH2D* target_exit_phasespaceX_cutoff                                        = NULL;
+    TH2D* target_exit_phasespaceY_cutoff                                        = NULL;
+    TH2D* target_exit_phasespaceXY                                              = NULL;
+    TH2D* target_exit_phasespaceXY_cutoff                                       = NULL;
+  
     std::map<G4int,TH1D*> target_exit_Rpos;
     std::map<G4int,TH1D*> target_exit_Rpos_cutoff;
 
-    TH3D* target_edep_dens;
-    TH2D* target_edep_rdens;
+    TH3D* target_edep_dens                                                      = NULL;
+    TH2D* target_edep_rdens                                                     = NULL;
 
     // Magnet histograms
     std::vector<TH1D*> magnet_edep;
@@ -175,23 +177,24 @@ private:
     std::vector<TH1D*> tracker_energy;
     std::vector<std::map<G4int,TH1D*>> tracker_type_energy;
     std::vector<std::map<G4int,TH1D*>> tracker_type_cutoff_energy;
-    std::vector<TH2D*> tracker_hitPos;
-    std::vector<TH2D*> tracker_hitPos_cutoff;
     std::vector<TH2D*> tracker_phasespaceX;
     std::vector<TH2D*> tracker_phasespaceY;
     std::vector<TH2D*> tracker_phasespaceX_cutoff;
     std::vector<TH2D*> tracker_phasespaceY_cutoff;
+    std::vector<TH2D*> tracker_phasespaceXY;
+    std::vector<TH2D*> tracker_phasespaceXY_cutoff;
     std::vector<std::map<G4int,TH2D*>> tracker_phasespaceX_cutoff_PDG;
     std::vector<std::map<G4int,TH2D*>> tracker_phasespaceY_cutoff_PDG;
+    std::vector<std::map<G4int,TH2D*>> tracker_phasespaceXY_cutoff_PDG;
 
     std::vector<std::map<G4int,TH1D*>> tracker_Rpos;
     std::vector<std::map<G4int,TH1D*>> tracker_Rpos_cutoff;
 
     //Initial distribution
-    TH2D* init_phasespaceX;
-    TH2D* init_phasespaceY;
-    TH2D* init_phasespaceXY;
-    TH1D* init_E;
+    TH2D* init_phasespaceX                                                      = NULL;
+    TH2D* init_phasespaceY                                                      = NULL;
+    TH2D* init_phasespaceXY                                                     = NULL;
+    TH1D* init_E                                                                = NULL;
 
     // End-of-run statistics
 
@@ -237,7 +240,7 @@ private:
 
     // RNG for sampling over the step
     G4int rngSeed;
-    TRandom* RNG;
+    TRandom* RNG                                                                = NULL;
 
     Int_t eventCounter; // Used for EventID-ing and metadata
     Int_t numEvents;    // Used for comparing to eventCounter with metadata;
