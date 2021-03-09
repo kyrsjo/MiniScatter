@@ -88,7 +88,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     }
     else if (TargetThickness < 0.0) {
         G4cerr << "Error in DetectorConstruction::DetectorConstruction():" << G4endl
-               << "TargetThickness = " << TargetThickness << " < 0.0; this is not allowed." << G4endl;
+               << "TargetThickness = " << TargetThickness/mm << " < 0.0; this is not allowed." << G4endl;
         exit(1);
     }
     else {
@@ -106,14 +106,13 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     //Find the minimum length of the world
     WorldSizeZ = WorldMinLength_in*mm;
     G4double maxZ_target = sqrt(TargetSizeX*TargetSizeX + TargetThickness*TargetThickness)/2.0; // Usually an overestimate, but safe
-    G4cout << "maxZ_target" << maxZ_target<<G4endl;
     if (maxZ_target > WorldSizeZ ) { WorldSizeZ = maxZ_target; }
     // Times 2 and round up to nearest 10 mm
     WorldSizeZ = ceil((2*WorldSizeZ/mm)/10.0)*10.0*mm;
 
 
     G4cout << "World construction details:" << G4endl
-           << "World size  X/Y/Z [mm] : " << WorldSizeX/mm  << ", " << WorldSizeY/mm  << ", " << WorldSizeZ         << ";" << G4endl;
+           << "World size  X/Y/Z [mm] : " << WorldSizeX/mm  << ", " << WorldSizeY/mm  << ", " << WorldSizeZ/mm      << ";" << G4endl;
     G4cout << "Target size X/Y/Z [mm] : " << TargetSizeX/mm << ", " << TargetSizeY/mm << ", " << TargetThickness/mm << ";" << G4endl;
 
     // Note: No explicit check for magnet overlaps etc. here.
