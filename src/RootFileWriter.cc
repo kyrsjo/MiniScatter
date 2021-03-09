@@ -223,6 +223,7 @@ void RootFileWriter::initializeRootFile(){
                                         );
             target_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
             target_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
+
         }
         else {
             target_edep_dens  = NULL;
@@ -417,15 +418,7 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
         tracker_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y' [rad]");
 
-        tracker_phasespaceXY_cutoff.push_back(
-            new TH2D((trackerName+"_cutoff_xy").c_str(),
-                     (trackerName+" phase space (x,y)").c_str(),
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm) );
-        tracker_phasespaceXY_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
-        tracker_phasespaceXY_cutoff.back()->GetYaxis()->SetTitle("Y [mm]");
-	
-        tracker_phasespaceXY_cutoff.push_back(
+	tracker_phasespaceXY_cutoff.push_back(
             new TH2D((trackerName+"_cutoff_xy").c_str(),
                      (trackerName+" phase space (x,y) (charged, energy > Ecut, r < Rcut)").c_str(),
                      1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
@@ -641,7 +634,7 @@ void RootFileWriter::initializeRootFile(){
         const G4String magName = mag->magnetName;
 
         magnet_edep.push_back( new TH1D((magName + "_edep").c_str(),(magName + " edep").c_str(),
-                                        1000,0,beamEnergy) );
+                                        engNbins,0,beamEnergy) );
         magnet_edep.back()->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
 
         G4int mag_edep_nbins_dz = (int) ceil((mag->GetLength()/mm) / fabs(this->edep_dens_dz));
