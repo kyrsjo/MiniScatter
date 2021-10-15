@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(MiniScatter)
 
 #Unfortunately, the Geant4 headers doesn't really work with C++17
