@@ -66,6 +66,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     else {
         beam_zpos *= mm;
 
+        //Sanity check
         if (beam_zpos >= - Detector->getTargetThickness() / 2.0) {
             G4cout << "Beam starting position = " << beam_zpos/mm
                    << " [mm] is not behind target back plane = "
@@ -80,6 +81,15 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                    << G4endl;
             exit(1);
         }
+    }
+
+    //Sanity check
+    if (abs(beam_offset) > Detector->getWorldSizeX()/2.0) {
+        G4cout << "Beam offset = " << beam_offset/mm
+                   << " [mm] is outside of world volume, max = world size / 2 = "
+                   << Detector->getWorldSizeX() / 2.0 / mm<< " [mm]"
+                   << G4endl;
+            exit(1);
     }
 
 }
