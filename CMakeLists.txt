@@ -1,13 +1,13 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(MiniScatter)
 
 #Unfortunately, the Geant4 headers doesn't really work with C++17
 # Therefore, for now we stick to to 14 and load the libstd++fs
 # manually (GNU only). Using a non-GNU compiler (e.g. Apple-CLANG)
 # will loose some functionality.
-#set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 #CMAKE_POLICY(SET CMP0025 NEW) #Separate AppleClang from Clang
 
