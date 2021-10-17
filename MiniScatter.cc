@@ -64,12 +64,14 @@ void printHelp(G4double target_thick,
                G4double world_size,
                G4String physListName,
                G4double physCutoffDist,
+               G4int    numEvents,
                G4double beam_energy,
                G4double beam_eFlat_min,
                G4double beam_eFlat_max,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
                G4int    rngSeed,
@@ -149,11 +151,10 @@ int main(int argc,char** argv) {
                                            {"ang",                   required_argument, NULL, 'a'  },
                                            {"targetAngle",           required_argument, NULL, 'A'  },
                                            {"worldsize",             required_argument, NULL, 'w'  },
-                                           {"dist",                  required_argument, NULL, 'd'  },
                                            {"ang",                   required_argument, NULL, 'a'  },
                                            {"phys",                  required_argument, NULL, 'p'  },
                                            {"physCutoffDist",        required_argument, NULL, 1400 },
-                                           // -n is only short
+                                           {"numEvents",             required_argument, NULL, 'n'  },
                                            {"energy",                required_argument, NULL, 'e'  },
                                            {"energyDistFlat",        required_argument, NULL, 1300 },
                                            {"beam",                  required_argument, NULL, 'b'  },
@@ -189,12 +190,14 @@ int main(int argc,char** argv) {
                       world_size,
                       physListName,
                       physCutoffDist,
+                      numEvents,
                       beam_energy,
                       beam_eFlat_min,
                       beam_eFlat_max,
                       beam_type,
                       beam_offset,
                       beam_zpos,
+                      covarianceString,
                       beam_rCut,
                       doBacktrack,
                       rngSeed,
@@ -555,12 +558,14 @@ int main(int argc,char** argv) {
               world_size,
               physListName,
               physCutoffDist,
+              numEvents,
               beam_energy,
               beam_eFlat_min,
               beam_eFlat_max,
               beam_type,
               beam_offset,
               beam_zpos,
+              covarianceString,
               beam_rCut,
               doBacktrack,
               rngSeed,
@@ -790,12 +795,14 @@ void printHelp(G4double target_thick,
                G4double world_size,
                G4String physListName,
                G4double physCutoffDist,
+               G4int    numEvents,
                G4double beam_energy,
                G4double beam_eFlat_min,
                G4double beam_eFlat_max,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
                G4int    rngSeed,
@@ -811,162 +818,212 @@ void printHelp(G4double target_thick,
                std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
-                   << "Usage/options:" << G4endl;
+                   << "Usage/options, long and short forms:" << G4endl<<G4endl;
 
-            G4cout << "-t <double> : Target thickness [mm],  default/current value = "
-                   << target_thick << G4endl
-                   << " Set thickness to 0.0 for no target (only objects)" << G4endl;
+            G4cout << " --thick/-t <double>" << G4endl
+                   << "\t Target thickness [mm]"
+                   << "\t Set thickness to 0.0 for no target (only objects)" << G4endl
+                   << "\t Default/current value = " << target_thick << G4endl <<G4endl;
 
-            G4cout << "-m <string> : Target material name,   default/current       = '"
-                   << target_material << "'" << G4endl
-                   << " Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
+            G4cout << " --mat/-m <string>" << G4endl
+                   << "\t Target material name" << G4endl
+                   << "\t Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
                    << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', "
                    << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
-                   << " Also possible: 'gas::pressure' "
+                   << "\t Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
-                   << " and pressure is given in mbar (T=300K is assumed)." << G4endl;
+                   << " and pressure is given in mbar (T=300K is assumed)."  << G4endl
+                   << "\t Default/current value = '"
+                   << target_material << "'" << G4endl << G4endl;
 
-            G4cout << "-d <double>(:<double>:<double>:...) or NONE : Detector distance(s) [mm], default/current value = ";
+            G4cout << " --dist/-d <double>(:<double>:<double>:...) or NONE" << G4endl
+                   << "\t Detector distance(s) [mm]" << G4endl
+                   << "\t Default/current value = ";
             if (detector_distances->size() == 0) {
-                G4cout << "NONE" << G4endl;
+                G4cout << "NONE" << G4endl<<G4endl;
             }
             else {
                 for (int i = 0; i < ((int)detector_distances->size())-1; i++) {
                     G4cout << detector_distances->at(i) << ":";
                 }
-                G4cout << detector_distances->back() << G4endl;
+                G4cout << detector_distances->back() << G4endl<<G4endl;
             }
 
-            G4cout << "-a <double> : Detector angle [deg],   default/current value = "
-                   << detector_angle << G4endl;
+            G4cout << " --ang/-a <double>" << G4endl
+                   << "\t Detector angle [deg]" << G4endl
+                   << "\t Default/current value = "
+                   << detector_angle << G4endl << G4endl;
 
-            G4cout << "-A <double> : Target angle [deg],   default/current value = "
-                   << target_angle << G4endl;
+            G4cout << " --targetAngle/-A <double>" << G4endl
+                   << "\t Target angle [deg]" << G4endl
+                   << "\t Default/current value = "
+                   << target_angle << G4endl << G4endl;
 
-            G4cout << "-w <double> : World size X/Y [mm],    default/current value = "
-                   << world_size << G4endl;
+            G4cout << " --worldsize/-w <double>" << G4endl
+                   << "\t World size X/Y [mm]" << G4endl
+                   << "\t Default/current value = "
+                   << world_size << G4endl << G4endl;
 
-            G4cout << "-p <string> : Physics list name,      default/current       = '"
-                   << physListName << "'" << G4endl;
+            G4cout << " --phys/-p <string>" << G4endl
+                   << "\t Physics list name" << G4endl
+                   << "\t Default/current value = '"
+                   << physListName << "'" << G4endl << G4endl;
 
-            G4cout << "--physCutoffDist <double>: Standard physics cutoff distance [mm], default/current value = "
-                   << physCutoffDist << G4endl;
+            G4cout << " --physCutoffDist <double>" << G4endl
+                   << "\t Standard physics cutoff distance [mm]" << G4endl
+                   << "\t Default/current value = "
+                   << physCutoffDist << G4endl << G4endl;
 
-            G4cout << "-n <int>    : Run a given number of events automatically"
+            G4cout << " --numEvents/-n <int>" << G4endl
+                   << "\t Run a given number of events automatically" << G4endl
+                   << "\t Default/current value = "
+                   << numEvents << G4endl << G4endl;
+
+            G4cout << " --energy/-e <double>" << G4endl
+                   << "\t Beam kinetic energy [MeV]" << G4endl
+                   << "\t Default/current value = "
+                   << beam_energy << G4endl << G4endl;
+
+            G4cout << " --energyDistFlat <double>[MeV]:<double>[MeV]" << G4endl
+                   << "\t Use a flat kinetic energy distribution, between the two limits." << G4endl
+                   << "\t If --energyDistFlat is used, --energy/-e will just be the reference energy." << G4endl
+                   << "\t Default/current min/max : "
+                   << beam_eFlat_min << ", " << beam_eFlat_max << G4endl << G4endl;
+
+            G4cout << " --beam/-b <string>" << G4endl
+                   << "\t Particle type" << G4endl
+                   << "\t This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
+                   << "\t typcial examples are 'e-', 'proton', 'gamma'." << G4endl
+                   << "\t Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl
+                   << "\t Default/current value = '"
+                   << beam_type << "'" << G4endl << G4endl;
+
+            G4cout << " --xoffset/-x <double>" << G4endl
+                   << "\t Beam offset (x) [mm]" << G4endl
+                   << "\t Default/current value = "
+                   << beam_offset << G4endl << G4endl;
+
+            G4cout << " --zoffset/-z (*)<double>" << G4endl
+                   << "\t Beam offset (z) [mm]" << G4endl
+                   << "\t If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
+                   << "\t If a '*' is prepended, the distribution is to be generated at z=0," << G4endl
+                   << "\t then backtracked to the given z value (which may be 0.0)" << G4endl
+                   << "\t Default/current value = " << beam_zpos
+                   << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl << G4endl;
+
+            G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
+                   << "\t Set initial gaussian beam distribution given in terms of Twiss parameters." << G4endl
+                   << "\t If the optional part is given x,y are treated separately." << G4endl 
+                   << "\t Default/current value = '" << covarianceString << "'" << G4endl << G4endl;
+
+            G4cout << " --beamRcut <double>" << G4endl
+                   << "\t Radial cutoff for the beam distribution." << G4endl
+                   << "\t If given alone, generate a circular uniform distribution." << G4endl
+                   << "\t If given together with --covar/-c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
+                   << "\t Default/current value = " << beam_rCut << G4endl << G4endl;
+
+            G4cout << " --seed/-s <int>" << G4endl
+                   << "\t Set the initial seed, 0->use the clock etc." << G4endl
+                   << "\t Default/current value = " << rngSeed << G4endl << G4endl;
+
+            G4cout << " --help/-g" << G4endl
+                   << "\t Display this help-text and exit." << G4endl << G4endl;
+
+            G4cout << " --gui/-g" << G4endl
+                   << "\t Use a GUI" << G4endl << G4endl;
+
+            G4cout << " --quickmode/-q" << G4endl
+                   << "\t Quickmode, skip most post-processing and plots" << G4endl
+                   << "\t Default/current value = " << (quickmode?"true":"false") << G4endl << G4endl;
+
+            G4cout << " --anaScatterTest" << G4endl
+                   << "\t Compute analytical scattering angle distribution" << G4endl
+                   << "\t Default/current value = " << (anaScatterTest?"true":"false") << G4endl << G4endl;
+
+            G4cout << " --miniroot/-r" << G4endl
+                   << "\t miniROOTfile, write small root file with only anlysis output, no TTrees." << G4endl
+                   << "\t Default/current value = " << (miniROOTfile?"true":"false") << G4endl << G4endl;
+
+            G4cout << " --outname/-f <string>" << G4endl
+                   << "\t Output filename" << G4endl
+                   << "\t Default/current value = " << filename_out << G4endl << G4endl;
+
+            G4cout << " --outfolder/-o <string>" << G4endl
+                   << "\t Output folder" << G4endl
+                   << "\t Default/current value = " << foldername_out << G4endl << G4endl;
+
+            G4cout << " --cutoffEnergyFraction <double>" << G4endl
+                   << "\t Minimum of beam energy to require for 'cutoff' plots" << G4endl
+                   << "\t Default/current value = " << cutoff_energyFraction << G4endl << G4endl;
+
+            G4cout << " --cutoffRadius <double>" << G4endl
+                   << "\t Maximum radius on target to require for 'cutoff' plots" << G4endl
+                   << "\t Default/current value = " << cutoff_radius << " [mm]" << G4endl << G4endl;
+
+            G4cout << " --edepDZ <double>" << G4endl
+                   << "\t Z bin width for energy deposit histograms" << G4endl
+                   << "\t Default/current value = " << edep_dens_dz << " [mm]" << G4endl << G4endl;
+
+            G4cout << " --engNbins <int>" << G4endl
+                   << "\t Number of bins for 1D energy histograms (0 => internal default), " << G4endl
+                   << "\t Default/current value = " << engNbins << G4endl << G4endl;
+
+            G4cout << " --object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3)" << G4endl
+                   << "\t Create an object (which may be a magnet) of the given type at the given position. " << G4endl
+                   << "\t If a '*' is prepended the position (<double> [mm]), the position is the " << G4endl
+                   << "\t   start of the active element relative to the end of the target;" << G4endl
+                   << "\t   otherwise it is the z-position of the middle of the element." << G4endl
+                   << "\t The gradient (<double> [T/m]) is the focusing gradient of the object (should be 0.0 if not a magnet)." << G4endl
+                   << "\t The length (<double> [mm]) is the total length of the volumes used by the object." << G4endl
+                   << "\t The rest of the arguments are given as key=value pairs, which may be type-specific." << G4endl
+                   << G4endl
+                   << "\t Standard key=val pairs:" << G4endl
+                   << "\t     xOffset:   Center offset in X (<double> [mm]) " << G4endl
+                   << "\t     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
+                   << "\t     xRot:      Rotation around horizontal axis (<double> [mm])" << G4endl
+                   << "\t     yRot:      Rotation around vertical axis (<double> [mm])" << G4endl
+                   << "\t   Note that the offset is applied first," << G4endl
+                   << "\t     then the object is rotated around the offset point." << G4endl
+                   << "\t     The xRot is applied before the yRot." << G4endl
+                   << G4endl
+                   << "\t Accepted types and their arguments:" << G4endl
+                   << G4endl
+                   << "\t   'PLASMA1':" << G4endl
+                   << "\t     radius:    Capillary radius (<double> [mm])" << G4endl
+                   << "\t     totalAmps: Flag (<True/False>) to interpret the gradient parameter" << G4endl
+                   << "\t                as the total current [A] instead of in [T/m]." << G4endl
+                   << "\t     width:     Capillay crystal width (<double> [mm])" << G4endl
+                   << "\t     height:    Capillay crystal height (<double> [mm])" << G4endl
+                   << G4endl
+                   << "\t   'COLLIMATOR1':" << G4endl
+                   << "\t     radius:    Channel radius (<double> [mm])" << G4endl
+                   << "\t     width:     Absorber width (<double> [mm])" << G4endl
+                   << "\t     height:    Absorber height (<double> [mm])" << G4endl
+                   << "\t     material:  Absorber material (similar to -m)" << G4endl
+                   << G4endl
+                   << "\t   'TARGET':" << G4endl
+                   << "\t     width:     Target width (<double> [mm])" << G4endl
+                   << "\t     height:    Target height (<double> [mm])" << G4endl
+                   << "\t     material:  Target material (similar to -m)" << G4endl
+                   << G4endl
+                   << "\t   'TARGETR':" << G4endl
+                   << "\t     radius:    Target radius(<double> [mm])" << G4endl
+                   << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl;
 
-            G4cout << "-e <double> : Beam kinetic energy [MeV],      default/current value = "
-                   << beam_energy << G4endl;
-
-            G4cout << "--energyDistFlat <double>[MeV]:<double>[MeV] : Use a flat kinetic energy distribution, "
-                   << "between the two limits. If used, -e will just be reference energy. Current min/max: "
-                   << beam_eFlat_min << ", " << beam_eFlat_max << G4endl;
-
-            G4cout << "-b <string> : Particle type,          default/current value = "
-                   << beam_type << G4endl
-                   << " This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
-                   << " typcial ones are 'e-', 'proton', 'gamma'." << G4endl
-                   << " Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl;
-
-            G4cout << "-x <double> : Beam offset (x) [mm],   default/current value = "
-                   << beam_offset << G4endl;
-
-            G4cout << "-z (*)<double> : Beam offset (z) [mm],   default/current value = "
-                   << beam_zpos
-                   << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl
-                   << " If set to 0.0, start at half the buffer distance. Note that target always at z=0." << G4endl
-                   << " If a '*' is prepended, the distribution is to be generated at z=0," << G4endl
-                   << " then backtracked to the given z value (which may be 0.0)" << G4endl;
-
-            G4cout << "-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY) : " << G4endl
-                   << " Set realistic beam distribution (on target surface); " << G4endl
-                   << " if optional part given then x,y are treated separately" << G4endl;
-
-            G4cout << "--beamRcut <double> : Radial cutoff for the beam distribution." << G4endl
-                   << " If given alone, generate a circular uniform distribution." << G4endl
-                   << " If given together with -c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
-                   << " Default/current value = " << beam_rCut << G4endl;
-
-            G4cout << "-s <int>    : Set the initial seed, 0->use the clock etc., default/current value = "
-                   << rngSeed << G4endl;
-
-            G4cout << "-g : Use a GUI" << G4endl;
-
-            G4cout << "-q : Quickmode, skip most post-processing and plots, default/current value = "
-                   << (quickmode?"true":"false") << G4endl;
-
-            G4cout << "--anaScatterTest : Compute analytical scattering angle distribution, default/current value = "
-                   << (anaScatterTest?"true":"false") << G4endl;
-
-            G4cout << "-r : miniROOTfile, write small root file with only anlysis output, no TTrees, default/current value = "
-                   << (miniROOTfile?"true":"false") << G4endl;
-
-            G4cout << "-f <string> : Output filename,        default/current value = "
-                   << filename_out << G4endl;
-
-            G4cout << "-o <string : Output folder,           default/current value = "
-                   << foldername_out << G4endl;
-
-            G4cout << "--cutoffEnergyFraction : Minimum of beam energy to require for 'cutoff' plots, "
-                   << "default/current value = " << cutoff_energyFraction << G4endl;
-
-            G4cout << "--cutoffRadius         : Maximum radius on target to require for 'cutoff' plots, "
-                   << "default/current value = " << cutoff_radius << " [mm]" << G4endl;
-
-            G4cout << "--edepDZ               : Z bin width for energy deposit histograms, "
-                   << "default/current value = " << edep_dens_dz << " [mm]" << G4endl;
-
-            G4cout << "--engNbins             : Number of bins for 1D energy histograms (0 => internal default), "
-                   << "default/current value = " << engNbins << G4endl;
-
-            G4cout << "--object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3) : "
-                   << " Create an object (which may be a magnet) of the given type at the given position. " << G4endl
-                   << " If a '*' is prepended the position (<double> [mm]), the position is the " << G4endl
-                   << "   start of the active element relative to the end of the target;" << G4endl
-                   << "   otherwise it is the z-position of the middle of the element." << G4endl
-                   << " The gradient (<double> [T/m]) is the focusing gradient of the object (should be 0.0 if not a magnet)." << G4endl
-                   << " The length <double> [mm] is the total length of the volumes used by the object." << G4endl
-                   << " The rest of the arguments are given as key=value pairs, which may be type-specific." << G4endl
-                   << " Common key=val pairs:" << G4endl
-                   << "     xOffset:   Center offset in X (<double> [mm]) " << G4endl
-                   << "     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
-                   << "     xRot:      Rotation around horizontal axis (<double> [mm])" << G4endl
-                   << "     yRot:      Rotation around vertical axis (<double> [mm])" << G4endl
-                   << "   Note that the offset is applied first," << G4endl
-                   << "     then the object is rotated around the offset point." << G4endl
-                   << "     The xRot is applied before the yRot." << G4endl
-                   << " Accepted types and their arguments:" << G4endl
-                   << "  'PLASMA1':" << G4endl
-                   << "     radius:    Capillary radius (<double> [mm])" << G4endl
-                   << "     totalAmps: Flag (<True/False>) to interpret the gradient parameter" << G4endl
-                   << "                as the total current [A] instead of in [T/m]." << G4endl
-                   << "     width:     Capillay crystal width (<double> [mm])" << G4endl
-                   << "     height:    Capillay crystal height (<double> [mm])" << G4endl
-                   << "  'COLLIMATOR1':" << G4endl
-                   << "     radius:    Channel radius (<double> [mm])" << G4endl
-                   << "     width:     Absorber width (<double> [mm])" << G4endl
-                   << "     height:    Absorber height (<double> [mm])" << G4endl
-                   << "     material:  Absorber material (similar to -m)" << G4endl
-                   << "  'TARGET':" << G4endl
-                   << "     width:     Target width (<double> [mm])" << G4endl
-                   << "     height:    Target height (<double> [mm])" << G4endl
-                   << "     material:  Target material (similar to -m)" << G4endl
-                   << "  'TARGETR':" << G4endl
-                   << "     radius:    Target radius(<double> [mm])" << G4endl
-                   << "     material:  Target material (similar to -m)" << G4endl;
-
-            G4cout << "Currently have the following magnet setups:" << G4endl;
+            G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
+            int i = 1;
             for (auto mag : magnetDefinitions) {
-                G4cout << mag << G4endl;
+                G4cout << "\t   " << i++ << ": '" << mag << "'" << G4endl;
             }
 
             G4cout << G4endl
                    << G4endl;
 
-            G4cout << "Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
-            G4cout << "One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4." << G4endl;
-            G4cout << "The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
-            G4cout << "Extra arguments are not compatible with -g" << G4endl;
+            G4cout << " Note that if both -g and -n is used, the events are ran before the GUI is opened." << G4endl;
+            G4cout << " One may also use one or more arguments which does not include a '-n' -- these are forwarded untouched to Geant4." << G4endl;
+            G4cout << " The first argument not in the form '-char' is interpreted as a macro to run. Don't use vis.mac, it will crash." << G4endl;
+            G4cout << " Extra arguments are not compatible with -g" << G4endl;
             G4cout << G4endl;
 }
 
