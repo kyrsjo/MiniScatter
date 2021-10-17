@@ -251,7 +251,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             particle = particleTable->FindParticle(beam_type);
         }
         if (particle == NULL) {
-            G4cerr << "Error - particle named '" << beam_type << "'not found" << G4endl;
+            G4cerr << "Error - particle named '" << beam_type << "' not found" << G4endl;
             //particleTable->DumpTable();
             exit(1);
         }
