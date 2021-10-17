@@ -46,6 +46,7 @@ public:
                            G4double beam_offset_in,
                            G4double beam_zpos_in,
                            G4bool   doBacktrack_in,
+                           G4double beam_angle_in,
                            G4String covarianceString_in,
                            G4double Rcut_in,
                            G4int rngSeed,
@@ -59,13 +60,7 @@ public:
     G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
 
-    static G4double GetDefaultZpos(G4double targetThickness_in) {
-        G4double beam_zpos = targetThickness_in / 2.0;
-        // Round up to nearest 10 mm
-        beam_zpos = ceil(beam_zpos/10.0)*10.0;
-
-        return -beam_zpos; //Negative!
-    }
+    static G4double GetDefaultZpos(G4double targetThickness_in);
 private:
     G4ParticleGun*           particleGun;  //pointer a to G4 class
     DetectorConstruction*    Detector;     //pointer to the geometry
@@ -73,9 +68,10 @@ private:
     G4double beam_energy;    // Beam kinetic energy [MeV]
 
     G4String beam_type;      // Beam particle type
-    G4double beam_offset;    // Beam offset (x) [mm]
+    G4double beam_offset;    // Beam offset (x)
     G4double beam_zpos;      // Beam initial z position [converted to G4 units in constructor]
     G4bool   doBacktrack;    // Generate at z=0 then backtrack to injection position?
+    G4double beam_angle;     // Beam initial angle
 
     G4ParticleDefinition* particle; // Particle type
 
@@ -106,7 +102,7 @@ private:
     TMatrixD covarY_L;
 
     //Setup for circular uniform distribution / Rcut
-    G4double Rcut; // [mm]
+    G4double Rcut; //
 
     TRandom* RNG;
     G4int rngSeed; // Seed to use when random-generating particles within Twiss distribution
@@ -117,7 +113,7 @@ private:
 
 public:
     //Leave the generated positions where RootFileWriter can pick it up [G4 units]
-    G4double x,xp, y,yp, E;
+    G4double x,xp, y,yp, z,E;
 };
 
 // -----------------------------------------------------------------------------------------

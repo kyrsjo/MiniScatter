@@ -71,6 +71,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4double beam_angle,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
@@ -117,6 +118,7 @@ int main(int argc,char** argv) {
     G4double beam_offset = 0.0;               // Beam offset (x) [mm]
     G4double beam_zpos   = 0.0;               // Beam offset (z) [mm]
     G4bool   doBacktrack = false;             // Backtrack to the z-position?
+    G4double beam_angle  = 0.0;               // Beam angle [deg]
     G4String covarianceString = "";           // Beam covariance matrix parameters
     G4double beam_rCut = 0.0;                 // Beam distribution radial cutoff
 
@@ -160,6 +162,7 @@ int main(int argc,char** argv) {
                                            {"beam",                  required_argument, NULL, 'b'  },
                                            {"xoffset",               required_argument, NULL, 'x'  },
                                            {"zoffset",               required_argument, NULL, 'z'  },
+                                           {"beamAngle",             required_argument, NULL, 1500 },
                                            {"covar",                 required_argument, NULL, 'c'  },
                                            {"beamRcut",              required_argument, NULL, 1200 },
                                            {"outname",               required_argument, NULL, 'f'  },
@@ -197,6 +200,7 @@ int main(int argc,char** argv) {
                       beam_type,
                       beam_offset,
                       beam_zpos,
+                      beam_angle,
                       covarianceString,
                       beam_rCut,
                       doBacktrack,
@@ -425,6 +429,18 @@ int main(int argc,char** argv) {
             }
             break;
 
+        case 1500: //--beamAngle
+            try {
+                beam_angle = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading beamAngle" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                exit(1);
+            }
+            break;
+        
         case 'c': //Beam covariance matrix from Twiss parameters
             //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
@@ -565,6 +581,7 @@ int main(int argc,char** argv) {
               beam_type,
               beam_offset,
               beam_zpos,
+              beam_angle,
               covarianceString,
               beam_rCut,
               doBacktrack,
@@ -677,6 +694,7 @@ int main(int argc,char** argv) {
                                                                     beam_offset,
                                                                     beam_zpos,
                                                                     doBacktrack,
+                                                                    beam_angle,
                                                                     covarianceString,
                                                                     beam_rCut,
                                                                     rngSeed,
@@ -802,6 +820,7 @@ void printHelp(G4double target_thick,
                G4String beam_type,
                G4double beam_offset,
                G4double beam_zpos,
+               G4double beam_angle,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
@@ -895,13 +914,11 @@ void printHelp(G4double target_thick,
                    << "\t This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
                    << "\t typcial examples are 'e-', 'proton', 'gamma'." << G4endl
                    << "\t Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl
-                   << "\t Default/current value = '"
-                   << beam_type << "'" << G4endl << G4endl;
+                   << "\t Default/current value = '" << beam_type << "'" << G4endl << G4endl;
 
             G4cout << " --xoffset/-x <double>" << G4endl
                    << "\t Beam offset (x) [mm]" << G4endl
-                   << "\t Default/current value = "
-                   << beam_offset << G4endl << G4endl;
+                   << "\t Default/current value = " << beam_offset << G4endl << G4endl;
 
             G4cout << " --zoffset/-z (*)<double>" << G4endl
                    << "\t Beam offset (z) [mm]" << G4endl
@@ -910,6 +927,17 @@ void printHelp(G4double target_thick,
                    << "\t then backtracked to the given z value (which may be 0.0)" << G4endl
                    << "\t Default/current value = " << beam_zpos
                    << ", doBacktrack = " << (doBacktrack?"true":"false") << G4endl << G4endl;
+
+            G4cout << " --beamAngle <double>" << G4endl
+                   << "\t Initial beam angle [deg]" << G4endl
+                   << "\t If set to nonzero value, rotate beam generation point and axis around x=y=z=0 by this amount."
+                   << "\t The beam will still be aimed at x=y=z=0." << G4endl
+                   << "\t The beam will be generated in the x/z plane, y=y'=0. Positive angle => positive x." << G4endl
+                   << "\t Angles with absolute value >= 90 degrees are not accepted." << G4endl
+                   << "\t Currently not compatible with --xoffset, --covar, --beamRcut, or backtracking from * in --zoffset." << G4endl
+                   << "\t Note that the absolute value of --zoffset (which is generally negative) will mean the distance from x=y=z=0 to the starting point."
+                   << "\t Default/current value = " << beam_angle << G4endl << G4endl;
+
 
             G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
                    << "\t Set initial gaussian beam distribution given in terms of Twiss parameters." << G4endl
