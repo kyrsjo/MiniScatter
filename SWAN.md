@@ -47,9 +47,9 @@ Assuming that you have compiled MiniScatter in CERNBOX as described above and th
 
  * Spin up a SWAN virtual machine.
    In the configuration dialog, make sure to select a software stack and platform which matches the one used in `setupLCG.sh` when compiling; currently this is:
-   - Software stack = `97 Python3`
-   - Platform = `x86_64_centos7-gcc9-opt`
-   - Environment script = `geant4.sh`
+   - Software stack = `100`
+   - Platform = `CentOS 7 (GCC 10)`
+   - Environment script = `geant4.sh` (I'm not sure if this is still needed)
  * Switch to tab `CERNBox`, then open the MiniScatter folder
  * Open one notebooks in the `examples` folder, and try to execute it step-by-step
 
