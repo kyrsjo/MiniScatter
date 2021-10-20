@@ -33,7 +33,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
                        "N", "ENERGY", "ENERGY_FLAT",\
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
-                       "COVAR", "BEAM_RCUT", "SEED", \
+                       "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS"):
             if key.startswith("MAGNET"):
@@ -108,6 +108,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
     else:
         if "ZOFFSET_BACKTRACK" in simSetup:
             raise ValueError("ZOFFSET_BACKTRACK present but not ZOFFSET?")
+
+    if "BEAMANGLE" in simSetup:
+        cmd += ["--beamAngle", str(simSetup["BEAMANGLE"])]
 
     if "COVAR" in simSetup:
         if len(simSetup["COVAR"]) == 3:
