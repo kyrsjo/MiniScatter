@@ -81,7 +81,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
 
     if (TargetThickness == 0.0) {
         if (magnetDefinitions.size() == 0) {
-            G4cerr << "Error: Magnet definitions must be used if TargetThickness=0." << G4endl;
+            G4cerr << "Error: Object/magnet definitions must be used if TargetThickness=0." << G4endl;
             exit(1);
         }
         HasTarget = false;
