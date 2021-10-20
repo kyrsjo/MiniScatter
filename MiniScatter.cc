@@ -1008,8 +1008,8 @@ void printHelp(G4double target_thick,
                    << "\t Standard key=val pairs:" << G4endl
                    << "\t     xOffset:   Center offset in X (<double> [mm]) " << G4endl
                    << "\t     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
-                   << "\t     xRot:      Rotation around horizontal axis (<double> [mm])" << G4endl
-                   << "\t     yRot:      Rotation around vertical axis (<double> [mm])" << G4endl
+                   << "\t     xRot:      Rotation around horizontal axis (<double> [deg])" << G4endl
+                   << "\t     yRot:      Rotation around vertical axis (<double> [deg])" << G4endl
                    << "\t   Note that the offset is applied first," << G4endl
                    << "\t     then the object is rotated around the offset point." << G4endl
                    << "\t     The xRot is applied before the yRot." << G4endl
