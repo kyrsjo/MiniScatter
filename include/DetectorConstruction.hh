@@ -36,6 +36,7 @@ public:
     DetectorConstruction(G4double TargetThickness_in,
                          G4String TargetMaterial_in,
                          G4double TargetAngle_in,
+                         G4String BackgroundMaterial_in,
                          G4double WorldSize_in,
                          G4double WorldMinLength_in,
                          std::vector <G4String> &magnetDefinitions_in);
@@ -43,6 +44,7 @@ public:
 
 private:
     void SetTargetMaterial (G4String);
+    void SetBackgroundMaterial (G4String);
     //  void SetDetectorMaterial (G4String);
 public:
 
@@ -50,6 +52,9 @@ public:
     G4int    GetTargetMaterialZ();
     G4double GetTargetMaterialA();
     G4double GetTargetMaterialDensity();
+
+    G4Material* GetTargetMaterial();
+    G4Material* GetBackgroundMaterial();
 
     //    void SetMagField(G4double);
     G4VPhysicalVolume* Construct();
@@ -70,6 +75,7 @@ public:
 
 private:
     G4Material*        vacuumMaterial = NULL;
+    G4Material*        airMaterial    = NULL;
 
     G4Material*        AlMaterial     = NULL;
     G4Material*        CMaterial      = NULL;
@@ -110,6 +116,8 @@ private:
 
     G4bool             HasTarget      = false;
     G4Material*        TargetMaterial = NULL;
+
+    G4Material*        BackgroundMaterial = NULL;
 
     G4double           DetectorDistance;
     G4Material*        DetectorMaterial;

@@ -31,7 +31,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
 
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
-                       "N", "ENERGY", "ENERGY_FLAT",\
+                       "BGMAT", "N", "ENERGY", "ENERGY_FLAT",\
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
@@ -80,6 +80,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
 
     if "PHYS_CUTDIST" in simSetup:
         cmd += ["--physCutoffDist", str(simSetup["PHYS_CUTDIST"])]
+
+    if "BGMAT" in simSetup:
+        cmd += ["--backgroundMaterial", str(simSetup["BGMAT"])]
 
     if "N" in simSetup:
         cmd += ["--numEvents", str(simSetup["N"])]

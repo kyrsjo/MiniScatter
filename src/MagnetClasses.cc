@@ -161,11 +161,7 @@ G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix, G4double width
     // Note: The mainLV's physical volume(s) are created in the DetectorConstruction class
     // Set width and height both <= 0.0 to autogenerate the wrapping volume width and height
 
-    G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
-    if (not vacuumMaterial) {
-        G4cerr << "Internal error -- material G4_Galactic not found in MagnetBase::MakeMainLV()!" << G4endl;
-        exit(1);
-    }
+    G4Material* BackgroundMaterial = detCon->GetBackgroundMaterial();
 
     if (width <= 0.0 and height <= 0) {
         //Autogenerate a maximalistic "slice",
@@ -191,7 +187,7 @@ G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix, G4double width
                                   mainLV_h/2.0,
                                   length/2.0);
 
-    G4LogicalVolume* newMainLV = new G4LogicalVolume(mainBox,vacuumMaterial,
+    G4LogicalVolume* newMainLV = new G4LogicalVolume(mainBox,BackgroundMaterial,
                                                      magnetName+"_"+name_postfix+"LV");
 
     // Make the bounding volume invisible by default

@@ -58,6 +58,7 @@
 
 void printHelp(G4double target_thick,
                G4String target_material,
+               G4String background_material,
                std::vector<G4double>* detector_distances,
                G4double detector_angle,
                G4double target_angle,
@@ -100,55 +101,58 @@ int main(int argc,char** argv) {
     int getopt_char;
     int getopt_idx;
 
-    G4double target_thick        = 1.0;       // Target thickness [mm]; 0.0 for no target slab (only magnets)
-    G4String target_material     = "G4_Al";   // Name of target material to use
-    G4double target_angle        = 0.0;       // Target angle around y-axis [deg]
+    G4double target_thick        = 1.0;           // Target thickness [mm]; 0.0 for no target slab (only magnets)
+    G4String target_material     = "G4_Al";       // Name of target material to use
+    G4double target_angle        = 0.0;           // Target angle around y-axis [deg]
 
-    std::vector<G4double> detector_distances; // Detector distances at x=y=0  [mm]
+    G4String background_material = "G4_Galactic"; // Background material
+
+    std::vector<G4double> detector_distances;     // Detector distances at x=y=0  [mm]
     detector_distances.push_back(50.0);
-    G4double detector_angle      = 0.0;       // Detectector angle around y-axis [deg]
+    G4double detector_angle      = 0.0;           // Detectector angle around y-axis [deg]
 
-    G4double world_size          = 50.0;      // World size X/Y [mm]
+    G4double world_size          = 50.0;          // World size X/Y [mm]
 
-    G4double beam_energy = 200;               // Beam kinetic energy [MeV]
-    G4double beam_eFlat_min = -1.0;           // For flat-spectrum energy distribution,
-    G4double beam_eFlat_max = -1.0;           //  set these to min/max, both > 0.0.
+    G4double beam_energy = 200;                   // Beam kinetic energy [MeV]
+    G4double beam_eFlat_min = -1.0;               // For flat-spectrum energy distribution,
+    G4double beam_eFlat_max = -1.0;               //  set these to min/max, both > 0.0.
 
-    G4String beam_type   = "e-";              // Beam particle type
-    G4double beam_offset = 0.0;               // Beam offset (x) [mm]
-    G4double beam_zpos   = 0.0;               // Beam offset (z) [mm]
-    G4bool   doBacktrack = false;             // Backtrack to the z-position?
-    G4double beam_angle  = 0.0;               // Beam angle [deg]
-    G4String covarianceString = "";           // Beam covariance matrix parameters
-    G4double beam_rCut = 0.0;                 // Beam distribution radial cutoff
+    G4String beam_type   = "e-";                  // Beam particle type
+    G4double beam_offset = 0.0;                   // Beam offset (x) [mm]
+    G4double beam_zpos   = 0.0;                   // Beam offset (z) [mm]
+    G4bool   doBacktrack = false;                 // Backtrack to the z-position?
+    G4double beam_angle  = 0.0;                   // Beam angle [deg]
+    G4String covarianceString = "";               // Beam covariance matrix parameters
+    G4double beam_rCut = 0.0;                     // Beam distribution radial cutoff
 
-    G4String physListName = "QGSP_FTFP_BERT"; // Name of physics list to use
-    G4double physCutoffDist = 0.1;            // Default physics cutoff distance [mm]
+    G4String physListName = "QGSP_FTFP_BERT";     // Name of physics list to use
+    G4double physCutoffDist = 0.1;                // Default physics cutoff distance [mm]
 
-    G4int    numEvents    = 0;                // Number of events to generate
+    G4int    numEvents    = 0;                    // Number of events to generate
 
-    G4bool   useGUI         = false;          // GUI on/off
-    G4bool   quickmode      = false;          // Don't make slow plots
-    G4bool   anaScatterTest = false;          // Compute analytical multiple scattering,
-                                              // for comparison with simulation output.
-    G4String filename_out   = "output";       // Output filename
-    G4String foldername_out = "plots";        // Output foldername
-    G4bool   miniROOTfile   = false;          // Write small root file
-                                              // (only analysis output, no TTrees)
+    G4bool   useGUI         = false;              // GUI on/off
+    G4bool   quickmode      = false;              // Don't make slow plots
+    G4bool   anaScatterTest = false;              // Compute analytical multiple scattering,
+                                                  // for comparison with simulation output.
+    G4String filename_out   = "output";           // Output filename
+    G4String foldername_out = "plots";            // Output foldername
+    G4bool   miniROOTfile   = false;              // Write small root file
+                                                  // (only analysis output, no TTrees)
 
-    G4int    rngSeed        = 0;              // RNG seed
+    G4int    rngSeed        = 0;                  // RNG seed
 
-    G4double cutoff_energyFraction = 0.95;       // [fraction]
-    G4double cutoff_radius         = world_size; // [mm]
+    G4double cutoff_energyFraction = 0.95;        // [fraction]
+    G4double cutoff_radius         = world_size;  // [mm]
 
-    G4double edep_dens_dz          = 0.0;        // Z bin width for energy deposit histograms [mm]
-    G4int    engNbins              = 0;          // Number of bins for the 1D energy histograms
+    G4double edep_dens_dz          = 0.0;         // Z bin width for energy deposit histograms [mm]
+    G4int    engNbins              = 0;           // Number of bins for the 1D energy histograms
 
     std::vector<G4String> magnetDefinitions;
 
     static struct option long_options[] = {
                                            {"thick",                 required_argument, NULL, 't'  },
                                            {"mat",                   required_argument, NULL, 'm'  },
+                                           {"backgroundMaterial",    required_argument, NULL, 1600 },
                                            {"dist",                  required_argument, NULL, 'd'  },
                                            {"ang",                   required_argument, NULL, 'a'  },
                                            {"targetAngle",           required_argument, NULL, 'A'  },
@@ -187,6 +191,7 @@ int main(int argc,char** argv) {
         case 'h': //Help
             printHelp(target_thick,
                       target_material,
+                      background_material,
                       &detector_distances,
                       detector_angle,
                       target_angle,
@@ -320,6 +325,10 @@ int main(int argc,char** argv) {
 
         case 'm': //Target material
             target_material = G4String(optarg);
+            break;
+
+        case 1600: //Background material
+            background_material = G4String(optarg);
             break;
 
         case 'n': //Number of events
@@ -568,6 +577,7 @@ int main(int argc,char** argv) {
     //Print the gotten/default arguments
     printHelp(target_thick,
               target_material,
+              background_material,
               &detector_distances,
               detector_angle,
               target_angle,
@@ -670,6 +680,7 @@ int main(int argc,char** argv) {
     DetectorConstruction* physWorld = new DetectorConstruction(target_thick,
                                                                target_material,
                                                                target_angle,
+                                                               background_material,
                                                                world_size,
                                                                world_min_length,
                                                                magnetDefinitions);
@@ -807,6 +818,7 @@ int main(int argc,char** argv) {
 
 void printHelp(G4double target_thick,
                G4String target_material,
+               G4String background_material,
                std::vector<G4double>* detector_distances,
                G4double detector_angle,
                G4double target_angle,
@@ -846,14 +858,19 @@ void printHelp(G4double target_thick,
 
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
-                   << "\t Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', "
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', "
+                   << "\t Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
+                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', 'G4_AIR',"
                    << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << "\t Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
                    << " and pressure is given in mbar (T=300K is assumed)."  << G4endl
                    << "\t Default/current value = '"
                    << target_material << "'" << G4endl << G4endl;
+
+            G4cout << "--backgroundMaterial <string>" << G4endl
+                   << " \t Background material name" << G4endl
+                   << "\t Default/current value = '"
+                   << background_material << "'" << G4endl << G4endl;
 
             G4cout << " --dist/-d <double>(:<double>:<double>:...) or NONE" << G4endl
                    << "\t Detector distance(s) [mm]" << G4endl
