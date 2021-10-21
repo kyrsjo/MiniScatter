@@ -1037,6 +1037,13 @@ void printHelp(G4double target_thick,
                    << "\t   'TARGETR':" << G4endl
                    << "\t     radius:    Target radius(<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
+                   << G4endl
+                   << "\t   'COLLIMATORHV':" << G4endl
+                   << "\t     gap:       Gap between collimator jaws (<double> [mm])" << G4endl
+                   << "\t     HV:        Horizontal (H) or vertical (V) collimator ('H'/'V')" << G4endl
+                   << "\t     jawThick:  Collimator jaw thickness (i.e. in in gap plane) (<double> [mm])" << G4endl
+                   << "\t     jawHeight: Collimator jaw height (i.e. out of gap plane) (<double> [mm])" << G4endl
+                   << "\t     material:  Jaw material (similar to -m)" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;

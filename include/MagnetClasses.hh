@@ -222,4 +222,24 @@ private:
     G4double radius = 10.0*mm;  //[G4 length units]
 };
 
+// COLLIMATORHV -- TWO SIMPLE SLABS OF MATERIALS, WITH EITHER
+// A HORISONAL (HCOLL) OR VERTICAL (VCOLL) GAP
+class MagnetCOLLIMATORHV : public MagnetBase {
+public:
+    MagnetCOLLIMATORHV(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                       std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                       G4String magnetName_in);
+    virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
+
+private:
+    G4String    targetMaterialName;
+    G4Material* targetMaterial = NULL;
+    G4double    gap       = 10.0*mm; //[G4 length units]
+    G4double    jawThick  = 50.0*mm; //[G4 length units]
+    G4double    jawHeight = 50.0*mm; //[G4 length units]
+    G4bool      isH       = true;    //Horizontal collimator -> vertical gap opening? If not, then vertical gap
+};
+
 #endif
