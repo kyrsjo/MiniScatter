@@ -26,7 +26,7 @@
 MagnetCOLLIMATORHV::MagnetCOLLIMATORHV(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                                        std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
                                        G4String magnetName_in) :
-    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "TARGETR"){
+    MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "COLLIMATORHV"){
 
     for (auto it : keyValPairs) {
         if (it.first == "gap") {
@@ -89,8 +89,7 @@ void MagnetCOLLIMATORHV::Construct() {
     //Sanity checks on dimensions; it could still fit with rotations etc.
     if (gap+2*jawThick > detCon->getWorldSizeX()/2 || mainLV_h > detCon->getWorldSizeY()/2) {
         G4cerr << "Error in MagnetCOLLIMATORHV::Construct():" << G4endl
-               << " The absorber is bigger than the world volume. "
-               << " including offsets and rotations."  << G4endl;
+               << " The absorber is bigger than the world volume. " << G4endl;
         G4cerr << "mainLW_w = " << mainLV_w/mm << " [mm]" << G4endl;
         G4cerr << "mainLW_h = " << mainLV_h/mm << " [mm]" << G4endl;
         exit(1);

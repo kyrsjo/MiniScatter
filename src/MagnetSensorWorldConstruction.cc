@@ -35,15 +35,20 @@ void MagnetSensorWorldConstruction::Construct() {
 
     for (auto magnet : mainGeometryConstruction->magnets) {
         //Pretty much a copy of what goes on in DetectorConstruction::Construct()
-        G4VPhysicalVolume* magnetDetectorPV   =
-            new G4PVPlacement(magnet->GetMainPV_transform(),
-                              magnet->GetDetectorLV(),
-                              magnet->magnetName + "_detectorPV",
-                              ghostWorldLogical,
-                              false,
-                              0,
-                              true);
-        magnetDetectorPVs.push_back(magnetDetectorPV);
+        if (magnet->GetUseGhostDetector()) {
+            G4VPhysicalVolume* magnetDetectorPV   =
+                new G4PVPlacement(magnet->GetMainPV_transform(),
+                                  magnet->GetDetectorLV(),
+                                  magnet->magnetName + "_detectorPV",
+                                  ghostWorldLogical,
+                                  false,
+                                  0,
+                                  true);
+            magnetDetectorPVs.push_back(magnetDetectorPV);
+        }
+        else {
+            magnetDetectorPVs.push_back(NULL);
+        }
 
     }
 }

@@ -64,7 +64,7 @@ void MagnetTARGETR::Construct() {
     }
 
     //Sanity checks on dimensions
-    if (radius > detCon->getWorldSizeX()) {
+    if (radius > detCon->getWorldSizeX()/2 || radius > detCon->getWorldSizeY()/2) {
         G4cerr << "Error in MagnetTARGETR::Construct():" << G4endl
                << " The absorber is bigger than the world volume."  << G4endl;
         exit(1);
@@ -91,7 +91,6 @@ void MagnetTARGETR::Construct() {
     }
 
     G4LogicalVolume*   targetLV = new G4LogicalVolume(targetSolid,targetMaterial, magnetName+"_targetLV");
-    //G4VPhysicalVolume* targetPV =
                                   new G4PVPlacement  (NULL,
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       targetLV,

@@ -116,6 +116,12 @@ protected:
     virtual void ConstructDetectorLV();
     G4LogicalVolume* detectorLV = NULL;
     G4VSensitiveDetector* magnetSD = NULL;
+    //By default, the detectors will be attached to dedicated volumes
+    // in the MagnetSensorWorld, which are copies of the mainLV.
+    // This means all steps in the mainLV are recorded.
+    // Set this flag to false in the constructor if one of the physically existing
+    // logical volumes are used instead.
+    G4bool useGhostDetector = true;
 
 public:
     const G4String magnetName;
@@ -126,7 +132,8 @@ public:
     virtual void Construct() = 0;
     G4LogicalVolume* GetMainLV() const;
     G4LogicalVolume* GetDetectorLV() const;
-    void AddSD(); // Adds an SD to the detectorLV
+    virtual void AddSD(); // Adds an SD to the detectorLV
+    G4bool GetUseGhostDetector() {return useGhostDetector;}
 
 public:
     //Parsing helpers
@@ -166,8 +173,8 @@ public:
     virtual void GetFieldValue(const G4double point[4], G4double field[6]) const;
 
 private:
-    G4double plasmaTotalCurrent; // [A]
-    G4double capRadius;  // [G4 units]
+    G4double plasmaTotalCurrent = 0.0;    // [A]
+    G4double capRadius          = 0.5*mm; // [G4 units]
 
 };
 
@@ -240,6 +247,36 @@ private:
     G4double    jawThick  = 50.0*mm; //[G4 length units]
     G4double    jawHeight = 50.0*mm; //[G4 length units]
     G4bool      isH       = true;    //Horizontal collimator -> vertical gap opening? If not, then vertical gap
+};
+
+// SHIELDEDSCINTILATOR
+// A cylindrical scintillator with a hollow cylindrical shell
+// This defines the detector so it is only sensitive in the scintillator
+class MagnetSHIELDEDSCINTILLATOR : public MagnetBase {
+public:
+    MagnetSHIELDEDSCINTILLATOR(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                               std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                               G4String magnetName_in);
+    virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return scintillatorMaterial->GetDensity(); };
+
+protected:
+    virtual void ConstructDetectorLV(); //Overide the general ConstructDetectorLV()
+
+private:
+    G4String    scintillatorMaterialName = "G4_SODIUM_IODIDE";
+    G4Material* scintillatorMaterial = NULL;
+    G4String    shieldingMaterialName = "G4_Pb";
+    G4Material* shieldingMaterial = NULL;
+    G4double    r_scint   = 25.0*mm; //[G4 length units] Radius of scintillating cyrstal
+    G4double    l_scint   = 50.0*mm; //[G4 length units] Length of scintillating crystal
+    G4double    z_scint   = 0.0*mm;  //[G4 length units] Longitudinal position of center of scintillating crystal, relative to center of shield
+    G4double    ri_shield = 30.0*mm; //[G4 length units] Inner radius of shield
+    G4double    ro_shield = 50.0*mm; //[G4 length units] Outer radius of shield
+
+    G4LogicalVolume* scintillatorLV = NULL;
+    G4LogicalVolume* shieldingLV    = NULL;
 };
 
 #endif

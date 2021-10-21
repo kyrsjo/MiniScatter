@@ -128,24 +128,28 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     // Build new Magnets
     MagnetBase* theMagnet = NULL;
     if (magnetType == "PLASMA1") {
-        theMagnet = new MagnetPLASMA1     (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                           keyValPairs, detCon, magnetName);
+        theMagnet = new MagnetPLASMA1             (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
     }
     else if(magnetType == "COLLIMATOR1") {
-        theMagnet = new MagnetCOLLIMATOR1 (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                           keyValPairs, detCon, magnetName);
+        theMagnet = new MagnetCOLLIMATOR1         (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
     }
     else if(magnetType == "TARGET") {
-        theMagnet = new MagnetTARGET      (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                           keyValPairs, detCon, magnetName);
+        theMagnet = new MagnetTARGET              (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
     }
     else if(magnetType == "TARGETR") {
-        theMagnet = new MagnetTARGETR     (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                           keyValPairs, detCon, magnetName);
+        theMagnet = new MagnetTARGETR             (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
     }
     else if (magnetType == "COLLIMATORHV") {
-        theMagnet = new MagnetCOLLIMATORHV(magnetPos, doRelPos, magnetLength, magnetGradient,
-                                           keyValPairs, detCon, magnetName);
+        theMagnet = new MagnetCOLLIMATORHV        (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
+    else if (magnetType == "SHIELDEDSCINTILLATOR") {
+        theMagnet = new MagnetSHIELDEDSCINTILLATOR(magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
     }
     else {
         G4cerr << "Uknown magnet type '" << magnetType << "'" << G4endl;

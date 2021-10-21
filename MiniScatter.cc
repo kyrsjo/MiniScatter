@@ -859,7 +859,7 @@ void printHelp(G4double target_thick,
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
                    << "\t Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_Galactic', 'G4_AIR',"
+                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR',"
                    << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << "\t Also possible: 'gas::pressure' "
                    << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
@@ -1034,6 +1034,7 @@ void printHelp(G4double target_thick,
                    << "\t Accepted types and their arguments:" << G4endl
                    << G4endl
                    << "\t   'PLASMA1':" << G4endl
+                   << "\t     Models a linear-field plasma lens, only vacuum, in a saphire crystal" << G4endl
                    << "\t     radius:    Capillary radius (<double> [mm])" << G4endl
                    << "\t     totalAmps: Flag (<True/False>) to interpret the gradient parameter" << G4endl
                    << "\t                as the total current [A] instead of in [T/m]." << G4endl
@@ -1041,26 +1042,40 @@ void printHelp(G4double target_thick,
                    << "\t     height:    Capillay crystal height (<double> [mm])" << G4endl
                    << G4endl
                    << "\t   'COLLIMATOR1':" << G4endl
+                   << "\t     Models a rectangular collimator with a circular hole in the middle along the z-axis, no field." << G4endl
                    << "\t     radius:    Channel radius (<double> [mm])" << G4endl
                    << "\t     width:     Absorber width (<double> [mm])" << G4endl
                    << "\t     height:    Absorber height (<double> [mm])" << G4endl
                    << "\t     material:  Absorber material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'TARGET':" << G4endl
+                   << "\t     Models a rectangular target, no field."
                    << "\t     width:     Target width (<double> [mm])" << G4endl
                    << "\t     height:    Target height (<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'TARGETR':" << G4endl
+                   << "\t     Models a cylindrical target, no field."
                    << "\t     radius:    Target radius(<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'COLLIMATORHV':" << G4endl
+                   << "\t     Models two collimating jaws, no field."
                    << "\t     gap:       Gap between collimator jaws (<double> [mm])" << G4endl
                    << "\t     HV:        Horizontal (H) or vertical (V) collimator ('H'/'V')" << G4endl
                    << "\t     jawThick:  Collimator jaw thickness (i.e. in in gap plane) (<double> [mm])" << G4endl
                    << "\t     jawHeight: Collimator jaw height (i.e. out of gap plane) (<double> [mm])" << G4endl
                    << "\t     material:  Jaw material (similar to -m)" << G4endl
+                   << G4endl
+                   << "\t   'SHIELDEDSCINTILLATOR':" << G4endl
+                   << "\t     Models a cylindrical scintilling crystal (sensitive) inside a cylindrical shield (not sensitive), no field." << G4endl
+                   << "\t     scintMat:  Scintillator material (similar to -m), defaults to 'G4_SODIUM_IODIDE'" << G4endl
+                   << "\t     shieldMat: Shielding material (similar to -m), defaults to 'G4_Pb'" << G4endl
+                   << "\t     rScint:    Scintillator radius (<double> [mm])" << G4endl
+                   << "\t     lScint:    Scintillator length (<double> [mm])" << G4endl
+                   << "\t     zScint:    Scintillator position (<double> [mm])" << G4endl
+                   << "\t     riShield:  Shield inner radius (<double> [mm])" << G4endl
+                   << "\t     roShield:  Shield outer radius (<double> [mm])" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
