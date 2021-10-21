@@ -86,17 +86,17 @@ void MagnetCOLLIMATORHV::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main");
-
-    //Sanity checks on dimensions
-    if (gap+2*jawThick > mainLV_w || mainLV_h > mainLV_h) {
+    //Sanity checks on dimensions; it could still fit with rotations etc.
+    if (gap+2*jawThick > detCon->getWorldSizeX()/2 || mainLV_h > detCon->getWorldSizeY()/2) {
         G4cerr << "Error in MagnetCOLLIMATORHV::Construct():" << G4endl
-               << " The absorber is bigger than it's allowed envelope "
+               << " The absorber is bigger than the world volume. "
                << " including offsets and rotations."  << G4endl;
         G4cerr << "mainLW_w = " << mainLV_w/mm << " [mm]" << G4endl;
         G4cerr << "mainLW_h = " << mainLV_h/mm << " [mm]" << G4endl;
         exit(1);
     }
+
+    this->mainLV = MakeNewMainLV("main", gap+2*jawThick, gap+2*jawHeight);
 
     // Build the target
     targetMaterial = G4Material::GetMaterial(targetMaterialName);

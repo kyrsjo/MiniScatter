@@ -156,9 +156,10 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     return theMagnet;
 }
 
-G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix){
+G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix, G4double width, G4double height){
     // Builds an outer volume
-    // Note: The mainLV's physical volume(s) are created in the DetectorConstruction classes
+    // Note: The mainLV's physical volume(s) are created in the DetectorConstruction class
+    // Set width and height both <= 0.0 to autogenerate the wrapping volume width and height
 
     G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
     if (not vacuumMaterial) {
@@ -166,8 +167,17 @@ G4LogicalVolume* MagnetBase::MakeNewMainLV(G4String name_postfix){
         exit(1);
     }
 
-    mainLV_w = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(xRot/rad);
-    mainLV_h = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(yRot/rad);
+    if (width <= 0.0 and height <= 0) {
+        //Autogenerate a maximalistic "slice",
+        // which will later be rotated when it is placed in the DetectorConstruction
+        mainLV_w = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(xRot/rad);
+        mainLV_h = detCon->getWorldSizeX()-2*xOffset-2*(length/2.0)*sin(yRot/rad);
+    }
+    else {
+        //Use input width/height
+        mainLV_w = width;
+        mainLV_h = height;
+    }
 
     if (mainLV_w < 0.0 or mainLV_h < 0.0) {
         G4cerr << "Error in MagnetBase::MakeNewMainLV():" << G4endl
@@ -218,8 +228,12 @@ void MagnetBase::ConstructDetectorLV() {
         G4cerr << "Error in MagnetBase::ConstructDetectorLV(): The detectorLV has already been constructed?" << G4endl;
         exit(1);
     }
+    if(this->mainLV == NULL) {
+        G4cerr << "Error in MagnetBase::ConstructDetectorLV(): The mainLV is not yet constructed?" << G4endl;
+        exit(1);
+    }
 
-    this->detectorLV = MakeNewMainLV("detector");
+    this->detectorLV = MakeNewMainLV("detector",mainLV_w,mainLV_h);
 }
 void MagnetBase::AddSD(){
     // Add the TargetSD to the virtual logical volume of the magnet.

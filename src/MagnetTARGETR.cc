@@ -63,15 +63,14 @@ void MagnetTARGETR::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main");
-
     //Sanity checks on dimensions
-    if (radius > mainLV_w) {
+    if (radius > detCon->getWorldSizeX()) {
         G4cerr << "Error in MagnetTARGETR::Construct():" << G4endl
-               << " The absorber is bigger than it's allowed envelope "
-               << " including offsets and rotations."  << G4endl;
+               << " The absorber is bigger than the world volume."  << G4endl;
         exit(1);
     }
+
+    this->mainLV = MakeNewMainLV("main",2*radius, 2*radius);
 
     // Build the target
     G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",

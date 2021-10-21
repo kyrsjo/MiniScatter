@@ -105,10 +105,10 @@ protected:
     FieldBase* field = NULL;
 
     G4LogicalVolume* mainLV = NULL;
-    G4LogicalVolume* MakeNewMainLV(G4String name_postfix);
+    G4LogicalVolume* MakeNewMainLV(G4String name_postfix, G4double width, G4double height);
 
-    G4double mainLV_w = 0.0; // Width  of mainLV after removing what is needed for trans and rot [G4 units]
-    G4double mainLV_h = 0.0; // Height of mainLV after removing what is needed for trans and rot [G4 units]
+    G4double mainLV_w = -1.0; // Width  of mainLV, in local (pre-rotation) coordinate axis [G4 units]
+    G4double mainLV_h = -1.0; // Height of mainLV, in local (pre-rotation) coordinate axis [G4 units]
 
     G4Transform3D mainPV_transform;
     void BuildMainPV_transform();
