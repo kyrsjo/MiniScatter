@@ -190,7 +190,7 @@ void RootFileWriter::initializeRootFile(){
 
     // Target energy deposition
     if (detCon->GetHasTarget()) {
-        targetEdep = new TH1D("targetEdep","targetEdep",engNbins,0,beamEnergy);
+        targetEdep = new TH1D("targetEdep","targetEdep",engNbins+1,0,beamEnergy*(1+1/engNbins));
         targetEdep->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
         targetEdep_NIEL = new TH1D("targetEdep_NIEL","targetEdep_NIEL",1000,0,1);
         targetEdep_NIEL->GetXaxis()->SetTitle("Total NIEL/event [keV]");
@@ -634,7 +634,7 @@ void RootFileWriter::initializeRootFile(){
         const G4String magName = mag->magnetName;
 
         magnet_edep.push_back( new TH1D((magName + "_edep").c_str(),(magName + " edep").c_str(),
-                                        engNbins,0,beamEnergy) );
+                                        engNbins+1,0,beamEnergy*(1+1/engNbins)) );
         magnet_edep.back()->GetXaxis()->SetTitle("Total energy deposit/event [MeV]");
 
         G4int mag_edep_nbins_dz = (int) ceil((mag->GetLength()/mm) / fabs(this->edep_dens_dz));
@@ -911,9 +911,11 @@ void RootFileWriter::doEvent(const G4Event* event){
                     }
                 }
 
-                targetEdep->Fill(edep/MeV);
-                targetEdep_NIEL->Fill(edep_NIEL/keV);
-                targetEdep_IEL->Fill(edep_IEL/MeV);
+                if (edep > 0.0) {
+                    targetEdep->Fill(edep/MeV);
+                    targetEdep_NIEL->Fill(edep_NIEL/keV);
+                    targetEdep_IEL->Fill(edep_IEL/MeV);
+                }
             }
             else {
                 G4cout << "targetEdepHitsCollection was NULL!"<<G4endl;
@@ -971,7 +973,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                         target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                         target_exit_phasespaceY_cutoff->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-			target_exit_phasespaceXY_cutoff->Fill(hitPos.x()/mm,hitPos.y()/mm);
+                        target_exit_phasespaceXY_cutoff->Fill(hitPos.x()/mm,hitPos.y()/mm);
                     }
 
                     //Energy
@@ -1086,14 +1088,14 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Phase space
                     tracker_phasespaceX[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     tracker_phasespaceY[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-		    tracker_phasespaceXY[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                    tracker_phasespaceXY[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
 
                     if (energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                         if (charge != 0) {
                             // All charged particles passing the cutoff
                             tracker_phasespaceX_cutoff[idx]->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                             tracker_phasespaceY_cutoff[idx]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-			    tracker_phasespaceXY_cutoff[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
+                            tracker_phasespaceXY_cutoff[idx]->Fill(hitPos.x()/mm, hitPos.y()/mm);
                         }
 
                         //Also separated by species
@@ -1111,7 +1113,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                             tracker_phasespaceY_cutoff_PDG[idx][0]->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
                         }
 
-			if(tracker_phasespaceXY_cutoff_PDG[idx].find(PDG) != tracker_phasespaceXY_cutoff_PDG[idx].end()) {
+                        if(tracker_phasespaceXY_cutoff_PDG[idx].find(PDG) != tracker_phasespaceXY_cutoff_PDG[idx].end()) {
                             tracker_phasespaceXY_cutoff_PDG[idx][PDG]->Fill(hitPos.x()/mm, momentum.y()/mm);
                         }
                         else {
@@ -1236,7 +1238,9 @@ void RootFileWriter::doEvent(const G4Event* event){
                     }
                 }
 
-                magnet_edep[magIdx]->Fill(edep/MeV);
+                if (edep > 0.0) {
+                    magnet_edep[magIdx]->Fill(edep/MeV);
+                }
 
                 //TTree, for event-by-event analysis
                 if (not miniFile){
