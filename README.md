@@ -11,7 +11,8 @@ Furthermore, the scan library provides behind-the-scenes saving of results, mean
 This is implemented using ROOT and HDF5.
 
 If you have used MiniScatter, please cite [3]:
-K. Sjobak and H. Holmestad, _MiniScatter, a simple Geant4 wrapper_, in proceedings of IPAC 2019, Melbourne, Australia, May 2019.
+
+**K. Sjobak and H. Holmestad, _MiniScatter, a simple Geant4 wrapper_, in proceedings of IPAC 2019, Melbourne, Australia, May 2019.**
 
 ## Installing MiniScatter
 
