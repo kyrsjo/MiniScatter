@@ -36,6 +36,7 @@ public:
     DetectorConstruction(G4double TargetThickness_in,
                          G4String TargetMaterial_in,
                          G4double TargetAngle_in,
+                         G4String BackgroundMaterial_in,
                          G4double WorldSize_in,
                          G4double WorldMinLength_in,
                          std::vector <G4String> &magnetDefinitions_in);
@@ -43,6 +44,7 @@ public:
 
 private:
     void SetTargetMaterial (G4String);
+    void SetBackgroundMaterial (G4String);
     //  void SetDetectorMaterial (G4String);
 public:
 
@@ -50,6 +52,9 @@ public:
     G4int    GetTargetMaterialZ();
     G4double GetTargetMaterialA();
     G4double GetTargetMaterialDensity();
+
+    G4Material* GetTargetMaterial();
+    G4Material* GetBackgroundMaterial();
 
     //    void SetMagField(G4double);
     G4VPhysicalVolume* Construct();
@@ -69,32 +74,35 @@ public:
     inline G4double getWorldSizeY()       const {return WorldSizeY;};
 
 private:
-    G4Material*        vacuumMaterial = NULL;
+    G4Material*        vacuumMaterial         = NULL;
+    G4Material*        airMaterial            = NULL;
 
-    G4Material*        AlMaterial     = NULL;
-    G4Material*        CMaterial      = NULL;
-    G4Material*        CuMaterial     = NULL;
-    G4Material*        PbMaterial     = NULL;
-    G4Material*        TiMaterial     = NULL;
-    G4Material*        SiMaterial     = NULL;
-    G4Material*        WMaterial      = NULL;
-    G4Material*        UMaterial      = NULL;
+    G4Material*        AlMaterial             = NULL;
+    G4Material*        CMaterial              = NULL;
+    G4Material*        CuMaterial             = NULL;
+    G4Material*        PbMaterial             = NULL;
+    G4Material*        TiMaterial             = NULL;
+    G4Material*        SiMaterial             = NULL;
+    G4Material*        WMaterial              = NULL;
+    G4Material*        UMaterial              = NULL;
+    G4Material*        FeMaterial             = NULL;
 
     G4Material*        MylarMaterial          = NULL;
     G4Material*        KaptonMaterial         = NULL;
     G4Material*        StainlessSteelMaterial = NULL;
     G4Material*        WaterMaterial          = NULL;
+    G4Material*        NaIMaterial            = NULL;
 
-    G4Material*        SapphireMaterial = NULL;
+    G4Material*        SapphireMaterial       = NULL;
 
-    G4Material*        ChromoxMaterial       = NULL;
-    G4Material*        ChromoxScreenMaterial = NULL;
+    G4Material*        ChromoxMaterial        = NULL;
+    G4Material*        ChromoxScreenMaterial  = NULL;
 
-    G4Material*        gasH_2         = NULL;
-    G4Material*        gasHe          = NULL;
-    G4Material*        gasN_2         = NULL;
-    G4Material*        gasNe          = NULL;
-    G4Material*        gasAr          = NULL;
+    G4Material*        gasH_2                 = NULL;
+    G4Material*        gasHe                  = NULL;
+    G4Material*        gasN_2                 = NULL;
+    G4Material*        gasNe                  = NULL;
+    G4Material*        gasAr                  = NULL;
 
     //These are all in G4 units
     G4double           WorldSizeX;
@@ -109,6 +117,8 @@ private:
 
     G4bool             HasTarget      = false;
     G4Material*        TargetMaterial = NULL;
+
+    G4Material*        BackgroundMaterial = NULL;
 
     G4double           DetectorDistance;
     G4Material*        DetectorMaterial;

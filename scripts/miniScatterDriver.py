@@ -31,9 +31,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
 
     for key in simSetup.keys():
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
-                       "N", "ENERGY", "ENERGY_FLAT",\
+                       "BGMAT", "N", "ENERGY", "ENERGY_FLAT",\
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
-                       "COVAR", "BEAM_RCUT", "SEED", \
+                       "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS"):
             if key.startswith("MAGNET"):
@@ -43,64 +43,67 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
     cmd = ["./MiniScatter"]
 
     if "THICK" in simSetup:
-        cmd += ["-t", str(simSetup["THICK"])]
+        cmd += ["--thick", str(simSetup["THICK"])]
     if "MAT" in simSetup:
         if "PRESS" in simSetup:
-            cmd += ["-m", simSetup["MAT"]+'::'+str(simSetup["PRESS"])]
+            cmd += ["--mat", simSetup["MAT"]+'::'+str(simSetup["PRESS"])]
         else:
-            cmd += ["-m", simSetup["MAT"]]
+            cmd += ["--mat", simSetup["MAT"]]
     else:
         if "PRESS" in simSetup:
             raise ValueError("Found PRESS="+str(simSetup["PRESS"]) + " but no MAT. This makes no sense.")
 
     if "DIST" in simSetup:
         if simSetup["DIST"] == "NONE":
-            cmd += ["-d", "NONE"]
+            cmd += ["--dist", "NONE"]
         elif type(simSetup["DIST"]) == float:
-            cmd += ["-d", str(simSetup["DIST"])]
+            cmd += ["--dist", str(simSetup["DIST"])]
         else: # It's a list of distances
             distStr = ""
             for d in simSetup["DIST"]:
                 distStr = distStr + str(d) + ":"
             distStr = distStr[0:-1]
             print("distStr=",distStr)
-            cmd += ["-d", distStr]
+            cmd += ["--dist", distStr]
 
     if "ANG" in simSetup:
-        cmd += ["-a", str(simSetup["ANG"])]
+        cmd += ["--ang", str(simSetup["ANG"])]
 
     if "TARG_ANG" in simSetup:
-        cmd += ["-A", str(simSetup["TARG_ANG"])]
+        cmd += ["--targetAngle", str(simSetup["TARG_ANG"])]
 
     if "WORLDSIZE" in simSetup:
-        cmd += ['-w', str(simSetup["WORLDSIZE"])]
+        cmd += ['--worldsize', str(simSetup["WORLDSIZE"])]
 
     if "PHYS" in simSetup:
-        cmd += ["-p", simSetup["PHYS"]]
+        cmd += ["--phys", simSetup["PHYS"]]
 
     if "PHYS_CUTDIST" in simSetup:
         cmd += ["--physCutoffDist", str(simSetup["PHYS_CUTDIST"])]
 
+    if "BGMAT" in simSetup:
+        cmd += ["--backgroundMaterial", str(simSetup["BGMAT"])]
+
     if "N" in simSetup:
-        cmd += ["-n", str(simSetup["N"])]
+        cmd += ["--numEvents", str(simSetup["N"])]
 
     if "ENERGY" in simSetup:
-        cmd += ["-e", str(simSetup["ENERGY"])]
+        cmd += ["--energy", str(simSetup["ENERGY"])]
 
     if "ENERGY_FLAT" in simSetup:
         cmd += ["--energyDistFlat", str(simSetup["ENERGY_FLAT"][0])+':'+str(simSetup["ENERGY_FLAT"][1]) ]
 
     if "BEAM" in simSetup:
-        cmd += ["-b", str(simSetup["BEAM"])]
+        cmd += ["--beam", str(simSetup["BEAM"])]
 
     if "XOFFSET" in simSetup:
-        cmd += ["-x", str(simSetup["XOFFSET"])]
+        cmd += ["--xoffset", str(simSetup["XOFFSET"])]
 
     if "ZOFFSET" in simSetup:
         if (not "ZOFFSET_BACKTRACK" in simSetup) or (simSetup["ZOFFSET_BACKTRACK"] == False):
-            cmd += ["-z", str(simSetup["ZOFFSET"])]
+            cmd += ["--zoffset", str(simSetup["ZOFFSET"])]
         elif simSetup["ZOFFSET_BACKTRACK"] == True:
-            cmd += ["-z", "*"+str(simSetup["ZOFFSET"])]
+            cmd += ["--zoffset", "*"+str(simSetup["ZOFFSET"])]
         else:
             raise ValueError("ZOFFSET_BACKTRACK=" +\
                              str(simSetup["ZOFFSET_BACKTRACK"]) +\
@@ -109,11 +112,14 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
         if "ZOFFSET_BACKTRACK" in simSetup:
             raise ValueError("ZOFFSET_BACKTRACK present but not ZOFFSET?")
 
+    if "BEAMANGLE" in simSetup:
+        cmd += ["--beamAngle", str(simSetup["BEAMANGLE"])]
+
     if "COVAR" in simSetup:
         if len(simSetup["COVAR"]) == 3:
-            cmd += ["-c", str(simSetup["COVAR"][0]) + ":" + str(simSetup["COVAR"][1]) + ":" + str(simSetup["COVAR"][2])]
+            cmd += ["--covar", str(simSetup["COVAR"][0]) + ":" + str(simSetup["COVAR"][1]) + ":" + str(simSetup["COVAR"][2])]
         elif len(simSetup["COVAR"]) == 6:
-            cmd += ["-c", str(simSetup["COVAR"][0]) + ":" + str(simSetup["COVAR"][1]) + ":" + str(simSetup["COVAR"][2])+"::" \
+            cmd += ["--covar", str(simSetup["COVAR"][0]) + ":" + str(simSetup["COVAR"][1]) + ":" + str(simSetup["COVAR"][2])+"::" \
                     + str(simSetup["COVAR"][3]) + ":" + str(simSetup["COVAR"][4]) + ":" + str(simSetup["COVAR"][5])]
         else:
             raise ValueError("Expected len(COVAR) == 3 or 6")
@@ -122,23 +128,23 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
         cmd += ["--beamRcut", str(simSetup["BEAM_RCUT"])]
 
     if "SEED" in simSetup:
-        cmd += ["-s", str(simSetup["SEED"])]
+        cmd += ["--seed", str(simSetup["SEED"])]
 
     if "OUTNAME" in simSetup:
-        cmd += ["-f", simSetup["OUTNAME"]]
+        cmd += ["--outname", simSetup["OUTNAME"]]
 
     if "OUTFOLDER" in simSetup:
-        cmd += ["-o", simSetup["OUTFOLDER"]]
+        cmd += ["--outfolder", simSetup["OUTFOLDER"]]
 
     if "QUICKMODE" in simSetup:
         if simSetup["QUICKMODE"] == True:
-            cmd += ["-q"]
+            cmd += ["--quickmode"]
         else:
             assert simSetup["QUICKMODE"] == False
 
     if "MINIROOT" in simSetup:
         if simSetup["MINIROOT"] == True:
-            cmd += ["-r"]
+            cmd += ["--miniroot"]
         else:
             assert simSetup["MINIROOT"] == False
 

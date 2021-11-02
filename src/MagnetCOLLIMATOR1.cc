@@ -71,15 +71,14 @@ void MagnetCOLLIMATOR1::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main");
-
     //Sanity checks on dimensions
-    if (width > mainLV_w || height > mainLV_h) {
+    if (width > detCon->getWorldSizeX() || height > detCon->getWorldSizeY()) {
         G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
-               << " The absorber is wider than it's allowed envelope "
-               << " including offsets and rotations."  << G4endl;
+               << " The absorber is wider than the world volume."  << G4endl;
         exit(1);
     }
+
+    this->mainLV = MakeNewMainLV("main", width,height);
 
     if (radius > width/2.0 or radius > height/2.0) {
         G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl

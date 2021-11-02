@@ -40,19 +40,21 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4double beam_offset_in,
                                                G4double beam_zpos_in,
                                                G4bool   doBacktrack_in,
+                                               G4double beam_angle_in,
                                                G4String covarianceString_in,
                                                G4double Rcut_in,
-                                               G4int rngSeed_in,
+                                               G4int    rngSeed_in,
                                                G4double beam_energy_min_in,
                                                G4double beam_energy_max_in  ) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
-    beam_offset(beam_offset_in),
+    beam_offset(beam_offset_in*mm),
     beam_zpos(beam_zpos_in),
     doBacktrack(doBacktrack_in),
+    beam_angle(beam_angle_in*deg),
     covarianceString(covarianceString_in),
-    Rcut(Rcut_in),
+    Rcut(Rcut_in*mm),
     rngSeed(rngSeed_in),
     beam_energy_min(beam_energy_min_in),
     beam_energy_max(beam_energy_max_in) {
@@ -66,6 +68,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     else {
         beam_zpos *= mm;
 
+        //Sanity check
         if (beam_zpos >= - Detector->getTargetThickness() / 2.0) {
             G4cout << "Beam starting position = " << beam_zpos/mm
                    << " [mm] is not behind target back plane = "
@@ -82,12 +85,57 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
         }
     }
 
+    //Sanity check
+    if (abs(beam_offset) > Detector->getWorldSizeX()/2.0) {
+        G4cout << "Beam offset = " << beam_offset/mm
+                   << " [mm] is outside of world volume, max = world size / 2 = "
+                   << Detector->getWorldSizeX() / 2.0 / mm<< " [mm]"
+                   << G4endl;
+            exit(1);
+    }
+
+    //Sanity check
+    if(abs(beam_angle) != 0.0) {
+        if (abs(beam_angle_in) >= 90.0) {
+            G4cout << "Beam angles >= 90 degrees are not supported."
+                   << G4endl;
+            exit(1);
+        }
+        if (covarianceString != "") {
+            G4cout << "Beam angle and covariance matrix cannot be used together."
+                   << G4endl;
+            exit(1);
+        }
+        if (Rcut != 0.0)  {
+            G4cout << "Beam angle and Rcut cannot be used together."
+                   << G4endl;
+            exit(1);
+        }
+        if (beam_offset != 0.0) {
+            G4cout << "Beam angle and beam offset cannot be used together."
+                   << G4endl;
+            exit(1);
+        }
+        if (doBacktrack) {
+            G4cout << "Beam angle and backtracking cannot be used together."
+                   << G4endl;
+            exit(1);
+        }
+    }
 }
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
     delete particleGun;
 }
 
+G4double PrimaryGeneratorAction::GetDefaultZpos(G4double targetThickness_in) {
+        G4double beam_zpos = targetThickness_in / 2.0;
+        // Round up to nearest 10 mm
+        G4double stepsize = 10.0*mm;
+        beam_zpos = ceil(beam_zpos/stepsize)*stepsize;
+
+        return -beam_zpos; //Negative!
+    }
 
 void PrimaryGeneratorAction::setupCovariance() {
     // Convert the covarianceString to a set of Twiss parameters,
@@ -251,7 +299,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             particle = particleTable->FindParticle(beam_type);
         }
         if (particle == NULL) {
-            G4cerr << "Error - particle named '" << beam_type << "'not found" << G4endl;
+            G4cerr << "Error - particle named '" << beam_type << "' not found" << G4endl;
             //particleTable->DumpTable();
             exit(1);
         }
@@ -276,7 +324,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         while(true) {
             G4double xn  = RNG->Gaus(0,1);
             G4double xpn = RNG->Gaus(0,1);;
-            x  = (xn*covarX_L[0][0] + xpn*covarX_L[0][1])*m + beam_offset*mm;
+            x  = (xn*covarX_L[0][0] + xpn*covarX_L[0][1])*m + beam_offset;
             xp = (xn*covarX_L[1][0] + xpn*covarX_L[1][1])*rad;
 
             G4double yn  = RNG->Gaus(0,1);
@@ -304,21 +352,36 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 }
             }
         }
+        z = beam_zpos;
     }
     else if (Rcut != 0.0) {
         G4double r = RNG->Uniform();
         G4double t = RNG->Uniform(2*M_PI);
-        x = sqrt(r)*cos(t)*Rcut*mm;
-        y = sqrt(r)*sin(t)*Rcut*mm;
+        x = sqrt(r)*cos(t)*Rcut + beam_offset;
+        y = sqrt(r)*sin(t)*Rcut;
 
         xp = 0.0;
         yp = 0.0;
+
+        z = beam_zpos;
     }
-    else {
-        x  = beam_offset*mm;
-        xp = 0.0;
+    else if (beam_angle != 0.0) {
+        x  = -beam_zpos*sin(beam_angle/rad);
+        xp = tan(-beam_angle/rad);
+
         y  = 0.0;
         yp = 0.0;
+
+        z = beam_zpos*cos(beam_angle/rad);
+    }
+    else {
+        x  = beam_offset;
+        xp = 0.0;
+
+        y  = 0.0;
+        yp = 0.0;
+
+        z = beam_zpos;
     }
 
     if (doBacktrack) {
@@ -327,9 +390,11 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         y -= (yp/rad)*(0.0 - beam_zpos);
     }
 
-    particleGun->SetParticlePosition(G4ThreeVector(x,y,beam_zpos));
+    particleGun->SetParticlePosition(G4ThreeVector(x,y,z));
 
-    //Technically not completely accurate but close enough for now
+    //Gives a non-unit vector, however it is normalized by
+    //  SetParticleMomentumDirection, which fixes it.
+    //  This works: With beam_angle, it hits (0,0,0) perfectly even at large angles.
     particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
 
     if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {

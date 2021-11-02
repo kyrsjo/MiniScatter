@@ -54,6 +54,7 @@
 DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
                                            G4String TargetMaterial_in,
                                            G4double TargetAngle_in,
+                                           G4String BackgroundMaterial_in,
                                            G4double WorldSize_in,
                                            G4double WorldMinLength_in,
                                            std::vector <G4String> &magnetDefinitions_in) :
@@ -80,10 +81,13 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
     WorldSizeY = WorldSize_in*mm;
 
     if (TargetThickness == 0.0) {
+        /*
+        // Makes sense to allow no targets since we can have non-vacuum background materials...
         if (magnetDefinitions.size() == 0) {
-            G4cerr << "Error: Magnet definitions must be used if TargetThickness=0." << G4endl;
+            G4cerr << "Error: Object/magnet definitions must be used if TargetThickness=0." << G4endl;
             exit(1);
         }
+        */
         HasTarget = false;
     }
     else if (TargetThickness < 0.0) {
@@ -138,7 +142,9 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         SetTargetMaterial(TargetMaterial_in);
     }
 
-    DetectorMaterial = vacuumMaterial;
+    SetBackgroundMaterial(BackgroundMaterial_in);
+
+    DetectorMaterial = BackgroundMaterial;
 
     G4cout << G4endl;
 }
@@ -154,7 +160,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
     // World volume
     solidWorld = new G4Box("WorldS", WorldSizeX/2.0, WorldSizeY/2.0, WorldSizeZ/2.0);
-    logicWorld = new G4LogicalVolume(solidWorld, vacuumMaterial, "WorldLV");
+    logicWorld = new G4LogicalVolume(solidWorld, BackgroundMaterial, "WorldLV");
 
     physiWorld = new G4PVPlacement(0,               //no rotation
                                    G4ThreeVector(), //World volume must be centered at the origin
@@ -235,13 +241,16 @@ void DetectorConstruction::DefineMaterials() {
     SiMaterial = man->FindOrBuildMaterial("G4_Si");
     WMaterial  = man->FindOrBuildMaterial("G4_W");
     UMaterial  = man->FindOrBuildMaterial("G4_U");
+    FeMaterial = man->FindOrBuildMaterial("G4_Fe");
 
     MylarMaterial          = man->FindOrBuildMaterial("G4_MYLAR");
     KaptonMaterial         = man->FindOrBuildMaterial("G4_KAPTON");
     StainlessSteelMaterial = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
     WaterMaterial          = man->FindOrBuildMaterial("G4_WATER");
+    NaIMaterial            = man->FindOrBuildMaterial("G4_SODIUM_IODIDE");
 
     vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
+    airMaterial    = man->FindOrBuildMaterial("G4_AIR");
 
     G4Element* elAl = new G4Element("Aluminium", "Al", 13.0, 26.9815385*g/mole);
     G4Element* elO  = new G4Element("Oxygen",    "O",  8.0,  15.999*g/mole);
@@ -445,6 +454,8 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
 //------------------------------------------------------------------------------
 
 void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
+    // TODO: Merge with SetBackgroundMaterial()
+
     // search the material by its name
     if(!GetHasTarget() || TargetThickness == 0.0){
         G4cerr << "Error in DetectorConstruction::SetTargetMaterial():" << G4endl
@@ -453,7 +464,9 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
     }
 
     G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
-    if (pttoMaterial) TargetMaterial = pttoMaterial;
+    if (pttoMaterial) {
+        TargetMaterial = pttoMaterial;
+    }
     else {
         G4cerr << "Error when setting material '"
                << materialChoice << "' -- not found!" << G4endl;
@@ -466,6 +479,27 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
     }
 }
 
+//------------------------------------------------------------------------------
+
+void DetectorConstruction::SetBackgroundMaterial(G4String materialChoice) {
+    // TODO: Merge with SetTargetMaterial()
+
+    // search the material by its name
+    G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
+    if (pttoMaterial) {
+        BackgroundMaterial = pttoMaterial;
+    }
+    else {
+        G4cerr << "Error when setting material '"
+               << materialChoice << "' -- not found!" << G4endl;
+        G4MaterialTable* materialTable = G4Material::GetMaterialTable();
+        G4cerr << "Valid choices:" << G4endl;
+        for (auto mat : *materialTable) {
+            G4cerr << mat->GetName() << G4endl;
+        }
+        exit(1);
+    }
+}
 //------------------------------------------------------------------------------
 
 G4int DetectorConstruction::GetTargetMaterialZ() {
@@ -493,6 +527,8 @@ G4int DetectorConstruction::GetTargetMaterialZ() {
 
     return (*elementVector)[maxAtomsIndex]->GetZ();
 }
+
+//------------------------------------------------------------------------------
 
 G4double DetectorConstruction::GetTargetMaterialA() {
     //Return the average mass number of the most common species in the target
@@ -530,6 +566,28 @@ G4double DetectorConstruction::GetTargetMaterialDensity() {
         exit(1);
     }
     return TargetMaterial->GetDensity();
+}
+
+//------------------------------------------------------------------------------
+
+G4Material* DetectorConstruction::GetTargetMaterial() {
+    if (!GetHasTarget() || TargetMaterial == NULL) {
+        G4cerr << "Error in DetectorConstruction::GetTargetMaterial():" << G4endl
+               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
+        exit(1);
+    }
+    return TargetMaterial;
+}
+
+//------------------------------------------------------------------------------
+
+G4Material* DetectorConstruction::GetBackgroundMaterial() {
+    if (BackgroundMaterial == NULL) {
+        G4cerr << "Error in DetectorConstruction::GetBackgroundMaterial():" << G4endl
+               << " No background material is actually defined?" << G4endl;
+        exit(1);
+    }
+    return BackgroundMaterial;
 }
 
 //------------------------------------------------------------------------------

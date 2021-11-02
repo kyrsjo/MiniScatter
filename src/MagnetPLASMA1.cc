@@ -93,34 +93,16 @@ void MagnetPLASMA1::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main");
-
-    /*
-    G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
-    if (not vacuumMaterial) {
-        G4cerr << "Internal error -- material G4_Galactic not found in MagnetPLASMA1::Construct()!" << G4endl;
+    //Sanity checks on dimensions
+    if (cryWidth > detCon->getWorldSizeX() || cryHeight > detCon->getWorldSizeY()) {
+        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
+               << " The absorber is wider than the world volume."  << G4endl;
         exit(1);
     }
 
-    //Field box
-    // TODO: Not really neccessary, use the mainLV directly
-    // (unless the goal is to make it smaller and contain the gas...)
-    G4VSolid* fieldBox            = new G4Box(magnetName+"_fieldBoxS",
-                                              detCon->getWorldSizeX()/2.0,
-                                              detCon->getWorldSizeX()/2.0,
-                                              length/2.0);
-    G4Material* fieldBoxMaterial  = vacuumMaterial; // TODO
-    G4LogicalVolume* fieldBoxLV   = new G4LogicalVolume(fieldBox,
-                                                        fieldBoxMaterial,
-                                                        magnetName+"_fieldBoxLV");
-    G4VPhysicalVolume* fieldBoxPV = new G4PVPlacement(NULL,
-                                                      G4ThreeVector(0.0,0.0,0.0),
-                                                      fieldBoxLV,
-                                                      magnetName + "_fieldBoxPV",
-                                                      this->mainLV,
-                                                      false,
-                                                      0,
-                                                      true); */
+    this->mainLV = MakeNewMainLV("main", cryWidth,cryHeight);
+
+    //Field
     field = new FieldPLASMA1(plasmaTotalCurrent, capRadius,
                              G4ThreeVector(xOffset, yOffset, getZ0()),mainLV);
     G4FieldManager* fieldMgr = new G4FieldManager(field);
