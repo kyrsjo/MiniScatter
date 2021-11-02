@@ -15,6 +15,7 @@ A tested set of CMAKE flags for `Geant4.10.07.p02` is:
 * `GEANT4_USE_QT=ON`
 * `GEANT4_USE_RAYTRACER_X11=ON`
 * `GEANT4_USE_XM=ON`
+
 This enables C++17 and the optional GUI; the GUI needs the `GEANT4_USE_OPENGL_X11=ON` and `GEANT4_USE_QT=ON`. You probably also want to set `CMAKE_INSTALL_PREFIX` and `GEANT4_INSTALL_DATADIR`.
 
 Assuming that it is installed in e.g. `~/code/geant4/geant4.10.04.p02-install`, then load Geant4 in the current shell by running `source ~/code/geant4/geant4.10.04.p02-install/bin/geant4.sh`.
