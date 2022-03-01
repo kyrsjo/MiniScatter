@@ -306,18 +306,18 @@ void RootFileWriter::initializeRootFile(){
         target_exit_phasespaceY_cutoff->GetXaxis()->SetTitle("Position y [mm]");
         target_exit_phasespaceY_cutoff->GetYaxis()->SetTitle("Angle dy/dz [rad]");
 
-	target_exit_phasespaceXY        = new TH2D("target_exit_xy",
+        target_exit_phasespaceXY        = new TH2D("target_exit_xy",
 						   "Target exit phase space (x,y)",
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
-	target_exit_phasespaceXY->GetXaxis()->SetTitle("Position x [mm]");
-	target_exit_phasespaceXY->GetYaxis()->SetTitle("Position y [mm]");
-	target_exit_phasespaceXY_cutoff = new TH2D("target_exit_cutoff_xy",
+        target_exit_phasespaceXY->GetXaxis()->SetTitle("Position x [mm]");
+        target_exit_phasespaceXY->GetYaxis()->SetTitle("Position y [mm]");
+        target_exit_phasespaceXY_cutoff = new TH2D("target_exit_cutoff_xy",
 						   "Target exit phase space (x,y) (charged, energy > Ecut, r < Rcut)",
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
-	target_exit_phasespaceXY_cutoff->GetXaxis()->SetTitle("Position x [mm]");
-	target_exit_phasespaceXY_cutoff->GetYaxis()->SetTitle("Position y [mm]");
+        target_exit_phasespaceXY_cutoff->GetXaxis()->SetTitle("Position x [mm]");
+        target_exit_phasespaceXY_cutoff->GetYaxis()->SetTitle("Position y [mm]");
 
     }
 
@@ -418,7 +418,7 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceY_cutoff.back()->GetXaxis()->SetTitle("Y [mm]");
         tracker_phasespaceY_cutoff.back()->GetYaxis()->SetTitle("Y' [rad]");
 
-	tracker_phasespaceXY_cutoff.push_back(
+        tracker_phasespaceXY_cutoff.push_back(
             new TH2D((trackerName+"_cutoff_xy").c_str(),
                      (trackerName+" phase space (x,y) (charged, energy > Ecut, r < Rcut)").c_str(),
                      1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
@@ -478,7 +478,7 @@ void RootFileWriter::initializeRootFile(){
             PDG.second->GetYaxis()->SetTitle("Y' [rad]");
         }
 
-	tracker_phasespaceXY_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
+        tracker_phasespaceXY_cutoff_PDG.push_back(std::map<G4int,TH2D*>());
         tracker_phasespaceXY_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_xy_PDG11").c_str(),
                                                                   (trackerName+" phase space (x,y) (electrons, energy > Ecut, r < Rcut)").c_str(),
                                                                   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
@@ -968,7 +968,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Phase space
                     target_exit_phasespaceX->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
                     target_exit_phasespaceY->Fill(hitPos.y()/mm, momentum.y()/momentum.z());
-		    target_exit_phasespaceXY->Fill(hitPos.x()/mm,hitPos.y()/mm);
+                    target_exit_phasespaceXY->Fill(hitPos.x()/mm,hitPos.y()/mm);
 
                     if (charge != 0 and energy/MeV > beamEnergy*beamEnergy_cutoff and hitR/mm < position_cutoffR) {
                         target_exit_phasespaceX_cutoff->Fill(hitPos.x()/mm, momentum.x()/momentum.z());
@@ -1012,7 +1012,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Fill the TTree
                     if (not miniFile) {
                         targetExitBuffer.x = hitPos.x()/mm;
-                        targetExitBuffer.y = hitPos.x()/mm;
+                        targetExitBuffer.y = hitPos.y()/mm;
                         targetExitBuffer.z = hitPos.z()/mm;
 
                         targetExitBuffer.px = momentum.x()/MeV;
