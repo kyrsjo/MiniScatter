@@ -183,7 +183,7 @@ void RootFileWriter::initializeRootFile(){
 
         initParts = new TTree("InitParts","InitParts tree"); //EDF added 1 Mar 2023
         initParts->Branch("InitPartsBranch",&initPartsBuffer,
-                            "x/D:y:z:px:py:pz:E"); //EDF added 1 Mar 2023
+                            "x/D:y:px:py:E"); //EDF added 1 Mar 2023
 
         trackerHits = new TTree("TrackerHits","TrackerHits tree");
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
