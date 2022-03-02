@@ -181,6 +181,10 @@ void RootFileWriter::initializeRootFile(){
                                "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
         }
 
+        initParts = new TTree("InitParts","InitParts tree"); //EDF added 1 Mar 2023
+        initParts->Branch("InitPartsBranch",&initPartsBuffer,
+                            "x/D:y:z:px:py:pz:E"); //EDF added 1 Mar 2023
+
         trackerHits = new TTree("TrackerHits","TrackerHits tree");
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
                             "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
@@ -1180,6 +1184,19 @@ void RootFileWriter::doEvent(const G4Event* event){
     init_phasespaceY->Fill(genAct->y/mm,genAct->yp/rad);
     init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
     init_E->Fill(genAct->E/MeV);
+
+    //Fill the TTree
+    if (not miniFile) {
+        initPartsBuffer.x = genAct->x/mm;
+        initPartsBuffer.y = genAct->y/mm;
+
+        initPartsBuffer.px = genAct->xp/rad;
+        initPartsBuffer.py = genAct->yp/rad;
+
+        initPartsBuffer.E = genAct->E / MeV; //not sure this will work
+
+        initParts->Fill();
+    }
 
     // *** Data from Magnets, which use a TargetSD ***
     size_t magIdx = -1;
