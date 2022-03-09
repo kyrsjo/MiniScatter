@@ -181,6 +181,10 @@ void RootFileWriter::initializeRootFile(){
                                "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
         }
 
+        initParts = new TTree("InitParts","InitParts tree"); //EDF added 1 Mar 2022
+        initParts->Branch("InitPartsBranch",&initPartsBuffer,
+                            "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID"); //EDF added 1 Mar 2022
+
         trackerHits = new TTree("TrackerHits","TrackerHits tree");
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
                             "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
@@ -1181,6 +1185,26 @@ void RootFileWriter::doEvent(const G4Event* event){
     init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
     init_E->Fill(genAct->E/MeV);
 
+    //Fill the TTree
+    if (not miniFile) {
+        initPartsBuffer.x = genAct->x/mm;
+        initPartsBuffer.y = genAct->y/mm;
+        initPartsBuffer.z = genAct->z/mm; //Required to fill struct properly
+
+        initPartsBuffer.px = genAct->xp/rad; //Actually rad here
+        initPartsBuffer.py = genAct->yp/rad;
+        initPartsBuffer.pz = 0;
+
+        initPartsBuffer.E = genAct->E / MeV;
+
+        initPartsBuffer.PDG = 0; //filler until genAct is updated
+        initPartsBuffer.charge = 0;
+
+        initPartsBuffer.eventID = eventCounter;
+
+        initParts->Fill();
+    }
+
     // *** Data from Magnets, which use a TargetSD ***
     size_t magIdx = -1;
     for (auto mag : detCon->magnets) {
@@ -1712,6 +1736,7 @@ void RootFileWriter::finalizeRootFile() {
 
     if (not miniFile) {
         G4cout << "Writing TTrees..." << G4endl;
+        initParts->Write(); //writing InitParts with other TTrees
 
         if (detCon->GetHasTarget()) {
             targetExit->Write();

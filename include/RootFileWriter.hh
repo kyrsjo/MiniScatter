@@ -124,8 +124,10 @@ private:
     // TTrees //
     TTree* targetExit                                                           = NULL;
     TTree* trackerHits                                                          = NULL;
+    TTree* initParts                                                            = NULL;//EDF added 1 Mar 2023
     trackerHitStruct targetExitBuffer;
     trackerHitStruct trackerHitsBuffer;
+    trackerHitStruct initPartsBuffer; //EDF added 1 Mar 2022
 
     Double_t* magnetEdepsBuffer                                                 = NULL;
     TTree* magnetEdeps                                                          = NULL;
