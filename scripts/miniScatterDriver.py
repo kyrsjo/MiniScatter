@@ -23,9 +23,10 @@ import ROOT
 import ROOT.TFile, ROOT.TVector
 import datetime
 
+
 def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
-
+    print(os.getcwd())
     if quiet and allOutput:
         raise AssertionError("Setting both 'quiet' and 'alloutput' makes no sense")
 
@@ -35,7 +36,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED", \
                        "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
-                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS"):
+                       "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "POSLIM", "EDEP_DZ", "ENG_NBINS"):
             if key.startswith("MAGNET"):
                 continue
             raise KeyError("Did not expect key {} in the simSetup".format(key))
@@ -159,6 +160,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
 
     if "ENG_NBINS" in simSetup:
         cmd += ["--engNbins", str(simSetup["ENG_NBINS"])]
+
+    if "POSLIM" in simSetup:
+        cmd += ["--histPosLim", str(simSetup["POSLIM"])]
 
     if "MAGNET" in simSetup:
         for mag in simSetup["MAGNET"]:

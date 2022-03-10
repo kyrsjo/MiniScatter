@@ -52,7 +52,7 @@ struct stat stat_info;
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = NULL;
 
-const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm;
+const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm; //test!
 const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
 
 void RootFileWriter::initializeRootFile(){
@@ -181,9 +181,9 @@ void RootFileWriter::initializeRootFile(){
                                "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
         }
 
-        initParts = new TTree("InitParts","InitParts tree"); //EDF added 1 Mar 2022
+        initParts = new TTree("InitParts","InitParts tree");
         initParts->Branch("InitPartsBranch",&initPartsBuffer,
-                            "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID"); //EDF added 1 Mar 2022
+                            "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
 
         trackerHits = new TTree("TrackerHits","TrackerHits tree");
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
@@ -569,8 +569,8 @@ void RootFileWriter::initializeRootFile(){
     init_phasespaceXY   =
         new TH2D("init_xy",
                  "Initial phase space (x,y)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
+                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
+                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm);
     init_E =
         new TH1D("init_E",
                  "Initial particle energy",
