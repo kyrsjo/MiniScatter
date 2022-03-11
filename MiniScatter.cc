@@ -148,7 +148,7 @@ int main(int argc,char** argv) {
     G4int    engNbins              = 0;           // Number of bins for the 1D energy histograms
 
     G4double histPosLim            = 10.0;        // Position histogram Limit, default 10
-    //G4double histAngLim            = 5.0;         // Angle histogram Limit, default 5
+    G4double histAngLim            = 5.0;         // Angle histogram Limit, default 5
 
     std::vector<G4String> magnetDefinitions;
 
@@ -187,7 +187,7 @@ int main(int argc,char** argv) {
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {"object",                required_argument, NULL, 1100 }, //synonymous with --magnet
                                            {"histPosLim",            required_argument, NULL, 1025 }, 
-                                           //{"histAngLim",            required_argument, NULL, 1026 },
+                                           {"histAngLim",            required_argument, NULL, 1026 },
                                            {0,0,0,0}
     };
 
@@ -244,7 +244,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'd': //Detector distance //marker
+        case 'd': //Detector distance
             { //Scope to avoid spilling temp variables
                 detector_distances.clear();
                 G4String detectorString = std::string(optarg);
@@ -576,7 +576,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        /*case 1026: //histAngLim definition, borrowed from engNbins
+        case 1026: //histAngLim definition, borrowed from engNbins
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -587,7 +587,7 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             break;
-        */
+        
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' ("<< getopt_char<<")"
                    << " when parsing command line arguments." << G4endl;
@@ -768,7 +768,7 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
     RootFileWriter::GetInstance()->setRNGseed(rngSeed);
     RootFileWriter::GetInstance()->setHistPosLim(histPosLim);
-    //RootFileWriter::GetInstance()->setHistAngLim(histAngLim);
+    RootFileWriter::GetInstance()->setHistAngLim(histAngLim);
 
 #ifdef G4VIS_USE
     // Initialize visualization

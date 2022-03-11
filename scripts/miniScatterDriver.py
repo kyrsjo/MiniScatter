@@ -23,10 +23,9 @@ import ROOT
 import ROOT.TFile, ROOT.TVector
 import datetime
 
-
 def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=False):
     "Run a MiniScatter simulation, given the parameters that are described by running './MiniScatter -h'. as the map simSetup."
-    print(os.getcwd())
+    
     if quiet and allOutput:
         raise AssertionError("Setting both 'quiet' and 'alloutput' makes no sense")
 

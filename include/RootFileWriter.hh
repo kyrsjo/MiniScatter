@@ -114,9 +114,9 @@ public:
         this->histPosLim = histPos;
     }
 
-    //void setHistAngLim(G4double histAngLim_in) {
-    //    this->histAngLim = histAngLim_in;
-    //}
+    void setHistAngLim(G4double histAngLim_in) {
+        this->histAngLim = histAngLim_in;
+    }
 
 private:
     RootFileWriter(){
@@ -240,7 +240,7 @@ private:
     G4double position_cutoffR = 1.0; // [mm]
 
     G4double histPosLim = 10.0;
-    //G4double histAngLim = 5.0;
+    G4double histAngLim = 5.0;
 
     static const G4double phasespacehist_posLim;
     static const G4double phasespacehist_angLim;
