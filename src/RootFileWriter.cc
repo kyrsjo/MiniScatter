@@ -1150,7 +1150,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Fill the TTree
                     if (not miniFile) {
                         trackerHitsBuffer.x = hitPos.x()/mm;
-                        trackerHitsBuffer.y = hitPos.x()/mm;
+                        trackerHitsBuffer.y = hitPos.y()/mm;
                         trackerHitsBuffer.z = hitPos.z()/mm;
 
                         trackerHitsBuffer.px = momentum.x()/MeV;
