@@ -124,8 +124,10 @@ private:
     // TTrees //
     TTree* targetExit                                                           = NULL;
     TTree* trackerHits                                                          = NULL;
+    TTree* initParts                                                            = NULL;
     trackerHitStruct targetExitBuffer;
     trackerHitStruct trackerHitsBuffer;
+    trackerHitStruct initPartsBuffer;
 
     Double_t* magnetEdepsBuffer                                                 = NULL;
     TTree* magnetEdeps                                                          = NULL;

@@ -181,6 +181,10 @@ void RootFileWriter::initializeRootFile(){
                                "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
         }
 
+        initParts = new TTree("InitParts","InitParts tree");
+        initParts->Branch("InitPartsBranch",&initPartsBuffer,
+                            "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
+
         trackerHits = new TTree("TrackerHits","TrackerHits tree");
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
                             "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
@@ -1146,7 +1150,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Fill the TTree
                     if (not miniFile) {
                         trackerHitsBuffer.x = hitPos.x()/mm;
-                        trackerHitsBuffer.y = hitPos.x()/mm;
+                        trackerHitsBuffer.y = hitPos.y()/mm;
                         trackerHitsBuffer.z = hitPos.z()/mm;
 
                         trackerHitsBuffer.px = momentum.x()/MeV;
@@ -1180,6 +1184,26 @@ void RootFileWriter::doEvent(const G4Event* event){
     init_phasespaceY->Fill(genAct->y/mm,genAct->yp/rad);
     init_phasespaceXY->Fill(genAct->x/mm,genAct->y/mm);
     init_E->Fill(genAct->E/MeV);
+
+    //Fill the TTree
+    if (not miniFile) {
+        initPartsBuffer.x = genAct->x/mm;
+        initPartsBuffer.y = genAct->y/mm;
+        initPartsBuffer.z = genAct->z/mm; //Required to fill struct properly
+
+        initPartsBuffer.px = genAct->xp/rad; //Actually rad here
+        initPartsBuffer.py = genAct->yp/rad;
+        initPartsBuffer.pz = 0;
+
+        initPartsBuffer.E = genAct->E / MeV;
+
+        initPartsBuffer.PDG = 0; //filler until genAct is updated
+        initPartsBuffer.charge = 0;
+
+        initPartsBuffer.eventID = eventCounter;
+
+        initParts->Fill();
+    }
 
     // *** Data from Magnets, which use a TargetSD ***
     size_t magIdx = -1;
@@ -1712,6 +1736,7 @@ void RootFileWriter::finalizeRootFile() {
 
     if (not miniFile) {
         G4cout << "Writing TTrees..." << G4endl;
+        initParts->Write(); //writing InitParts with other TTrees
 
         if (detCon->GetHasTarget()) {
             targetExit->Write();
@@ -1961,6 +1986,7 @@ void RootFileWriter::finalizeRootFile() {
         if (detCon->GetHasTarget()) {
             delete targetExit; targetExit = NULL;
         }
+        delete initParts; initParts = NULL;
     }
 
     histFile->Write();
