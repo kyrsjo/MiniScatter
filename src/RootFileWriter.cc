@@ -1992,6 +1992,7 @@ void RootFileWriter::finalizeRootFile() {
         if (detCon->GetHasTarget()) {
             delete targetExit; targetExit = NULL;
         }
+        delete initParts; initParts = NULL;
     }
 
     histFile->Write();
