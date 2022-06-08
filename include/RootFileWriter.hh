@@ -129,8 +129,12 @@ private:
     trackerHitStruct trackerHitsBuffer;
     trackerHitStruct initPartsBuffer;
 
+    // (magnet buffers are arrayed)
     Double_t* magnetEdepsBuffer                                                 = NULL;
     TTree* magnetEdeps                                                          = NULL;
+
+    trackerHitStruct* magnetExitBuffer;
+    TTree* magnetExit                                                           = NULL;
 
     // Histograms //
 
