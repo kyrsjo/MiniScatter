@@ -192,7 +192,7 @@ void RootFileWriter::initializeRootFile(){
         // For magnets, branches are created elsewhere, one per magnet.
         magnetEdeps = new TTree("magnetEdeps", "Magnet Edeps tree");
 
-        magnetExit  = new TTree("magnetExit", "MagnetExit tree");
+        // For magnetExit phase space data Tree and Branches are created elsewhere
     }
 
     // Target energy deposition
@@ -858,13 +858,17 @@ void RootFileWriter::initializeRootFile(){
         size_t numMagnets = detCon->magnets.size();
         if (numMagnets > 0) {
             magnetEdepsBuffer = new Double_t[numMagnets];
-            magnetExitBuffer = new trackerHitStruct[numMagnets];
 
             size_t i = 0;
             for (auto mag : detCon->magnets) {
                 G4String magName = mag->magnetName;
+                
                 magnetEdeps->Branch(magName, &(magnetEdepsBuffer[i]), (magName+"/D").c_str());
-                magnetExit->Branch(magName,  &(magnetExitBuffer[i]), ("x/D:y:z:px:py:pz:E:PDG/I:charge:eventID"));
+                
+                magnetExit[i] = new TTree((magName+"_ExitHits").c_str(), "MagnetExit tree");
+                magnetExitBuffer[i] = trackerHitStruct();
+                magnetExit[i]->Branch("magnetExitBranch",  &(magnetExitBuffer[i]), ("x/D:y:z:px:py:pz:E:PDG/I:charge:eventID"));
+                
                 i++;
             }
         }
@@ -1403,6 +1407,8 @@ void RootFileWriter::doEvent(const G4Event* event){
                         magnetExitBuffer[magIdx].charge = charge;
 
                         magnetExitBuffer[magIdx].eventID = eventCounter;
+                        
+                        magnetExit[magIdx]->Fill();
                     }
                 }
             }
@@ -1417,7 +1423,6 @@ void RootFileWriter::doEvent(const G4Event* event){
     if (not miniFile) {
         // Outside of the loop over magnets -- Fill to write all branches
         magnetEdeps->Fill();
-        magnetExit->Fill();
     }
 }
 void RootFileWriter::finalizeRootFile() {
@@ -1751,18 +1756,16 @@ void RootFileWriter::finalizeRootFile() {
         delete magnetEdeps;
         magnetEdeps=NULL;
 
-        magnetExit->Write();
-        delete magnetExit;
-        magnetExit = NULL;
+        for (auto mag : magnetExit) {
+            mag.second->Write();
+            delete mag.second;
+        }
+        magnetExit.clear();
+        magnetExitBuffer.clear();
 
         if (magnetEdepsBuffer != NULL) {
             delete magnetEdepsBuffer;
             magnetEdepsBuffer = NULL;
-        }
-
-        if(magnetExitBuffer != NULL) {
-            delete magnetExitBuffer;
-            magnetExitBuffer = NULL;
         }
     }
 
