@@ -133,8 +133,8 @@ private:
     Double_t* magnetEdepsBuffer                                                 = NULL;
     TTree* magnetEdeps                                                          = NULL;
 
-    trackerHitStruct* magnetExitBuffer;
-    TTree* magnetExit                                                           = NULL;
+    std::map<G4int,trackerHitStruct> magnetExitBuffer;
+    std::map<G4int,TTree*> magnetExit;
 
     // Histograms //
 
