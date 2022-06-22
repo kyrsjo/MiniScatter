@@ -1191,14 +1191,14 @@ void RootFileWriter::doEvent(const G4Event* event){
         initPartsBuffer.y = genAct->y/mm;
         initPartsBuffer.z = genAct->z/mm; //Required to fill struct properly
 
-        initPartsBuffer.px = genAct->xp/rad; //Actually rad here
-        initPartsBuffer.py = genAct->yp/rad;
+        initPartsBuffer.px = genAct->xp;
+        initPartsBuffer.py = genAct->yp;
         initPartsBuffer.pz = 0;
 
         initPartsBuffer.E = genAct->E / MeV;
 
-        initPartsBuffer.PDG = 0; //filler until genAct is updated
-        initPartsBuffer.charge = 0;
+        initPartsBuffer.PDG = genAct->PDG;
+        initPartsBuffer.charge = genAct->PDG_Q;
 
         initPartsBuffer.eventID = eventCounter;
 

@@ -19,6 +19,8 @@
 
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleDefinition.hh"
+#include "G4ParticleTable.hh"
+#include "G4IonTable.hh"
 #include "globals.hh"
 
 //System of units defines variables like "s" and "m" in the global scope,
@@ -30,6 +32,8 @@
 #pragma GCC diagnostic pop
 
 #include "TRandom.h"
+
+#include <fstream>
 
 class G4ParticleGun;
 class G4Event;
@@ -49,9 +53,10 @@ public:
                            G4double beam_angle_in,
                            G4String covarianceString_in,
                            G4double Rcut_in,
-                           G4int rngSeed,
+                           G4int    rngSeed,
                            G4double beam_energy_min_in,
-                           G4double beam_energy_max_in );
+                           G4double beam_energy_max_in,
+                           G4String beam_loadFile_in );
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
@@ -60,10 +65,15 @@ public:
     G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
 
+    void endOfRun();
+
     static G4double GetDefaultZpos(G4double targetThickness_in);
 private:
     G4ParticleGun*           particleGun;  //pointer a to G4 class
     DetectorConstruction*    Detector;     //pointer to the geometry
+
+    G4ParticleTable* particleTable;
+    G4IonTable*      ionTable;
 
     G4double beam_energy;    // Beam kinetic energy [MeV]
 
@@ -111,9 +121,13 @@ private:
     G4double beam_energy_min; // [MeV]
     G4double beam_energy_max; // [MeV]
 
+    G4String beam_loadFile; // Filename or empty
+    std::ifstream beam_loadFile_csv;
+
 public:
     //Leave the generated positions where RootFileWriter can pick it up [G4 units]
     G4double x,xp, y,yp, z,E;
+    G4int PDG, PDG_Q;
 };
 
 // -----------------------------------------------------------------------------------------
