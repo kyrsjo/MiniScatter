@@ -434,7 +434,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             std::stringstream lineStream(line);
             std::string word;
             try {
-                G4cout << "Line='" << line << "' -> Words: '";
+                //G4cout << "Line='" << line << "' -> Words: '";
 
                 std::getline(lineStream,word,',');
                 G4String particle_name = word;
@@ -450,30 +450,27 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
                 std::getline(lineStream,word,',');
                 x = std::stod(word)*mm;
-                G4cout << word << "','";
+                //G4cout << word << "','";
 
                 std::getline(lineStream,word,',');
                 xp = std::stod(word);
-                G4cout << word << "','";
+                //G4cout << word << "','";
 
                 std::getline(lineStream,word,',');
                 y = std::stod(word)*mm;
-                G4cout << word << "','";
+                //G4cout << word << "','";
 
                 std::getline(lineStream,word,',');
                 yp = std::stod(word);
-                G4cout << word << "','";
+                //G4cout << word << "','";
 
                 std::getline(lineStream,word,',');
                 z = std::stod(word)*mm;
-                G4cout << word << "','";
+                //G4cout << word << "','";
 
                 std::getline(lineStream,word,',');
                 E = std::stod(word)*MeV;
-                G4cout << word << "'" << G4endl;
-
-                
-
+                //G4cout << word << "'" << G4endl;
             }
             catch (const std::invalid_argument& ia) {
                 G4cerr << "Error when parsing line '" + line + "'" << G4endl;
