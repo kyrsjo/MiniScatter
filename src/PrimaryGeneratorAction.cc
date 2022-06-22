@@ -298,34 +298,53 @@ G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPo
     return floatData;
 }
 
+G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particleString) {
+    const G4String ION = "ion";
+    G4ParticleDefinition* particle_ret = NULL;
+    if (particleString.compare(0, ION.length(), ION) == 0) {
+        // Format: 'ion::Z,A'
+        str_size ionZpos = particleString.index("::")+2;
+        str_size ionApos = particleString.index(";")+1;
+        if (ionZpos >= particleString.length() or ionApos >= particleString.length()) {
+            G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
+            exit(1);
+        }
+        G4int ionZ, ionA;
+        try {
+            ionZ = std::stoi(particleString(ionZpos,ionApos-ionZpos));
+            ionA = std::stoi(particleString(ionApos,particleString.length()));
+        }
+        catch (const std::invalid_argument& ia) {
+            G4cerr << "Error when extracting ionZ and ionA from string '" << particleString << "'" << G4endl;
+            G4cerr << "ionZpos = " << ionZpos << G4endl;
+            G4cerr << "ionApos = " << ionApos << G4endl;
+            exit(1);
+        }
+        G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
+        particle_ret = ionTable->GetIon(ionZ,ionA);
+    }
+    else {
+        particle_ret = particleTable->FindParticle(particleString);
+    }
+    return particle_ret;
+}
+
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
     if (anEvent->GetEventID() == 0) {
         particleTable = G4ParticleTable::GetParticleTable();
         ionTable = G4IonTable::GetIonTable();
-        const G4String ION = "ion";
-        if (beam_type.compare(0, ION.length(), ION) == 0) {
-            // Format: 'ion::Z,A'
-            str_size ionZpos = beam_type.index("::")+2;
-            str_size ionApos = beam_type.index(",")+1;
-            if (ionZpos >= beam_type.length() or ionApos >= beam_type.length()) {
-                G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
-                exit(1);
-            }
-            G4int ionZ = std::stoi(beam_type(ionZpos,ionApos-ionZpos));
-            G4int ionA = std::stoi(beam_type(ionApos,beam_type.length()));
-            G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
-            particle = ionTable->GetIon(ionZ,ionA);
-        }
-        else {
-            particle = particleTable->FindParticle(beam_type);
-        }
+        
+        particle = NULL;
+        particle = parseParticleName(beam_type);
         if (particle == NULL) {
             G4cerr << "Error - particle named '" << beam_type << "' not found" << G4endl;
             //particleTable->DumpTable();
             exit(1);
         }
-        PDG_Q = particle->GetPDGCharge();
+        PDG   = get_beam_particlePDG();
+        PDG_Q = get_beam_particlecharge();
+
         particleGun->SetParticleDefinition(particle);
 
         G4cout << G4endl;
@@ -418,8 +437,16 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 G4cout << "Line='" << line << "' -> Words: '";
 
                 std::getline(lineStream,word,',');
-                PDG = std::stoi(word);
-                G4cout << word << "','";
+                G4String particle_name = word;
+                particle = parseParticleName(particle_name);
+                if (particle==NULL) {
+                    G4cerr << "ERROR when parsing particle name '" + particle_name + "'." << G4endl;
+                    exit(1);
+                }
+                PDG   = get_beam_particlePDG();
+                PDG_Q = get_beam_particlecharge();
+                particleGun->SetParticleDefinition(particle);
+                
 
                 std::getline(lineStream,word,',');
                 x = std::stod(word)*mm;
@@ -445,9 +472,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 E = std::stod(word)*MeV;
                 G4cout << word << "'" << G4endl;
 
-                particle = particleTable->FindParticle(PDG);
-                PDG_Q = particle->GetPDGCharge();
-                particleGun->SetParticleDefinition(particle);
+                
 
             }
             catch (const std::invalid_argument& ia) {

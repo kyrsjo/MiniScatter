@@ -942,7 +942,7 @@ void printHelp(G4double target_thick,
                    << "\t Particle type" << G4endl
                    << "\t This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
                    << "\t typcial examples are 'e-', 'proton', 'gamma'." << G4endl
-                   << "\t Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl
+                   << "\t Ions can also be specified as 'ion::Z;A' where Z and A are the nucleus charge and mass number." << G4endl
                    << "\t Default/current value = '" << beam_type << "'" << G4endl << G4endl;
 
             G4cout << " --xoffset/-x <double>" << G4endl
@@ -987,7 +987,8 @@ void printHelp(G4double target_thick,
                    << "\t Note that the number of particles in the file must be at least as big as --numEvents."
                    << "\t Expected format is determined from file ending, possibilities are:" << G4endl
                    << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
-                   << "\t\t       PDG_ID<int>, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>"
+                   << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>"
+                   << "\t\t       Here the particle_type is specified in the same way as in --beam."
                    << "\t Default/current value = \"" << beam_loadFile << "\"" << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl

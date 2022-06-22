@@ -60,10 +60,16 @@ public:
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
+    //Parse a particleString as given by --beam or in the .csv file,
+    // generate a particle or an ion.
+    // Returns the generated particle or NULL if not found
+    G4ParticleDefinition* parseParticleName(G4String particleString);
+
     G4double get_beam_energy()         const { return beam_energy; };
     G4double get_beam_energy_flatMax() const { return beam_energy_max; };
     G4double get_beam_particlemass()   const { return particle->GetPDGMass(); };
     G4double get_beam_particlecharge() const { return particle->GetPDGCharge(); };
+    G4int    get_beam_particlePDG()    const { return particle->GetPDGEncoding(); };
 
     void endOfRun();
 
