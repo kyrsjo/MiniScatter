@@ -1,7 +1,3 @@
-//Eric Fackelman 29 July
-//Intending to make a Magnet with ESS PBW shape
-//Built from MagnetTARGETR.cc
-
 /*
  * This file is part of MiniScatter.
  *
@@ -15,7 +11,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have received a cop//180,180 + 240,60 is greaty of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
@@ -76,10 +72,10 @@ void MagnetPBW::Construct() {
 
     this->mainLV = MakeNewMainLV("main",2*radius, 2*radius);
 
-    // Build the target (PBW_)
+    // Build the target (PBW)
     G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
                                             radius, radius+4.25, length/2.0,
-                                            210.0*deg, 120.0*deg); //180,180 + 240,60 is great
+                                            210.0*deg, 120.0*deg);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
