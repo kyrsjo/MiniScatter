@@ -76,10 +76,10 @@ void MagnetPBW::Construct() {
 
     this->mainLV = MakeNewMainLV("main",2*radius, 2*radius);
 
-    // Build the target
+    // Build the target (PBW_)
     G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
                                             radius, radius+4.25, length/2.0,
-                                            0.0, 90.0*deg);
+                                            210.0*deg, 120.0*deg); //180,180 + 240,60 is great
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
@@ -94,12 +94,31 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    G4LogicalVolume*   targetLV = new G4LogicalVolume(targetSolid,targetMaterial, magnetName+"_targetLV");
-                                  new G4PVPlacement  (NULL,
-                                                      G4ThreeVector(0.0,0.0,0.0),
+    //Define rotation so PBW is oriented correct with no user modification
+    G4RotationMatrix* pRot = new G4RotationMatrix();
+    pRot->rotateX(270.0*deg);
+
+    G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
+                                  new G4PVPlacement   (pRot,
+                                                      G4ThreeVector(0.0,0.0,radius+5.0), //beam origin is 5mm before PBW
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
+                                                      false,
+                                                      0,
+                                                      true);
+
+    G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
+                                                      radius+1.25, radius+3.25, (length)/2.0,
+                                                      240.0*deg,60.0*deg);
+
+    G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
+                                                      magnetName + "_waterLV");
+                                  new G4PVPlacement   (NULL,
+                                                      G4ThreeVector(0.0,0.0,0.0),
+                                                      waterLV,
+                                                      magnetName + "_waterPV",
+                                                      targetLV,               //mother volume is targetSolidLV!
                                                       false,
                                                       0,
                                                       true);
