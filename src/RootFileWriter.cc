@@ -52,8 +52,8 @@ struct stat stat_info;
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = NULL;
 
-const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm; //eventaully need to remove these
-const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
+const G4double RootFileWriter::phasespacehist_posLim = this->histPosLim;
+const G4double RootFileWriter::phasespacehist_angLim = this->histAngLim;
 
 void RootFileWriter::initializeRootFile(){
     G4RunManager*           run    = G4RunManager::GetRunManager();
@@ -401,8 +401,8 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceXY.push_back(
             new TH2D((trackerName+"_xy").c_str(),
                      (trackerName+" phase space (x,y)").c_str(),
-                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
-                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm) );
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm) );
         tracker_phasespaceXY.back()->GetXaxis()->SetTitle("X [mm]");
         tracker_phasespaceXY.back()->GetYaxis()->SetTitle("Y [mm]");
 
@@ -425,8 +425,8 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceXY_cutoff.push_back(
             new TH2D((trackerName+"_cutoff_xy").c_str(),
                      (trackerName+" phase space (x,y) (charged, energy > Ecut, r < Rcut)").c_str(),
-                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
-                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm) );
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm) );
         tracker_phasespaceXY_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
         tracker_phasespaceXY_cutoff.back()->GetYaxis()->SetTitle("Y [mm]");
 	
@@ -569,8 +569,8 @@ void RootFileWriter::initializeRootFile(){
     init_phasespaceXY   =
         new TH2D("init_xy",
                  "Initial phase space (x,y)",
-                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
-                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm);
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
+                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
     init_E =
         new TH1D("init_E",
                  "Initial particle energy",
@@ -1660,15 +1660,19 @@ void RootFileWriter::finalizeRootFile() {
 
         if (detCon->GetHasTarget()) {
             target_exit_phasespaceX->Write();
+            target_exit_phasespaceX->SetOption("COLZ");
             target_exit_phasespaceY->Write();
+            target_exit_phasespaceY->SetOption("COLZ");
 
             target_exit_phasespaceX_cutoff->Write();
+            target_exit_phasespaceX_cutoff->SetOption("COLZ");
             target_exit_phasespaceY_cutoff->Write();
+            target_exit_phasespaceY_cutoff->SetOption("COLZ");
 
-        target_exit_phasespaceXY->SetOption("COLZ");
-	    target_exit_phasespaceXY->Write();
-        target_exit_phasespaceXY_cutoff->SetOption("COLZ");
-	    target_exit_phasespaceXY_cutoff->Write();
+            target_exit_phasespaceXY->SetOption("COLZ");
+            target_exit_phasespaceXY->Write();
+            target_exit_phasespaceXY_cutoff->SetOption("COLZ");
+            target_exit_phasespaceXY_cutoff->Write();
 
             if (target_edep_rdens != NULL) {
                 target_edep_rdens->Write();
@@ -1676,25 +1680,32 @@ void RootFileWriter::finalizeRootFile() {
         }
 
         for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+            tracker_phasespaceX[idx]->SetOption("COLZ");
             tracker_phasespaceX[idx]->Write();
+            tracker_phasespaceY[idx]->SetOption("COLZ");
             tracker_phasespaceY[idx]->Write();
             tracker_phasespaceXY[idx]->SetOption("COLZ");
-	        tracker_phasespaceXY[idx]->Write();
+	          tracker_phasespaceXY[idx]->Write();
 
+            tracker_phasespaceX_cutoff[idx]->SetOption("COLZ");
             tracker_phasespaceX_cutoff[idx]->Write();
+            tracker_phasespaceY_cutoff[idx]->SetOption("COLZ");
             tracker_phasespaceY_cutoff[idx]->Write();
             tracker_phasespaceXY_cutoff[idx]->SetOption("COLZ");
-	        tracker_phasespaceXY_cutoff[idx]->Write();
+	          tracker_phasespaceXY_cutoff[idx]->Write();
 
             for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
             for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
-	    for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
-	      PDG.second->Write();
-	    }
+            for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
+              PDG.second->SetOption("COLZ");
+              PDG.second->Write();
+            }
         }
 
         for (auto it : magnet_edep_rdens) {
@@ -1703,24 +1714,30 @@ void RootFileWriter::finalizeRootFile() {
 	    }
         }
         for (auto it : magnet_exit_phasespaceX) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceY) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceX_cutoff) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceY_cutoff) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto mag : magnet_exit_phasespaceX_cutoff_PDG) {
             for (auto PDG : mag) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
         }
         for (auto mag : magnet_exit_phasespaceY_cutoff_PDG) {
             for (auto PDG : mag) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
         }

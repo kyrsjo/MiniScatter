@@ -224,7 +224,9 @@ int main(int argc,char** argv) {
                       cutoff_radius,
                       edep_dens_dz,
                       engNbins,
-                      magnetDefinitions); //need to add for histLims
+                      histPosLim,
+                      histAngLim,
+                      magnetDefinitions);
             exit(1);
             break;
 
@@ -634,6 +636,8 @@ int main(int argc,char** argv) {
               cutoff_radius,
               edep_dens_dz,
               engNbins,
+              histPosLim,
+              histAngLim,
               magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
@@ -877,6 +881,8 @@ void printHelp(G4double target_thick,
                G4double cutoff_radius,
                G4double edep_dens_dz,
                G4int    engNbins,
+               G4Double histPosLim,
+               G4Double histAngLim,
                std::vector<G4String> &magnetDefinitions) {
             G4cout << "Welcome to MiniScatter!" << G4endl
                    << G4endl
@@ -1043,6 +1049,14 @@ void printHelp(G4double target_thick,
             G4cout << " --engNbins <int>" << G4endl
                    << "\t Number of bins for 1D energy histograms (0 => internal default), " << G4endl
                    << "\t Default/current value = " << engNbins << G4endl << G4endl;
+
+            G4cout << " --histPosLim <double>" << G4endl
+                   << "\t Adjusts limits of Position histograms" << G4endl
+                   << "\t Default/current value = " << histPosLim << G4endl << G4endl
+
+            G4cout << " --histAngLim <double>" << G4endl
+                   << "\t Adjusts limits of Angle histograms" << G4endl
+                   << "\t Default/current value = " << histAngLim << G4endl << G4endl
 
             G4cout << " --object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3)" << G4endl
                    << "\t Create an object (which may be a magnet) of the given type at the given position. " << G4endl

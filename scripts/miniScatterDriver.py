@@ -33,8 +33,8 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
         if not key in ("THICK", "MAT", "PRESS", "DIST", "ANG", "TARG_ANG", "WORLDSIZE", "PHYS", "PHYS_CUTDIST",\
                        "BGMAT", "N", "ENERGY", "ENERGY_FLAT",\
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
-                       "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED", \
-                       "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT",\
+                       "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED",\
+                       "OUTNAME", "OUTFOLDER", "QUICKMODE", "MINIROOT","ANGLIM",\
                        "CUTOFF_ENERGYFRACTION", "CUTOFF_RADIUS", "POSLIM", "EDEP_DZ", "ENG_NBINS"):
             if key.startswith("MAGNET"):
                 continue
@@ -162,6 +162,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
 
     if "POSLIM" in simSetup:
         cmd += ["--histPosLim", str(simSetup["POSLIM"])]
+
+    if "ANGLIM" in simSetup:
+        cmd += ["--histAngLim", str(simSetup["ANGLIM"])]
 
     if "MAGNET" in simSetup:
         for mag in simSetup["MAGNET"]:
