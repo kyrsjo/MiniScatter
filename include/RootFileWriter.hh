@@ -110,6 +110,14 @@ public:
         this->rngSeed = rngSeed_in;
     }
 
+    void setHistPosLim(G4double histPos) {
+        this->histPosLim = histPos;
+    }
+
+    void setHistAngLim(G4double histAngLim_in) {
+        this->histAngLim = histAngLim_in;
+    }
+
 private:
     RootFileWriter(){
         has_filename_out = false;
@@ -230,6 +238,9 @@ private:
     G4double beamEnergy_cutoff = 0.95;
     // Compute statistics for charged particles with position inside this radius
     G4double position_cutoffR = 1.0; // [mm]
+
+    G4double histPosLim = 10.0;
+    G4double histAngLim = 5.0;
 
     static const G4double phasespacehist_posLim;
     static const G4double phasespacehist_angLim;

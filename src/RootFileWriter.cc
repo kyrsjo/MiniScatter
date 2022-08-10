@@ -52,7 +52,7 @@ struct stat stat_info;
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = NULL;
 
-const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm;
+const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm; //eventaully need to remove these
 const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
 
 void RootFileWriter::initializeRootFile(){
@@ -401,8 +401,8 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceXY.push_back(
             new TH2D((trackerName+"_xy").c_str(),
                      (trackerName+" phase space (x,y)").c_str(),
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm) );
+                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
+                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm) );
         tracker_phasespaceXY.back()->GetXaxis()->SetTitle("X [mm]");
         tracker_phasespaceXY.back()->GetYaxis()->SetTitle("Y [mm]");
 
@@ -425,8 +425,8 @@ void RootFileWriter::initializeRootFile(){
         tracker_phasespaceXY_cutoff.push_back(
             new TH2D((trackerName+"_cutoff_xy").c_str(),
                      (trackerName+" phase space (x,y) (charged, energy > Ecut, r < Rcut)").c_str(),
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                     1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm) );
+                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
+                     1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm) );
         tracker_phasespaceXY_cutoff.back()->GetXaxis()->SetTitle("X [mm]");
         tracker_phasespaceXY_cutoff.back()->GetYaxis()->SetTitle("Y [mm]");
 	
@@ -569,8 +569,8 @@ void RootFileWriter::initializeRootFile(){
     init_phasespaceXY   =
         new TH2D("init_xy",
                  "Initial phase space (x,y)",
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
-                 1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
+                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm,
+                 1000, -RootFileWriter::histPosLim/mm,RootFileWriter::histPosLim/mm);
     init_E =
         new TH1D("init_E",
                  "Initial particle energy",
@@ -1652,8 +1652,10 @@ void RootFileWriter::finalizeRootFile() {
     if (not quickmode) { //Write the 2D and 3D histograms to the ROOT file (slow)
 
         G4cout << "Writing 2D histograms..." << G4endl;
+
         init_phasespaceX->Write();
         init_phasespaceY->Write();
+        init_phasespaceXY->SetOption("COLZ");
         init_phasespaceXY->Write();
 
         if (detCon->GetHasTarget()) {
@@ -1663,7 +1665,9 @@ void RootFileWriter::finalizeRootFile() {
             target_exit_phasespaceX_cutoff->Write();
             target_exit_phasespaceY_cutoff->Write();
 
+        target_exit_phasespaceXY->SetOption("COLZ");
 	    target_exit_phasespaceXY->Write();
+        target_exit_phasespaceXY_cutoff->SetOption("COLZ");
 	    target_exit_phasespaceXY_cutoff->Write();
 
             if (target_edep_rdens != NULL) {
@@ -1674,11 +1678,13 @@ void RootFileWriter::finalizeRootFile() {
         for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
             tracker_phasespaceX[idx]->Write();
             tracker_phasespaceY[idx]->Write();
-	    tracker_phasespaceXY[idx]->Write();
+            tracker_phasespaceXY[idx]->SetOption("COLZ");
+	        tracker_phasespaceXY[idx]->Write();
 
             tracker_phasespaceX_cutoff[idx]->Write();
             tracker_phasespaceY_cutoff[idx]->Write();
-	    tracker_phasespaceXY_cutoff[idx]->Write();
+            tracker_phasespaceXY_cutoff[idx]->SetOption("COLZ");
+	        tracker_phasespaceXY_cutoff[idx]->Write();
 
             for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
                 PDG.second->Write();
