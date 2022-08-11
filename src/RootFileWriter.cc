@@ -52,9 +52,6 @@ struct stat stat_info;
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = NULL;
 
-const G4double RootFileWriter::phasespacehist_posLim = this->histPosLim;
-const G4double RootFileWriter::phasespacehist_angLim = this->histAngLim;
-
 void RootFileWriter::initializeRootFile(){
     G4RunManager*           run    = G4RunManager::GetRunManager();
     DetectorConstruction*   detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();

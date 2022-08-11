@@ -111,11 +111,11 @@ public:
     }
 
     void setHistPosLim(G4double histPos_in) {
-        this->histPosLim = histPos_in;
+        this->phasespacehist_posLim = histPos_in;
     }
 
     void setHistAngLim(G4double histAngLim_in) {
-        this->histAngLim = histAngLim_in;
+        this->phasespacehist_angLim = histAngLim_in;
     }
 
 private:
@@ -239,11 +239,9 @@ private:
     // Compute statistics for charged particles with position inside this radius
     G4double position_cutoffR = 1.0; // [mm]
 
-    G4double histPosLim = 10.0;
-    G4double histAngLim = 5.0;
-
-    G4double phasespacehist_posLim = 10.0*mm;
-    G4double phasespacehist_angLim = 5.0*deg;
+    //Set default limits for histograms
+    G4double phasespacehist_posLim = 10;
+    G4double phasespacehist_angLim = 5;
 
     //Delta z for the energy deposition density radial TH2Ds and TH3Ds [mm, 0 => Disable; < 0 => TH2Ds only]
     G4double edep_dens_dz = 0.0;
