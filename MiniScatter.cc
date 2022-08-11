@@ -1053,11 +1053,11 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = " << engNbins << G4endl << G4endl;
 
             G4cout << " --histPosLim <double>" << G4endl
-                   << "\t Adjusts limits of Position histograms" << G4endl
+                   << "\t Range of Position histograms" << G4endl
                    << "\t Default/current value = " << histPosLim << G4endl << G4endl;
 
             G4cout << " --histAngLim <double>" << G4endl
-                   << "\t Adjusts limits of Angle histograms" << G4endl
+                   << "\t Range of Angle histograms" << G4endl
                    << "\t Default/current value = " << histAngLim << G4endl << G4endl;
 
             G4cout << " --object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3)" << G4endl

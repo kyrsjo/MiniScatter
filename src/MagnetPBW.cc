@@ -22,6 +22,8 @@
 #include "G4SubtractionSolid.hh"
 
 #include "G4PVPlacement.hh"
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
 
 MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                             std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
@@ -75,7 +77,7 @@ void MagnetPBW::Construct() {
     // Build the target (PBW)
     G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
                                             radius, radius+4.25, length/2.0,
-                                            210.0*deg, 120.0*deg);
+                                            30.0*deg, 120.0*deg);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
@@ -92,7 +94,8 @@ void MagnetPBW::Construct() {
 
     //Define rotation so PBW is oriented correct with no user modification
     G4RotationMatrix* pRot = new G4RotationMatrix();
-    pRot->rotateX(270.0*deg);
+    pRot->rotateX(90.0*deg);
+    pRot->rotateY(90.0*deg);
 
     G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
                                   new G4PVPlacement   (pRot,
@@ -106,7 +109,7 @@ void MagnetPBW::Construct() {
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
                                                       radius+1.25, radius+3.25, (length)/2.0,
-                                                      240.0*deg,60.0*deg);
+                                                      60.0*deg,60.0*deg);
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
                                                       magnetName + "_waterLV");
@@ -114,10 +117,18 @@ void MagnetPBW::Construct() {
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       waterLV,
                                                       magnetName + "_waterPV",
-                                                      targetLV,               //mother volume is targetSolidLV!
+                                                      targetLV,               //Mother volume is targetSolidLV!
                                                       false,
                                                       0,
                                                       true);
+
+    //Set color and line segments per circle for Visualization
+    G4VisAttributes * aluminum = new G4VisAttributes(G4Colour(0.66,0.67,0.71));
+    aluminum->SetForceLineSegmentsPerCircle(100);
+    targetLV->SetVisAttributes(aluminum);
+    G4VisAttributes * water = new G4VisAttributes(G4Colour(0,1,1));
+    water->SetForceLineSegmentsPerCircle(100);
+    waterLV->SetVisAttributes(water);
 
     ConstructDetectorLV();
     BuildMainPV_transform();
