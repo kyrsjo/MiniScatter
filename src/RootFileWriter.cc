@@ -1650,21 +1650,23 @@ void RootFileWriter::finalizeRootFile() {
 
         G4cout << "Writing 2D histograms..." << G4endl;
 
+        init_phasespaceX->SetOption("COLZ");
         init_phasespaceX->Write();
+        init_phasespaceY->SetOption("COLZ");
         init_phasespaceY->Write();
         init_phasespaceXY->SetOption("COLZ");
         init_phasespaceXY->Write();
 
         if (detCon->GetHasTarget()) {
-            target_exit_phasespaceX->Write();
             target_exit_phasespaceX->SetOption("COLZ");
-            target_exit_phasespaceY->Write();
+            target_exit_phasespaceX->Write();
             target_exit_phasespaceY->SetOption("COLZ");
+            target_exit_phasespaceY->Write();
 
-            target_exit_phasespaceX_cutoff->Write();
             target_exit_phasespaceX_cutoff->SetOption("COLZ");
-            target_exit_phasespaceY_cutoff->Write();
+            target_exit_phasespaceX_cutoff->Write();
             target_exit_phasespaceY_cutoff->SetOption("COLZ");
+            target_exit_phasespaceY_cutoff->Write();
 
             target_exit_phasespaceXY->SetOption("COLZ");
             target_exit_phasespaceXY->Write();
@@ -1951,19 +1953,19 @@ void RootFileWriter::finalizeRootFile() {
         delete target_exit_phasespaceX_cutoff; target_exit_phasespaceX_cutoff = NULL;
         delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
 
-	delete target_exit_phasespaceXY; target_exit_phasespaceXY = NULL;
-	delete target_exit_phasespaceXY_cutoff; target_exit_phasespaceXY_cutoff = NULL;
+        delete target_exit_phasespaceXY; target_exit_phasespaceXY = NULL;
+        delete target_exit_phasespaceXY_cutoff; target_exit_phasespaceXY_cutoff = NULL;
     }
 
     //2D tracker histos
     for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
         delete tracker_phasespaceX[idx]; tracker_phasespaceX[idx] = NULL;
         delete tracker_phasespaceY[idx]; tracker_phasespaceY[idx] = NULL;
-	delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
+	      delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
 	
         delete tracker_phasespaceX_cutoff[idx]; tracker_phasespaceX_cutoff[idx] = NULL;
         delete tracker_phasespaceY_cutoff[idx]; tracker_phasespaceY_cutoff[idx] = NULL;
-	delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
+	      delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
 
         for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
             delete PDG.second;
@@ -1975,7 +1977,7 @@ void RootFileWriter::finalizeRootFile() {
         }
         tracker_phasespaceY_cutoff_PDG[idx].clear();
 
-	for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
+	      for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
             delete PDG.second;
         }
         tracker_phasespaceXY_cutoff_PDG[idx].clear();
