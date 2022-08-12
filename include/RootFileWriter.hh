@@ -137,8 +137,12 @@ private:
     trackerHitStruct trackerHitsBuffer;
     trackerHitStruct initPartsBuffer;
 
+    // (magnet buffers are arrayed)
     Double_t* magnetEdepsBuffer                                                 = NULL;
     TTree* magnetEdeps                                                          = NULL;
+
+    std::map<G4int,trackerHitStruct> magnetExitBuffer;
+    std::map<G4int,TTree*> magnetExit;
 
     // Histograms //
 
