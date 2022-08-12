@@ -1391,7 +1391,7 @@ void RootFileWriter::doEvent(const G4Event* event){
                     //Fill the TTree
                     if (not miniFile) {
                         magnetExitBuffer[magIdx].x = hitPos.x()/mm;
-                        magnetExitBuffer[magIdx].y = hitPos.x()/mm;
+                        magnetExitBuffer[magIdx].y = hitPos.y()/mm;
                         magnetExitBuffer[magIdx].z = hitPos.z()/mm;
 
                         magnetExitBuffer[magIdx].px = momentum.x()/MeV;

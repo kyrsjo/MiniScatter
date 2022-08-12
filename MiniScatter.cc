@@ -564,11 +564,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1100: //Object/Magnet definition
+        case 1100: // Object/Magnet definition
             magnetDefinitions.push_back(string(optarg));
             break;
 
-        case 1025: //histPosLim definition, borrowed from engNbins
+        case 1025: // Position Histogram Limit change
             try {
                 histPosLim = std::stod(string(optarg));
             }
@@ -580,7 +580,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1026: //histAngLim definition, borrowed from engNbins
+        case 1026: // Angle Histogram Limit change
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -994,7 +994,6 @@ void printHelp(G4double target_thick,
                    << "\t Note that the absolute value of --zoffset (which is generally negative) will mean the distance from x=y=z=0 to the starting point."
                    << "\t Default/current value = " << beam_angle << G4endl << G4endl;
 
-
             G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
                    << "\t Set initial gaussian beam distribution given in terms of Twiss parameters." << G4endl
                    << "\t If the optional part is given x,y are treated separately." << G4endl 
@@ -1053,12 +1052,12 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = " << engNbins << G4endl << G4endl;
 
             G4cout << " --histPosLim <double>" << G4endl
-                   << "\t Range of Position histograms" << G4endl
-                   << "\t Default/current value = " << histPosLim << G4endl << G4endl;
+                   << "\t Range for Position axes in ROOT histograms" << G4endl
+                   << "\t Default/current value = +/-" << histPosLim << G4endl << G4endl;
 
             G4cout << " --histAngLim <double>" << G4endl
-                   << "\t Range of Angle histograms" << G4endl
-                   << "\t Default/current value = " << histAngLim << G4endl << G4endl;
+                   << "\t Range for Angle axes in ROOT histograms" << G4endl
+                   << "\t Default/current value = +/-" << histAngLim << G4endl << G4endl;
 
             G4cout << " --object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3)" << G4endl
                    << "\t Create an object (which may be a magnet) of the given type at the given position. " << G4endl
