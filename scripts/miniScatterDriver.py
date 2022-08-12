@@ -34,7 +34,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
                        "PHYS_CUTDIST", "BGMAT", "N", "ENERGY", "ENERGY_FLAT",\
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED","OUTNAME", "OUTFOLDER",\
-                       "QUICKMODE", "MINIROOT", "CUTOFF_ENERGYFRACTION",\
+                       "QUICKMODE", "ANASCATTER", "MINIROOT", "CUTOFF_ENERGYFRACTION",\
                        "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS", "ANGLIM", "POSLIM"):
             if key.startswith("MAGNET"):
                 continue
