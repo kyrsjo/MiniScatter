@@ -1711,8 +1711,8 @@ void RootFileWriter::finalizeRootFile() {
                 PDG.second->Write();
             }
             for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
-              PDG.second->SetOption("COLZ");
-              PDG.second->Write();
+                PDG.second->SetOption("COLZ");
+                PDG.second->Write();
             }
         }
 
