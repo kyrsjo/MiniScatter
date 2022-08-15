@@ -144,7 +144,7 @@ void MagnetPLASMA1::Construct() {
         exit(1);
     }
     G4LogicalVolume*   crystalLV = new G4LogicalVolume(crystalSolid,sapphireMaterial, magnetName+"_crystalLV");
-    //G4VPhysicalVolume* crystalPV =
+    G4VPhysicalVolume* crystalPV =
                                    new G4PVPlacement  (NULL,
                                                        G4ThreeVector(0.0,0.0,0.0),
                                                        crystalLV,
@@ -152,7 +152,13 @@ void MagnetPLASMA1::Construct() {
                                                        mainLV,
                                                        false,
                                                        0,
-                                                       true);
+                                                       false);
+    if(crystalPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing crystalPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     ConstructDetectorLV();
     BuildMainPV_transform();

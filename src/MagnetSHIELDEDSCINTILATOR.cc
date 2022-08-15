@@ -142,20 +142,26 @@ void MagnetSHIELDEDSCINTILLATOR::Construct() {
     }
 
     // Scintillator
-    G4VSolid*         scintillatorSolid = new G4Tubs         (magnetName+"_scintS",
-                                                              0.0, r_scint, l_scint/2.0,
-                                                              0.0, 360.0*deg);
+    G4VSolid*          scintillatorSolid = new G4Tubs         (magnetName+"_scintS",
+                                                               0.0, r_scint, l_scint/2.0,
+                                                               0.0, 360.0*deg);
 
-                      scintillatorLV    = new G4LogicalVolume(scintillatorSolid,scintillatorMaterial, magnetName+"_scintLV");
+                       scintillatorLV    = new G4LogicalVolume(scintillatorSolid,scintillatorMaterial, magnetName+"_scintLV");
 
-                                          new G4PVPlacement  (NULL,
+    G4VPhysicalVolume* scintillatorPV    = new G4PVPlacement  (NULL,
                                                               G4ThreeVector(0.0,0.0,z_scint),
                                                               scintillatorLV,
                                                               magnetName + "_scintPV",
                                                               mainLV,
                                                               false,
                                                               0,
-                                                              true);
+                                                              false);
+    if(scintillatorPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing scintillatorPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetSHIELDEDSCINTILLATOR::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     //Shielding
     G4VSolid* shieldingCylOuter = new G4Tubs(magnetName+"_shieldingCylOuterS",
@@ -169,14 +175,20 @@ void MagnetSHIELDEDSCINTILLATOR::Construct() {
 
                     shieldingLV = new G4LogicalVolume(shieldingSolid, shieldingMaterial, magnetName+"_shieldingLV");
 
-                                  new G4PVPlacement(NULL,
+    G4PVPlacement* shieldingPV  = new G4PVPlacement(NULL,
                                                     G4ThreeVector(0.0,0.0,0.0),
                                                     shieldingLV,
                                                     magnetName+"shieldingPV",
                                                     mainLV,
                                                     false,
                                                     0,
-                                                    true);
+                                                    false);
+    if(shieldingPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing scintillatorPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetSHIELDEDSCINTILLATOR::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     //Other
     ConstructDetectorLV();

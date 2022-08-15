@@ -93,15 +93,20 @@ void MagnetTARGET::Construct() {
     }
 
     G4LogicalVolume*   targetLV = new G4LogicalVolume(targetSolid,targetMaterial, magnetName+"_targetLV");
-    //G4VPhysicalVolume* targetPV =
-                                  new G4PVPlacement  (NULL,
+    G4VPhysicalVolume* targetPV = new G4PVPlacement  (NULL,
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
                                                       false,
                                                       0,
-                                                      true);
+                                                      false);
+    if(targetPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing targetPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetTARGET::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     ConstructDetectorLV();
     BuildMainPV_transform();
