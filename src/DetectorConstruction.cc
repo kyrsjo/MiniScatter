@@ -46,6 +46,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
 
+#include "G4Exception.hh"
+
 #include <cmath>
 #include <string>
 
@@ -189,7 +191,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                           logicWorld,                     //its mother
                                           false,                          //pMany not used
                                           0,                              //copy number
-                                          true);                          //Check for overlaps
+                                          false);                         //Check for overlaps
+        if(physiTarget->CheckOverlaps()) {
+            G4Exception("DetectorConstruction::Construct()", "MSDetCon1000",FatalException,"Overlap detected when placing Target, see error message above for more info.");
+        }
     }
     else {
         solidTarget = NULL;
@@ -217,8 +222,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                                           logicWorld,
                                                           false,
                                                           0,
-                                                          true);
+                                                          false);
 
+        if(magnetPV->CheckOverlaps()) {
+            G4String errormessage = "Overlap detected when placing magnet '" + magnet->magnetName + "', see error message above for more info.";
+            G4Exception("DetectorConstruction::Construct()", "MSDetCon1001",FatalException,errormessage);
+        }
         magnetPVs.push_back(magnetPV);
     }
 
