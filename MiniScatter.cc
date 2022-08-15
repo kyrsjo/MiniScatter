@@ -40,6 +40,8 @@
 #define G4UI_USE
 #endif
 
+#include "MiniScatterVersion.hh"
+
 #include "RootFileWriter.hh"
 
 #include "G4SystemOfUnits.hh"
@@ -59,9 +61,6 @@
 
 //#include <unistd.h> //getopt()
 #include <getopt.h> // Long options to getopt (GNU extension)
-
-const char* const miniscatter_version = "1.0";
-const char* const miniscatter_date    = "August 2022";
 
 void printHelp(G4double target_thick,
                G4String target_material,
