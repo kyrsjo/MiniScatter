@@ -225,9 +225,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                                           false);
 
         if(magnetPV->CheckOverlaps()) {
-            G4String errormessage = "Overlap detected when placing magnet '" + magnet->magnetName + "', see error message above for more info.";
+            G4String errormessage = "Overlap detected when placing magnet \n"
+                "\t'" + magnet->magnetName + "' of type '" + magnet->magnetType + "'\n"
+                "\t, see error message above for more info.";
             G4Exception("DetectorConstruction::Construct()", "MSDetCon1001",FatalException,errormessage);
         }
+
         magnetPVs.push_back(magnetPV);
     }
 
