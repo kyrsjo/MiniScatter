@@ -16,6 +16,9 @@
  */
 
 #include "RootFileWriter.hh"
+#include "MiniScatterVersion.hh"
+
+#include "TNamed.h"
 
 #include "TGraph.h"
 #include "TCanvas.h"
@@ -162,6 +165,11 @@ void RootFileWriter::initializeRootFile(){
         exit(1);
     }
     G4cout << G4endl;
+
+    // Add some metadata to the newly opened file
+    TNamed* version_number = new TNamed("MiniScatter_version_number", miniscatter_version);
+    version_number->Write();
+    delete version_number;
 
     eventCounter = 0;
 

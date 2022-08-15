@@ -1,4 +1,8 @@
-/*
+/* MiniScatter.cc:
+ * Helga Holmestad 2015-2019
+ * Kyrre Sjobak    2015-
+ * Eric Fackelman  2022
+ *
  * This file is part of MiniScatter.
  *
  *  MiniScatter is free software: you can redistribute it and/or modify
@@ -35,6 +39,8 @@
 #define G4VIS_USE
 #define G4UI_USE
 #endif
+
+#include "MiniScatterVersion.hh"
 
 #include "RootFileWriter.hh"
 
@@ -98,6 +104,25 @@ int main(int argc,char** argv) {
     // "Error in <UnknownClass::InitInterpreter()>: LLVM SYMBOLS ARE EXPOSED TO CLING! This will cause problems; please hide them or dlopen() them after the call to TROOT::InitInterpreter()!"
     // when running with GUI.
     gROOT->Reset();
+
+    G4cout << "**********************************************************" << G4endl
+           << "**********************************************************" << G4endl
+           << G4endl;
+    G4cout << " Welcome to MiniScatter, release version " << miniscatter_version << "!" << G4endl
+           << " Release dated: " << miniscatter_date << G4endl
+           << G4endl;
+    G4cout << " MiniScatter is controlled with command line arguments." << G4endl
+           << " Run MiniScatter --help to see all possible arguments,"
+           << "  a description of each of them, and their default/current values." << G4endl
+           << G4endl;
+    G4cout << " If publishing results obtained with this code, " << G4endl
+           << "  please cite K.Sjobak and H.Holmestad, 'MINISCATTER, A SIMPLE GEANT4 WRAPPER'," << G4endl
+           << "  https://dx.doi.org/10.18429/JACoW-IPAC2019-WEPTS025" << G4endl
+           << G4endl;
+
+    G4cout << "**********************************************************" << G4endl
+           << "**********************************************************" << G4endl
+           << G4endl;
 
     //Parse command line arguments
     int getopt_char;
@@ -886,9 +911,7 @@ void printHelp(G4double target_thick,
                G4double histPosLim,
                G4double histAngLim,
                std::vector<G4String> &magnetDefinitions) {
-            G4cout << "Welcome to MiniScatter!" << G4endl
-                   << G4endl
-                   << "Usage/options, long and short forms:" << G4endl<<G4endl;
+            G4cout << "Usage/options, long and short forms:" << G4endl<<G4endl;
 
             G4cout << " --thick/-t <double>" << G4endl
                    << "\t Target thickness [mm]"
@@ -986,12 +1009,13 @@ void printHelp(G4double target_thick,
 
             G4cout << " --beamAngle <double>" << G4endl
                    << "\t Initial beam angle [deg]" << G4endl
-                   << "\t If set to nonzero value, rotate beam generation point and axis around x=y=z=0 by this amount."
+                   << "\t If set to nonzero value, rotate beam generation point and axis around x=y=z=0 by this amount." << G4endl
                    << "\t The beam will still be aimed at x=y=z=0." << G4endl
                    << "\t The beam will be generated in the x/z plane, y=y'=0. Positive angle => positive x." << G4endl
                    << "\t Angles with absolute value >= 90 degrees are not accepted." << G4endl
                    << "\t Currently not compatible with --xoffset, --covar, --beamRcut, or backtracking from * in --zoffset." << G4endl
-                   << "\t Note that the absolute value of --zoffset (which is generally negative) will mean the distance from x=y=z=0 to the starting point."
+                   << "\t Note that the absolute value of --zoffset (which is generally negative)" << G4endl
+                   << "\t will mean the distance from x=y=z=0 to the starting point."
                    << "\t Default/current value = " << beam_angle << G4endl << G4endl;
 
             G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
@@ -1002,7 +1026,8 @@ void printHelp(G4double target_thick,
             G4cout << " --beamRcut <double>" << G4endl
                    << "\t Radial cutoff for the beam distribution." << G4endl
                    << "\t If given alone, generate a circular uniform distribution." << G4endl
-                   << "\t If given together with --covar/-c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
+                   << "\t If given together with --covar/-c, generate a multivariate gaussian" << G4endl
+                   << "\t with all particles starting within the given radius." << G4endl
                    << "\t Default/current value = " << beam_rCut << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl
@@ -1013,7 +1038,7 @@ void printHelp(G4double target_thick,
                    << "\t Display this help-text and exit." << G4endl << G4endl;
 
             G4cout << " --gui/-g" << G4endl
-                   << "\t Use a GUI" << G4endl << G4endl;
+                   << "\t Use the standard Geant4 GUI" << G4endl << G4endl;
 
             G4cout << " --quickmode/-q" << G4endl
                    << "\t Quickmode, skip most post-processing and plots" << G4endl
