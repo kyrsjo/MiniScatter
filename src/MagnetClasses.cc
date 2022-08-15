@@ -39,6 +39,8 @@
 
 #include "G4VisAttributes.hh"
 
+#include "G4Exception.hh"
+
 MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
 
     //Split by '::'
