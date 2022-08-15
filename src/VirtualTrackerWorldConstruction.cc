@@ -59,8 +59,7 @@ void VirtualTrackerWorldConstruction::Construct() {
 
     G4Material* vacuumMaterial = G4Material::GetMaterial("G4_Galactic");
     if (not vacuumMaterial) {
-        G4cerr << "Internal error -- material G4_Galactic not found in VirtualTrackerWorldConstruction::Construct()!" << G4endl;
-        exit(1);
+        G4Exception("VirtualTrackerWorldConstruction::Construct()", "MSVirtDetCon1001",FatalException,"Internal error -- material G4_Galactic not found");
     }
 
     int idx = 0;
@@ -73,6 +72,7 @@ void VirtualTrackerWorldConstruction::Construct() {
         G4ThreeVector zTrans(0.0-sin(trackerAngle/rad)*TrackerThickness/2,
                              0.0, 
                              dist-cos(trackerAngle/rad)*TrackerThickness/2); //Center of tracker plane should be at the specified position
+        
         G4VPhysicalVolume* physiTracker = 
                        new G4PVPlacement(G4Transform3D(*trackerRot,zTrans),          //Translate then rotate
                                          logicTracker,                               //its logical volume
@@ -80,7 +80,13 @@ void VirtualTrackerWorldConstruction::Construct() {
                                          ghostWorldLogical,                          //its mother
                                          false,                                      //pMany not used
                                          0,                                          //copy number
-                                         true);                                      //Check for overlaps
+                                         false);                                      //Check for overlaps
+        if(physiTracker->CheckOverlaps()) {
+            G4String errormessage = "Overlap detected when placing tracking detector \n"
+                "\t number " + std::to_string(idx) + "' at dist = " + std::to_string(dist) + " [mm]\n"
+                "\t, see error message above for more info.";
+            G4Exception("VirtualTrackerWorldConstruction::Construct()", "MSVirtDetCon1001",FatalException,errormessage);
+        }
 
         virtualTrackerLVs.push_back(logicTracker);
         virtualTrackerPVs.push_back(physiTracker);
