@@ -42,6 +42,8 @@
 
 #include "G4SystemOfUnits.hh"
 
+#include "G4Exception.hh"
+
 #include <iostream>
 #include <iomanip>
 
@@ -66,8 +68,8 @@ void RootFileWriter::initializeRootFile(){
     TH2D::StatOverflows(true);
 
     if (not has_filename_out) {
-        G4cerr << "Error: filename_out not set." << G4endl;
-        exit(1);
+        G4String errormessage = "filename_out not set";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1000",FatalException,errormessage);
     }
     rootFileName = foldername_out + "/" + filename_out + ".root";
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
@@ -92,8 +94,8 @@ void RootFileWriter::initializeRootFile(){
 
                 char* cwd = get_current_dir_name();
                 if (cwd == NULL) {
-                    perror("Error getting the current path");
-                    exit(1);
+                    G4String errormessage = "Error getting the current path";
+                    G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1001",FatalException,errormessage);
                 }
 
                 if (cwd[strlen(cwd)-1] == '/') {
@@ -114,9 +116,8 @@ void RootFileWriter::initializeRootFile(){
             const char* path_full = foldername_out_full.c_str();
 
             if( strlen(path_full) < 2 ) {
-                G4cerr << "ERROR: Path string must be more than '/' (and why is '/' not existing?), got '"
-                       << path_full << "' - aborting!" << G4endl;
-                exit(1);
+                G4String errormessage = "Path string must be more than '/' (and why is '/' not existing?), got '" + G4String(path_full) + "'";
+                G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1002",FatalException,errormessage);
             }
 
             //Create the folders recursively
@@ -146,13 +147,13 @@ void RootFileWriter::initializeRootFile(){
             }
         }
         else {
-            G4cerr << "ERROR: Could not lookup folder " << foldername_out << " - aborting!" << G4endl;
-            exit(1);
+            G4String errormessage = "Could not lookup folder '" + foldername_out + "'";
+            G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1003",FatalException,errormessage);
         }
     }
     else if(not S_ISDIR(stat_info.st_mode)) {
-        G4cerr << "ERROR: An non-folder entity named " << foldername_out << " already exist- aborting!" << G4endl;
-        exit(1);
+        G4String errormessage = "A non-folder entity named '" + foldername_out + "' already exist";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1004",FatalException,errormessage);
     }
     else {
         G4cout << "Folder '" << foldername_out << "' already exists -- using it!" << G4endl;
@@ -161,8 +162,8 @@ void RootFileWriter::initializeRootFile(){
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
     if ( not histFile->IsOpen() ) {
-        G4cerr << "Opening TFile '" << rootFileName << "' failed; quitting." << G4endl;
-        exit(1);
+        G4String errormessage = "Opening TFile '" + rootFileName + "' failed.";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1005",FatalException,errormessage);
     }
     G4cout << G4endl;
 
@@ -2156,7 +2157,7 @@ void RootFileWriter::setEngNbins(G4int edepNbins_in) {
         this->engNbins = edepNbins_in;
     }
     else if (edepNbins_in < 0) {
-        G4cerr << "Error: edepNbins must be > 0 (or 0 for auto)" << G4endl;
-        exit(1);
+        G4String errormessage = "edepNbins must be > 0 (or 0 for auto)";
+        G4Exception("RootFileWriter::setEngNbins()", "MSRootFile2000",FatalException,errormessage);
     }
 }
