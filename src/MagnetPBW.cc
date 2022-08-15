@@ -98,14 +98,20 @@ void MagnetPBW::Construct() {
     pRot->rotateY(90.0*deg);
 
     G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
-                                  new G4PVPlacement   (pRot,
+    G4PVPlacement*    targetPV  = new G4PVPlacement   (pRot,
                                                       G4ThreeVector(0.0,0.0,radius+5.0), //beam origin is 5mm before PBW
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
                                                       false,
                                                       0,
-                                                      true);
+                                                      false);
+    if(targetPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing targetPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
                                                       radius+1.25, radius+3.25, (length)/2.0,
@@ -113,7 +119,7 @@ void MagnetPBW::Construct() {
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
                                                       magnetName + "_waterLV");
-                                  new G4PVPlacement   (NULL,
+    G4PVPlacement*      waterPV = new G4PVPlacement   (NULL,
                                                       G4ThreeVector(0.0,0.0,0.0),
                                                       waterLV,
                                                       magnetName + "_waterPV",
@@ -121,6 +127,12 @@ void MagnetPBW::Construct() {
                                                       false,
                                                       0,
                                                       true);
+    if(waterPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing waterPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     //Set color and line segments per circle for Visualization
     G4VisAttributes* aluminum = new G4VisAttributes(G4Colour(0.66,0.67,0.71));
