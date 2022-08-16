@@ -241,8 +241,14 @@ public:
 
 private:
     G4String targetMaterialName;
-    G4Material* targetMaterial = NULL;
-    G4double radius = 10.0*mm;  //[G4 length units]
+    G4Material* targetMaterial = G4Material::GetMaterial("G4_Al");
+    G4double radius = 88.0 * mm;  //[G4 length units]
+    G4double al1Thick = 1.0 * mm;
+    G4double waterThick = 2.0 * mm;
+    G4double al2Thick = 1.25 * mm;
+    G4double thickness = 4.25 * mm;
+    G4double width;
+    G4double height;
 };
 
 // COLLIMATORHV -- TWO SIMPLE SLABS OF MATERIALS, WITH EITHER
