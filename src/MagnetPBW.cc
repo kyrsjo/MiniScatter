@@ -37,6 +37,15 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         else if (it.first == "material") {
             targetMaterialName = it.second;
         }
+        else if (it.first == "al1Thick") {
+            al1Thick = ParseDouble(it.second, "Al 1 Thickness") * mm;
+        }
+        else if (it.first == "waterThick") {
+            waterThick = ParseDouble(it.second, "water Thickness") * mm;
+        }
+        else if (it.first == "al2Thick") {
+            al2Thick = ParseDouble(it.second, "Al 2 Thickness") * mm;
+        }
         else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
             ParseOffsetRot(it.first, it.second);
         }
@@ -53,9 +62,25 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         exit(1);
     }
 
+    thickness = al1Thick + waterThick + al2Thick;
+
+    //!!!!!Overriding length - if not 0 raise error  -overwrites.
+    //Because PBW will be rotated later!
+    width = 60; //assumes "width" < radius
+    //Assumes a PBW angle range from 30 deg to 150 deg!
+    length = (radius + thickness) * 0.5 + (radius + thickness + 5.0); //decimal is sin30 and z translation is needed
+    height = 2* (radius + thickness) * 0.86602540378; //decimal is cos30 (sqrt(3)/2)
+
     PrintCommonParameters();
     G4cout << "\t targetMaterialName      = " << targetMaterialName <<             G4endl;
     G4cout << "\t inner radius            = " << radius/mm          << " [mm]"  << G4endl;
+    G4cout << "\t al1Thick                = " << al1Thick/mm        << " [mm]"  << G4endl;
+    G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
+    G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
+    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
+    G4cout << "\t MainLV Width            = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
+    G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
 
 }
 
@@ -72,11 +97,11 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main",2*radius, 2*radius);
+    this->mainLV = MakeNewMainLV("main",length,height);
 
     // Build the target (PBW)
     G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
-                                            radius, radius+4.25, length/2.0,
+                                            radius, radius + thickness, width*0.5,
                                             30.0*deg, 120.0*deg);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
@@ -99,7 +124,7 @@ void MagnetPBW::Construct() {
 
     G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
     G4PVPlacement*    targetPV  = new G4PVPlacement   (pRot,
-                                                      G4ThreeVector(0.0,0.0,radius+5.0), //beam origin is 5mm before PBW
+                                                      G4ThreeVector(0.0,0.0,(radius + thickness) + 5.0), //beam origin is 5mm before PBW
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
@@ -114,7 +139,7 @@ void MagnetPBW::Construct() {
     }
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
-                                                      radius+1.25, radius+3.25, (length)/2.0,
+                                                      radius + al2Thick, radius + (al2Thick + waterThick), width*0.5,
                                                       60.0*deg,60.0*deg);
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
@@ -146,4 +171,3 @@ void MagnetPBW::Construct() {
     ConstructDetectorLV();
     BuildMainPV_transform();
 }
-
