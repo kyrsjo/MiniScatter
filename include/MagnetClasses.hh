@@ -280,6 +280,8 @@ private:
 };
 
 // PBW -- Replica of the ESS PBW
+// A section of a cylindrical shell from startPhi to (startPhi + arcPhi) of a thickness
+// Includes a water channel in the middle from (startPhi * 2) to (startPhi * 2 + arcPhi * 0.5)
 class MagnetPBW : public MagnetBase {
 public:
     MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
@@ -290,18 +292,18 @@ public:
     virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
 
 private:
-    G4String targetMaterialName;
-    G4Material* targetMaterial = G4Material::GetMaterial("G4_Al");
-    G4double radius = 88.0 * mm;  //[G4 length units]
-    G4double al1Thick = 1.0 * mm;
-    G4double waterThick = 2.0 * mm;
-    G4double al2Thick = 1.25 * mm;
-    G4double thickness = 4.25 * mm;
-    G4double width = 60 * mm;
-    G4double height = 150 * mm;
-    G4double startPhi = 30 * deg;
-    G4double arcPhi = 120 * deg;
-    G4double z = 250 * mm;
+    G4String targetMaterialName = "G4_Al";
+    G4Material* targetMaterial;
+    G4double radius = 88.0*mm;  //[G4 length units] Inner radius of cylinder, >0
+    G4double al1Thick = 1.0*mm;  //[G4 length units] Outer thickness of metal window, >0
+    G4double waterThick = 2.0*mm;  //[G4 length units] Thickness of water channel, >0
+    G4double al2Thick = 1.25*mm;  //[G4 length units] Inner thickness of metal window, >0
+    G4double thickness = 4.25*mm;  //[G4 length units] Total thicnkess
+    G4double width = 60.0*mm;  //[G4 length units] Width of cylinder as seen by PBW, >0
+    G4double height = 160.0*mm;  //[G4 length units] Height of window section, >0
+    G4double startPhi = 30.0*deg;  // [User angle units] Start angle of window section, within: 0 >= startPhi <= 85
+    G4double arcPhi = 120.0*deg;  // [User angle units] Arc angle of window section, within: 15 <= arcPhi <= 180
+    G4double z = 70.0*mm;  //[G4 length units] Distance to translate PBW so center lines up with pos
 };
 
 #endif

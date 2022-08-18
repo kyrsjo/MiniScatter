@@ -53,6 +53,9 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         else if (it.first == "arcPhi") {
             arcPhi = ParseDouble(it.second, "Window Arc Angle") * deg;
         }
+        else if (it.first == "width") {
+            arcPhi = ParseDouble(it.second, "Window Width") * mm;
+        }
         else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
             ParseOffsetRot(it.first, it.second);
         }
@@ -77,28 +80,43 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
                << length / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (al1Thick == 0.0) {
-        G4cerr << "Invalid al1Thick for PBW: al1Thick must be > 0.0, but was "
+    if (radius <= 0.0) {
+        G4cerr << "Invalid radius for PBW: Radius must be > 0.0, but was "
+               << radius / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (al1Thick <= 0.0) {
+        G4cerr << "Invalid al1Thick for PBW: Al1Thick must be > 0.0, but was "
                << al1Thick / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (waterThick == 0.0) {
-        G4cerr << "Invalid waterThick for PBW: waterThick must be > 0.0, but was "
+    if (waterThick <= 0.0) {
+        G4cerr << "Invalid waterThick for PBW: WaterThick must be > 0.0, but was "
                << waterThick / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (al2Thick == 0.0) {
-        G4cerr << "Invalid al2Thick for PBW: al2Thick must be > 0.0, but was "
+    if (al2Thick <= 0.0) {
+        G4cerr << "Invalid al2Thick for PBW: Al2Thick must be > 0.0, but was "
                << al2Thick / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (arcPhi == 0.0 || arcPhi > 180.0) {
-        G4cerr << "Invalid arc angle for PBW: arcPhi must be 0 < arcPhi < 180, but was "
+    if (width <= 0.0) {
+        G4cerr << "Invalid width for PBW: Width must be > 0.0, but was "
+               << width / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (startPhi / deg < 0.0 || startPhi / deg > 85.0) {
+        G4cerr << "Invalid arc angle for PBW: StartPhi must be within: 0 >= startPhi <= 85, but was "
+               << startPhi / deg << " [deg]" << G4endl; 
+        exit(1);
+    }
+    if (arcPhi / deg < 15.0 || arcPhi / deg > 180.0) {
+        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 15 <= arcPhi <= 180, but was "
                << arcPhi / deg << " [deg]" << G4endl; 
         exit(1);
     }
-    if (arcPhi / deg + startPhi / deg <= 90.0) {
-        G4cerr << "Invalid angles for PBW: arcPhi + startPhi must be >= 90.0, but was "
+    if (startPhi / deg + arcPhi / deg <= 100.0 || startPhi / deg + arcPhi / deg >= 180.0 ) {
+        G4cerr << "Invalid angles for PBW: StartPhi + arcPhi must be >= 100.0 and <= 180, but was "
                << arcPhi / deg << " [deg] + " << startPhi / deg << " [deg] = " 
                << arcPhi / deg + startPhi / deg << " [deg] " << G4endl; 
         exit(1);
