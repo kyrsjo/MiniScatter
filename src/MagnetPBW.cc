@@ -11,17 +11,20 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a cop//180,180 + 240,60 is greaty of the GNU General Public License
+ *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "MagnetClasses.hh"
 
-#include "G4Box.hh"
 #include "G4Tubs.hh"
-#include "G4SubtractionSolid.hh"
 
 #include "G4PVPlacement.hh"
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
+#include "G4Material.hh"
+
+#include <cmath>
 
 MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                             std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
@@ -44,6 +47,12 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         else if (it.first == "al2Thick") {
             al2Thick = ParseDouble(it.second, "Al 2 Thickness") * mm;
         }
+        else if (it.first == "startPhi") {
+            startPhi = ParseDouble(it.second, "Window Start Angle") * deg;
+        }
+        else if (it.first == "arcPhi") {
+            arcPhi = ParseDouble(it.second, "Window Arc Angle") * deg;
+        }
         else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
             ParseOffsetRot(it.first, it.second);
         }
@@ -62,12 +71,43 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
 
     thickness = al1Thick + waterThick + al2Thick;
 
-    //!!!!!Overriding length - if not 0 raise error  -overwrites.
-    //Because PBW will be rotated later!
-    width = 60; //assumes "width" < radius
-    //Assumes a PBW angle range from 30 deg to 150 deg!
-    length = (radius + thickness) * 0.5 + (radius + thickness + 5.0); //decimal is sin30 and z translation is needed
-    height = 2* (radius + thickness) * 0.86602540378; //decimal is cos30 (sqrt(3)/2)
+    //Error catching
+    if (length != 0.0) {
+        G4cerr << "Invalid length for PBW: Length must be 0.0, but was "
+               << length / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (al1Thick == 0.0) {
+        G4cerr << "Invalid al1Thick for PBW: al1Thick must be > 0.0, but was "
+               << al1Thick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (waterThick == 0.0) {
+        G4cerr << "Invalid waterThick for PBW: waterThick must be > 0.0, but was "
+               << waterThick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (al2Thick == 0.0) {
+        G4cerr << "Invalid al2Thick for PBW: al2Thick must be > 0.0, but was "
+               << al2Thick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (arcPhi == 0.0 || arcPhi > 180.0) {
+        G4cerr << "Invalid arc angle for PBW: arcPhi must be 0 < arcPhi < 180, but was "
+               << arcPhi / deg << " [deg]" << G4endl; 
+        exit(1);
+    }
+    if (arcPhi / deg + startPhi / deg <= 90.0) {
+        G4cerr << "Invalid angles for PBW: arcPhi + startPhi must be >= 90.0, but was "
+               << arcPhi / deg << " [deg] + " << startPhi / deg << " [deg] = " 
+               << arcPhi / deg + startPhi / deg << " [deg] " << G4endl; 
+        exit(1);
+    }
+
+    //Calculate dimensions for mainLV box and z distance for positioning
+    length = radius * (1 - cos(arcPhi/rad * 0.5)) + thickness;
+    height = 2 * sin(arcPhi/rad * 0.5) * (radius + thickness);
+    z = radius * cos(arcPhi/rad * 0.5) + length * 0.5; //do python notebook of graphing
 
     PrintCommonParameters();
     G4cout << "\t targetMaterialName      = " << targetMaterialName <<             G4endl;
@@ -76,9 +116,12 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
     G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
     G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
-    G4cout << "\t MainLV Width            = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t startPhi                = " << startPhi/deg       << " [deg]" << G4endl;
+    G4cout << "\t arcPhi                  = " << arcPhi/deg         << " [deg]" << G4endl;
+    G4cout << "\t PBW Width               = " << width/mm           << " [mm]"  << G4endl;
     G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
     G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
+    G4cout << "\t z                       = " << z/mm               << " [mm]"  << G4endl;
 
 }
 
@@ -95,12 +138,15 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main",length,height);
+    this->mainLV = MakeNewMainLV("main",width,height);
 
     // Build the target (PBW)
-    G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
-                                            radius, radius + thickness, width*0.5,
-                                            30.0*deg, 120.0*deg);
+    G4VSolid* targetSolid = new G4Tubs(magnetName+"_targetS",
+                                      radius,
+                                      radius + thickness,
+                                      width * 0.5,
+                                      startPhi/rad,
+                                      arcPhi/rad);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
@@ -115,34 +161,62 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    //Define rotation so PBW is oriented correct with no user modification
     G4RotationMatrix* pRot = new G4RotationMatrix();
-    pRot->rotateX(270.0*deg);
+    pRot->rotateX(90.0*deg);
+    pRot->rotateY(90.0*deg);
 
-    G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
+    G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,
+                                                      targetMaterial,
+                                                      magnetName+"_targetLV");
+
     G4PVPlacement*    targetPV  = new G4PVPlacement   (pRot,
-                                                      G4ThreeVector(0.0,0.0,(radius + thickness) + 5.0), //beam origin is 5mm before PBW
+                                                      G4ThreeVector(0.0, 0.0, z),
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
                                                       false,
                                                       0,
                                                       true);
+    if(targetPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing targetPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
-                                                      radius + al2Thick, radius + (al2Thick + waterThick), width*0.5,
-                                                      60.0*deg,60.0*deg);
+                                                      radius + al2Thick,
+                                                      radius + (al2Thick + waterThick),
+                                                      width * 0.5,
+                                                      startPhi/rad * 2.0,
+                                                      arcPhi/rad * 0.5);
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
                                                       magnetName + "_waterLV");
-                                  new G4PVPlacement   (NULL,
-                                                      G4ThreeVector(0.0,0.0,0.0),
+
+    G4PVPlacement*      waterPV = new G4PVPlacement   (NULL,
+                                                      G4ThreeVector(0.0, 0.0, 0.0),
                                                       waterLV,
                                                       magnetName + "_waterPV",
-                                                      targetLV,               //mother volume is targetSolidLV!
+                                                      targetLV,           //mother volume is targetLV!
                                                       false,
                                                       0,
                                                       true);
+    if(waterPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing waterPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
+
+    //Set color and line segments per circle for Visualization
+    G4VisAttributes* aluminum = new G4VisAttributes(G4Colour(0.66,0.67,0.71));
+    aluminum->SetForceLineSegmentsPerCircle(100);
+    targetLV->SetVisAttributes(aluminum);
+    
+    G4VisAttributes* water = new G4VisAttributes(G4Colour(0,1,1));
+    water->SetForceLineSegmentsPerCircle(100);
+    waterLV->SetVisAttributes(water);
 
     ConstructDetectorLV();
     BuildMainPV_transform();

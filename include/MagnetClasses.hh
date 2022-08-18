@@ -229,28 +229,6 @@ private:
     G4double radius = 10.0*mm;  //[G4 length units]
 };
 
-// PBW -- Replica of the ESS PBW
-class MagnetPBW : public MagnetBase {
-public:
-    MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
-                    std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
-                    G4String magnetName_in);
-    virtual void Construct();
-
-    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
-
-private:
-    G4String targetMaterialName;
-    G4Material* targetMaterial = G4Material::GetMaterial("G4_Al");
-    G4double radius = 88.0 * mm;  //[G4 length units]
-    G4double al1Thick = 1.0 * mm;
-    G4double waterThick = 2.0 * mm;
-    G4double al2Thick = 1.25 * mm;
-    G4double thickness = 4.25 * mm;
-    G4double width;
-    G4double height;
-};
-
 // COLLIMATORHV -- TWO SIMPLE SLABS OF MATERIALS, WITH EITHER
 // A HORISONAL (HCOLL) OR VERTICAL (VCOLL) GAP
 class MagnetCOLLIMATORHV : public MagnetBase {
@@ -299,6 +277,31 @@ private:
 
     G4LogicalVolume* scintillatorLV = NULL;
     G4LogicalVolume* shieldingLV    = NULL;
+};
+
+// PBW -- Replica of the ESS PBW
+class MagnetPBW : public MagnetBase {
+public:
+    MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                    std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                    G4String magnetName_in);
+    virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
+
+private:
+    G4String targetMaterialName;
+    G4Material* targetMaterial = G4Material::GetMaterial("G4_Al");
+    G4double radius = 88.0 * mm;  //[G4 length units]
+    G4double al1Thick = 1.0 * mm;
+    G4double waterThick = 2.0 * mm;
+    G4double al2Thick = 1.25 * mm;
+    G4double thickness = 4.25 * mm;
+    G4double width = 60 * mm;
+    G4double height = 150 * mm;
+    G4double startPhi = 30 * deg;
+    G4double arcPhi = 120 * deg;
+    G4double z = 250 * mm;
 };
 
 #endif
