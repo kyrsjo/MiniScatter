@@ -211,10 +211,10 @@ int main(int argc,char** argv) {
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
+                                           {"histPosLim",            required_argument, NULL, 1005 }, 
+                                           {"histAngLim",            required_argument, NULL, 1006 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {"object",                required_argument, NULL, 1100 }, //synonymous with --magnet
-                                           {"histPosLim",            required_argument, NULL, 1025 }, 
-                                           {"histAngLim",            required_argument, NULL, 1026 },
                                            {0,0,0,0}
     };
 
@@ -588,12 +588,8 @@ int main(int argc,char** argv) {
                 G4cout << "engNbins must be >= 0" << G4endl;
             }
             break;
-
-        case 1100: // Object/Magnet definition
-            magnetDefinitions.push_back(string(optarg));
-            break;
-
-        case 1025: // Position Histogram Limit change
+            
+        case 1005: // Position Histogram Limit change
             try {
                 histPosLim = std::stod(string(optarg));
             }
@@ -605,7 +601,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1026: // Angle Histogram Limit change
+        case 1006: // Angle Histogram Limit change
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -615,6 +611,10 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number!" << G4endl;
                 exit(1);
             }
+            break;
+
+        case 1100: // Object/Magnet definition
+            magnetDefinitions.push_back(string(optarg));
             break;
         
         default: // WTF?

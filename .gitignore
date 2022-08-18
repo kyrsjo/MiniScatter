@@ -14,7 +14,4 @@ __pycache__
 .sys.v*
 
 .ipynb_checkpoints
-examples/EricScripts/
-examples/SimpleDemoPBW.ipynb
-examples/simplePBW_1mmAl_1e5_DistribTest.png
 .vscode/
