@@ -932,17 +932,17 @@ void printHelp(G4double target_thick,
 
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
-                   << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR',"
-                   << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
-                   << "\t Also possible: 'gas::pressure' "
-                   << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
-                   << " and pressure is given in mbar (T=300K is assumed)."  << G4endl
+                   << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe'," << G4endl
+                   << "\t                'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR'," << G4endl
+                   << "\t                'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
+                   << "\t Also possible: 'gas::pressure' " << G4endl
+                   << "\t                where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar'," << G4endl
+                   << "\t                and pressure is given in mbar (T=300K is assumed)."  << G4endl
                    << "\t Default/current value = '"
                    << target_material << "'" << G4endl << G4endl;
 
             G4cout << "--backgroundMaterial <string>" << G4endl
-                   << " \t Background material name" << G4endl
+                   << "\t The name of the background material (world volume) to use." << G4endl
                    << "\t Default/current value = '"
                    << background_material << "'" << G4endl << G4endl;
 
@@ -1047,11 +1047,12 @@ void printHelp(G4double target_thick,
                    << "\t Only the --zoffset flag is taken into account;" << G4endl
                    << "\t  the other beam-relevant flags are ignored." << G4endl
                    << "\t The flags --energy and --beam is only used for reference energy in Twiss etc." << G4endl
-                   << "\t Note that the number of particles in the file must be at least as big as --numEvents."
+                   << "\t Note that the number of particles in the file must be at least as big as --numEvents." <<G4endl
                    << "\t Expected format is determined from file ending, possibilities are:" << G4endl
                    << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
-                   << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>"
-                   << "\t\t       Here the particle_type is specified in the same way as in --beam."
+                   << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>" << G4endl
+                   << "\t\t       Here the particle_type is specified in the same way as in --beam." << G4endl
+                   << "\t\t       Please see beamFile.csv for an example." << G4endl
                    << "\t Default/current value = \"" << beam_loadFile << "\"" << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl
@@ -1169,6 +1170,7 @@ void printHelp(G4double target_thick,
                    << "\t     material:  Jaw material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'SHIELDEDSCINTILLATOR':" << G4endl
+                   << "\t     Models a cylindrical scintillator inside a cylindrical shield, no field." << G4endl
                    << "\t     Specific parameters:" << G4endl
                    << "\t     Models a cylindrical scintilling crystal (sensitive)" << G4endl
                    << "\t     inside a cylindrical shield (not sensitive), no field." << G4endl
@@ -1192,7 +1194,7 @@ void printHelp(G4double target_thick,
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
                    << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
-                   << "\t\t\t\t arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
+                   << "\t                 arcPhi should be within: 0 < arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
