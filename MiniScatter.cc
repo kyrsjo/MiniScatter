@@ -1150,18 +1150,15 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'PBW':" << G4endl
                    << "\t     Models the ESS Proton Beam Window, no field." << G4endl
-                   << "\t     Positions the PBW so the beam goes through the center." << G4endl
+                   << "\t     User must set pos to be >half length of object, see parameter initialization." << G4endl
                    << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
                    << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
                    << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0 [mm]" << G4endl
                    << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0 [mm]" << G4endl
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
-                   << "\t     startPhi:   Start angle of window section        (<double> [deg]),   default: 30.0 [deg]" << G4endl
-                   << "\t\t\t\t startPhi should be within: 0 >= startPhi <= 85 [deg]" << G4endl
                    << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
-                   << "\t\t\t\t arcPhi should be within: 15 <= arcPhi <= 180 [deg]" << G4endl
-                   << "\t     **NOTE**    For a realistic PBW geometry: 100.0 <= startPhi + arcPhi <= 180 [deg]" << G4endl
+                   << "\t\t\t\t arcPhi should be within: 30 <= arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;

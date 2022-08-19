@@ -301,9 +301,10 @@ private:
     G4double thickness = 4.25*mm;  //[G4 length units] Total thicnkess
     G4double width = 60.0*mm;  //[G4 length units] Width of cylinder as seen by PBW, >0
     G4double height = 160.0*mm;  //[G4 length units] Height of window section, >0
-    G4double startPhi = 30.0*deg;  // [User angle units] Start angle of window section, within: 0 >= startPhi <= 85
     G4double arcPhi = 120.0*deg;  // [User angle units] Arc angle of window section, within: 15 <= arcPhi <= 180
-    G4double z = 70.0*mm;  //[G4 length units] Distance to translate PBW so center lines up with pos
+    G4double startPhi = 30*deg;  // [Degrees] Start angle of window section, = 90 - arcPhi/2
+    G4double boxCenter = 68.125*mm;  //[G4 length units] Distance to translate PBW so center lines up with pos
+    G4double rightAng = 90*deg;
 };
 
 #endif
