@@ -1158,7 +1158,7 @@ void printHelp(G4double target_thick,
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
                    << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
-                   << "\t\t\t\t arcPhi should be within: 30 <= arcPhi <= 180 [deg]" << G4endl
+                   << "\t\t\t\t arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
