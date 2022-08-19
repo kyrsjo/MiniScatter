@@ -224,7 +224,7 @@ int main(int argc,char** argv) {
 
     while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:A:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
-        case 'h': //Help
+        case 'h': //--help ; Print help
             printHelp(target_thick,
                       target_material,
                       background_material,
@@ -262,11 +262,11 @@ int main(int argc,char** argv) {
             exit(1);
             break;
 
-        case 'g': //Use GUI
+        case 'g': //--gui ; Use the GUI
             useGUI = true;
             break;
 
-        case 't': //Target thickness
+        case 't': //--thick ; Target thickness
             try {
                 target_thick = std::stod(string(optarg));
             }
@@ -278,7 +278,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'd': //Detector distance
+        case 'd': //--dist ; Detector distance(s)
             { //Scope to avoid spilling temp variables
                 detector_distances.clear();
                 G4String detectorString = std::string(optarg);
@@ -310,7 +310,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'a': //Detector angle
+        case 'a': //--angle ; Detector angle
             try {
                 detector_angle = std::stod(string(optarg));
             }
@@ -322,7 +322,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'A': //Target angle
+        case 'A': //--targetAngle ; Target angle
             try {
                 target_angle = std::stod(string(optarg));
             }
@@ -334,7 +334,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'w': //World size
+        case 'w': //--worldsize ; World size
             try {
                 world_size = std::stod(string(optarg));
             }
@@ -346,11 +346,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'p': //Named physics list
+        case 'p': //--phys ; Named physics list
             physListName = G4String(optarg);
             break;
 
-        case 1400: //Physics cutoff distance (--physCutoffDist)
+        case 1400: //--physCutoffDist ; Physics cutoff distance (--physCutoffDist)
             try {
                 physCutoffDist = std::stod(string(optarg));
             }
@@ -362,15 +362,15 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'm': //Target material
+        case 'm': //--mat ; Target material
             target_material = G4String(optarg);
             break;
 
-        case 1600: //Background material
+        case 1600: //--backgroundMaterial ; Background material
             background_material = G4String(optarg);
             break;
 
-        case 'n': //Number of events
+        case 'n': //--numEvents ; Number of events
             try {
                 numEvents = std::stoi(string(optarg));
             }
@@ -382,7 +382,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'e': //beam energy
+        case 'e': //--energy ; The (reference) beam kinetic energy
             try {
                 beam_energy = std::stod(string(optarg));
             }
@@ -394,7 +394,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1300: {//beam energy (flat distribution)
+        case 1300: {//--energyDistFlat ; beam energy (flat distribution)
             G4String edist_str = G4String(optarg);
 
             str_size startPos = 0;
@@ -441,11 +441,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'b': //Beam type
+        case 'b': //--beam ; Beam particle type
             beam_type = G4String(optarg);
             break;
 
-        case 'x': //beam offset (x)
+        case 'x': //--xoffset / Beam offset (x)
             try {
                 beam_offset = std::stod(string(optarg));
             }
@@ -457,7 +457,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'z': //beam offset (z)
+        case 'z': //--zoffset ; Beam offset (z)
             if (strlen(optarg) > 0 && optarg[0] == '*') {
                 doBacktrack = true;
             }
@@ -477,7 +477,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1500: //--beamAngle
+        case 1500: //--beamAngle ; Initial angle of beam particles
             try {
                 beam_angle = std::stod(string(optarg));
             }
@@ -489,12 +489,12 @@ int main(int argc,char** argv) {
             }
             break;
         
-        case 'c': // --covar ; Beam covariance matrix from Twiss parameters
+        case 'c': //--covar ; Beam covariance matrix from Twiss parameters
             //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
             break;
 
-        case 1200: // --beamRcut ; Beam radial cutoff [mm]
+        case 1200: //--beamRcut ; Beam radial cutoff [mm]
             try {
                 beam_rCut = std::stod(string(optarg));
             }
@@ -506,23 +506,23 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1700: //  --beamFile ; Input filename to load beam from
+        case 1700: //--beamFile ; Input filename to load beam from
             beam_loadFile = G4String(optarg);
             break;
 
-        case 'f': // --outname ; Output filename
+        case 'f': //--outname ; Output filename
             filename_out = G4String(optarg);
             break;
 
-        case 'o': //Output foldername
+        case 'o': //--outname ; Output foldername
             foldername_out = G4String(optarg);
             break;
 
-        case 'r': //Mini ROOT file
+        case 'r': //--miniroot ; Mini ROOT file
             miniROOTfile = true;
             break;
 
-        case 's': //RNG seed
+        case 's': //--seed ; RNG seed
             try {
                 rngSeed = std::stoi(string(optarg));
             }
@@ -534,15 +534,15 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'q': // Quick mode (skip most plots)
+        case 'q': //--quickmode ; Quick mode (skip most plots)
             quickmode = true;
             break;
 
-        case 1004: // anaScatterTest
+        case 1004: //--anaScatterTest ; Make analytical plots for scattering
             anaScatterTest = true;
             break;
 
-        case 1000: // Cutoff energy fraction
+        case 1000: //--cutoffEnergyFraction ; Cutoff energy fraction
             try {
                 cutoff_energyFraction = std::stod(string(optarg));
             }
@@ -554,7 +554,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1001: // Cutoff radius [mm]
+        case 1001: //--cutoffRadius ; Cutoff radius [mm]
             try {
                 cutoff_radius = std::stod(string(optarg));
             }
@@ -566,7 +566,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1002: // Z bin width for energy deposit histograms [mm]
+        case 1002: //--edepDZ ; Z bin width for energy deposit histograms [mm]
             try {
                 edep_dens_dz = std::stod(string(optarg));
             }
@@ -578,7 +578,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1003: // Number of bins for the energy 1D histograms
+        case 1003: //--engNbins ; Number of bins for the energy 1D histograms
             if (engNbins != 0) {
                 G4cout << "Can only set engNbins once." << G4endl;
             }
@@ -598,7 +598,7 @@ int main(int argc,char** argv) {
             }
             break;
             
-        case 1005: // Position Histogram Limit change
+        case 1005: //--histPosLim ; Position Histogram Limit change
             try {
                 histPosLim = std::stod(string(optarg));
             }
@@ -610,7 +610,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1006: // Angle Histogram Limit change
+        case 1006: //--histAngLim ; Angle Histogram Limit change
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -622,7 +622,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1100: // Object/Magnet definition
+        case 1100: //--object/--magnet ; Definition of an Object, also known as a Magnet
             magnetDefinitions.push_back(string(optarg));
             break;
         
@@ -1059,7 +1059,7 @@ void printHelp(G4double target_thick,
                    << "\t Set the initial seed, 0->use the clock etc." << G4endl
                    << "\t Default/current value = " << rngSeed << G4endl << G4endl;
 
-            G4cout << " --help/-g" << G4endl
+            G4cout << " --help/-h" << G4endl
                    << "\t Display this help-text and exit." << G4endl << G4endl;
 
             G4cout << " --gui/-g" << G4endl
