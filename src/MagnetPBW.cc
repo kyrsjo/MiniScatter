@@ -100,8 +100,8 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
                << width / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (arcPhi / deg < 30.0 || arcPhi / deg > 180.0) {
-        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 30 <= arcPhi <= 180, but was "
+    if (arcPhi / deg < 0.0 || arcPhi / deg > 180.0) {
+        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 0 <= arcPhi <= 180, but was "
                << arcPhi / deg << " [deg]" << G4endl; 
         exit(1);
     }
@@ -109,6 +109,7 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     //Calculate dimensions for mainLV box and positioning
     thickness = al1Thick + waterThick + al2Thick;
     startPhi = rightAng/rad - (arcPhi/rad * 0.5);
+    waterStartPhi = rightAng/rad - (arcPhi/rad * 0.25);
     length = radius * (1 - cos(arcPhi/rad * 0.5)) + thickness;
     height = 2 * sin(arcPhi/rad * 0.5) * (radius + thickness);
     boxCenter = radius * cos(arcPhi/rad * 0.5) + length * 0.5;
@@ -194,7 +195,7 @@ void MagnetPBW::Construct() {
                                                       radius + al2Thick,
                                                       radius + (al2Thick + waterThick),
                                                       width * 0.5,
-                                                      startPhi/rad * 2.0,
+                                                      waterStartPhi/rad,
                                                       arcPhi/rad * 0.5);
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
