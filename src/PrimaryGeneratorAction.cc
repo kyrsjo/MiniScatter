@@ -19,8 +19,6 @@
 #include "DetectorConstruction.hh"
 #include "G4Event.hh"
 #include "G4ParticleGun.hh"
-#include "G4ParticleTable.hh"
-#include "G4IonTable.hh"
 #include "Randomize.hh"
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
@@ -45,7 +43,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4double Rcut_in,
                                                G4int    rngSeed_in,
                                                G4double beam_energy_min_in,
-                                               G4double beam_energy_max_in  ) :
+                                               G4double beam_energy_max_in,
+                                               G4String beam_loadFile_in) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
@@ -57,7 +56,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     Rcut(Rcut_in*mm),
     rngSeed(rngSeed_in),
     beam_energy_min(beam_energy_min_in),
-    beam_energy_max(beam_energy_max_in) {
+    beam_energy_max(beam_energy_max_in),
+    beam_loadFile(beam_loadFile_in) {
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
@@ -81,6 +81,28 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                    << " [mm] is behind world back plane = "
                    << - Detector->getWorldSizeZ() / 2.0 / mm<< " [mm]"
                    << G4endl;
+            exit(1);
+        }
+    }
+
+    //Sanity check
+    if (beam_loadFile != "") {
+        if ( (beam_offset != 0.0) || (beam_angle != 0.0) || (covarianceString != "") || (Rcut != 0.0) || (beam_energy_min != -1) || (beam_energy_max != -1) ) {
+            G4cerr << "Error, user specified a flag which is incompatible with --beamFile." << G4endl;
+            exit(1);
+        }
+        G4String beam_loadFile_lower = beam_loadFile;
+        beam_loadFile_lower.toLower();
+        if (beam_loadFile.rfind(".csv") == (beam_loadFile.length()-4)) {
+            beam_loadFile_csv = std::ifstream(beam_loadFile,std::ifstream::in);
+            if (!beam_loadFile_csv.good()) {
+                G4cerr << "Error when opening file '" + beam_loadFile + "', does the file exist?" << G4endl;
+                exit(1);
+            }
+            G4cout << "Opened CSV file '" + beam_loadFile + "'" << G4endl;
+        }
+        else {
+            G4cerr << "Error, the file type of '" + beam_loadFile + "' could not be determined." << G4endl;
             exit(1);
         }
     }
@@ -276,33 +298,53 @@ G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPo
     return floatData;
 }
 
+G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particleString) {
+    const G4String ION = "ion";
+    G4ParticleDefinition* particle_ret = NULL;
+    if (particleString.compare(0, ION.length(), ION) == 0) {
+        // Format: 'ion::Z,A'
+        str_size ionZpos = particleString.index("::")+2;
+        str_size ionApos = particleString.index(";")+1;
+        if (ionZpos >= particleString.length() or ionApos >= particleString.length()) {
+            G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
+            exit(1);
+        }
+        G4int ionZ, ionA;
+        try {
+            ionZ = std::stoi(particleString(ionZpos,ionApos-ionZpos));
+            ionA = std::stoi(particleString(ionApos,particleString.length()));
+        }
+        catch (const std::invalid_argument& ia) {
+            G4cerr << "Error when extracting ionZ and ionA from string '" << particleString << "'" << G4endl;
+            G4cerr << "ionZpos = " << ionZpos << G4endl;
+            G4cerr << "ionApos = " << ionApos << G4endl;
+            exit(1);
+        }
+        G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
+        particle_ret = ionTable->GetIon(ionZ,ionA);
+    }
+    else {
+        particle_ret = particleTable->FindParticle(particleString);
+    }
+    return particle_ret;
+}
+
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
     if (anEvent->GetEventID() == 0) {
-        G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-        G4IonTable* ionTable = G4IonTable::GetIonTable();
-        G4String ION = "ion";
-        if (beam_type.compare(0, ION.length(), ION) == 0) {
-            // Format: 'ion::Z,A'
-            str_size ionZpos = beam_type.index("::")+2;
-            str_size ionApos = beam_type.index(",")+1;
-            if (ionZpos >= beam_type.length() or ionApos >= beam_type.length()) {
-                G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
-                exit(1);
-            }
-            G4int ionZ = std::stoi(beam_type(ionZpos,ionApos-ionZpos));
-            G4int ionA = std::stoi(beam_type(ionApos,beam_type.length()));
-            G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
-            particle = ionTable->GetIon(ionZ,ionA);
-        }
-        else {
-            particle = particleTable->FindParticle(beam_type);
-        }
+        particleTable = G4ParticleTable::GetParticleTable();
+        ionTable = G4IonTable::GetIonTable();
+        
+        particle = NULL;
+        particle = parseParticleName(beam_type);
         if (particle == NULL) {
             G4cerr << "Error - particle named '" << beam_type << "' not found" << G4endl;
             //particleTable->DumpTable();
             exit(1);
         }
+        PDG   = get_beam_particlePDG();
+        PDG_Q = get_beam_particlecharge();
+
         particleGun->SetParticleDefinition(particle);
 
         G4cout << G4endl;
@@ -310,14 +352,19 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         G4cout << "Distance to target   = " << (-beam_zpos - Detector->getTargetThickness()/2.0)/mm << "[mm]" << G4endl;
         G4cout << G4endl;
 
+        //If needed, setup the covariance matrices for beam generation
         if (covarianceString != "") {
             hasCovariance = true;
             setupCovariance();
         }
+
+        //If needed, setup the RNG
         if (covarianceString != "" or Rcut != 0.0 or (beam_energy_min >= 0.0 and beam_energy_max > 0.0)) {
             RNG = new TRandom1((UInt_t) rngSeed);
         }
-    }
+
+	
+    } //END first-event setup
 
     if (hasCovariance) {
         int loopCounter = 0;
@@ -374,6 +421,63 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
         z = beam_zpos*cos(beam_angle/rad);
     }
+    else if (beam_loadFile) {
+        if (beam_loadFile_csv.is_open()) {
+            if (beam_loadFile_csv.eof()) {
+                G4cerr << "ERROR: Got EOF while reading file, event/line no. " << anEvent->GetEventID() << G4endl << G4endl;
+                exit(1);
+            }
+
+            std::string line;
+            std::getline(beam_loadFile_csv,line);
+
+            std::stringstream lineStream(line);
+            std::string word;
+            try {
+                //G4cout << "Line='" << line << "' -> Words: '";
+
+                std::getline(lineStream,word,',');
+                G4String particle_name = word;
+                particle = parseParticleName(particle_name);
+                if (particle==NULL) {
+                    G4cerr << "ERROR when parsing particle name '" + particle_name + "'." << G4endl;
+                    exit(1);
+                }
+                PDG   = get_beam_particlePDG();
+                PDG_Q = get_beam_particlecharge();
+                particleGun->SetParticleDefinition(particle);
+                
+
+                std::getline(lineStream,word,',');
+                x = std::stod(word)*mm;
+                //G4cout << word << "','";
+
+                std::getline(lineStream,word,',');
+                xp = std::stod(word);
+                //G4cout << word << "','";
+
+                std::getline(lineStream,word,',');
+                y = std::stod(word)*mm;
+                //G4cout << word << "','";
+
+                std::getline(lineStream,word,',');
+                yp = std::stod(word);
+                //G4cout << word << "','";
+
+                std::getline(lineStream,word,',');
+                z = std::stod(word)*mm;
+                //G4cout << word << "','";
+
+                std::getline(lineStream,word,',');
+                E = std::stod(word)*MeV;
+                //G4cout << word << "'" << G4endl;
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cerr << "Error when parsing line '" + line + "'" << G4endl;
+                exit(1);
+            }
+        }
+    }
     else {
         x  = beam_offset;
         xp = 0.0;
@@ -397,13 +501,22 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     //  This works: With beam_angle, it hits (0,0,0) perfectly even at large angles.
     particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
 
-    if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {
-        E = beam_energy_min+RNG->Uniform()*(beam_energy_max-beam_energy_min);
-        E *= MeV;
-    }
-    else {
-        E = beam_energy*MeV;
+    if (not beam_loadFile) {
+        if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {
+            E = beam_energy_min+RNG->Uniform()*(beam_energy_max-beam_energy_min);
+            E *= MeV;
+        }
+        else {
+            E = beam_energy*MeV;
+        }
     }
     particleGun->SetParticleEnergy(E); //Setting the kinetic energy (E>0 is valid)
     particleGun->GeneratePrimaryVertex(anEvent);
+
+}
+
+void PrimaryGeneratorAction::endOfRun() {
+    if (beam_loadFile_csv) {
+        beam_loadFile_csv.close();
+    }
 }
