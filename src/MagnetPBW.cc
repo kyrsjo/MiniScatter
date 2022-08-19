@@ -134,15 +134,12 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
 
 void MagnetPBW::Construct() {
     if (this->mainLV != NULL) {
-        G4cerr << "Error in MagnetPBW::Construct(): The mainLV has already been constructed?" << G4endl;
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1000",FatalException,"Internal error -- The mainLV has already been constructed?");
     }
 
     //Sanity checks on dimensions
     if (radius > detCon->getWorldSizeX()/2 || radius > detCon->getWorldSizeY()/2) {
-        G4cerr << "Error in MagnetPBW::Construct():" << G4endl
-               << " The absorber is bigger than the world volume."  << G4endl;
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1001",FatalException,"The absorber is bigger than the world volume.");
     }
 
     this->mainLV = MakeNewMainLV("main",width,height);
@@ -157,15 +154,13 @@ void MagnetPBW::Construct() {
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
-        G4cerr << "Error when setting material '"
-               << targetMaterialName << "' for MagnetPBW '"
-               << magnetName << "' -- not found!" << G4endl;
+        G4String errormessage = "Error when setting material '" + targetMaterialName + "' for MagnetPBW, it was not found.\n";
+        errormessage += "Valid choices:\n";
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
-        G4cerr << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            G4cerr << mat->GetName() << G4endl;
+            errormessage += mat->GetName() + "\n";
         }
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1002",FatalException,errormessage);
     }
 
     G4RotationMatrix* pRot = new G4RotationMatrix();
