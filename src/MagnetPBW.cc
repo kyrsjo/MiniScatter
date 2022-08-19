@@ -47,9 +47,6 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         else if (it.first == "al2Thick") {
             al2Thick = ParseDouble(it.second, "Al 2 Thickness") * mm;
         }
-        else if (it.first == "startPhi") {
-            startPhi = ParseDouble(it.second, "Window Start Angle") * deg;
-        }
         else if (it.first == "arcPhi") {
             arcPhi = ParseDouble(it.second, "Window Arc Angle") * deg;
         }
@@ -71,8 +68,6 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
                << gradient << " [T/m]" << G4endl;
         exit(1);
     }
-
-    thickness = al1Thick + waterThick + al2Thick;
 
     //Error catching
     if (length != 0.0) {
@@ -105,27 +100,18 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
                << width / mm << " [mm]" << G4endl; 
         exit(1);
     }
-    if (startPhi / deg < 0.0 || startPhi / deg > 85.0) {
-        G4cerr << "Invalid arc angle for PBW: StartPhi must be within: 0 >= startPhi <= 85, but was "
-               << startPhi / deg << " [deg]" << G4endl; 
-        exit(1);
-    }
-    if (arcPhi / deg < 15.0 || arcPhi / deg > 180.0) {
-        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 15 <= arcPhi <= 180, but was "
+    if (arcPhi / deg < 30.0 || arcPhi / deg > 180.0) {
+        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 30 <= arcPhi <= 180, but was "
                << arcPhi / deg << " [deg]" << G4endl; 
         exit(1);
     }
-    if (startPhi / deg + arcPhi / deg <= 100.0 || startPhi / deg + arcPhi / deg >= 180.0 ) {
-        G4cerr << "Invalid angles for PBW: StartPhi + arcPhi must be >= 100.0 and <= 180, but was "
-               << arcPhi / deg << " [deg] + " << startPhi / deg << " [deg] = " 
-               << arcPhi / deg + startPhi / deg << " [deg] " << G4endl; 
-        exit(1);
-    }
 
-    //Calculate dimensions for mainLV box and z distance for positioning
+    //Calculate dimensions for mainLV box and positioning
+    thickness = al1Thick + waterThick + al2Thick;
+    startPhi = rightAng/rad - (arcPhi/rad * 0.5);
     length = radius * (1 - cos(arcPhi/rad * 0.5)) + thickness;
     height = 2 * sin(arcPhi/rad * 0.5) * (radius + thickness);
-    z = radius * cos(arcPhi/rad * 0.5) + length * 0.5; //do python notebook of graphing
+    boxCenter = radius * cos(arcPhi/rad * 0.5) + length * 0.5;
 
     PrintCommonParameters();
     G4cout << "\t targetMaterialName      = " << targetMaterialName <<             G4endl;
@@ -134,12 +120,14 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
     G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
     G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
-    G4cout << "\t startPhi                = " << startPhi/deg       << " [deg]" << G4endl;
     G4cout << "\t arcPhi                  = " << arcPhi/deg         << " [deg]" << G4endl;
     G4cout << "\t PBW Width               = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t Calculated Values:" << G4endl;
     G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
     G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
-    G4cout << "\t z                       = " << z/mm               << " [mm]"  << G4endl;
+    G4cout << "\t Box Center              = " << boxCenter/mm       << " [mm]"  << G4endl;
+    G4cout << "\t The PBW first surface " << G4endl;
+    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm]"  << G4endl;
 
 }
 
@@ -188,7 +176,7 @@ void MagnetPBW::Construct() {
                                                       magnetName+"_targetLV");
 
     G4PVPlacement*    targetPV  = new G4PVPlacement   (pRot,
-                                                      G4ThreeVector(0.0, 0.0, z),
+                                                      G4ThreeVector(0.0, 0.0, boxCenter),
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
