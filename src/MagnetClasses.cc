@@ -314,7 +314,7 @@ void MagnetBase::ParseOffsetRot(G4String k, G4String v) {
 void MagnetBase::PrintCommonParameters() {
     G4cout << " Initialized a '" << magnetType << "', parameters:"  <<             G4endl;
     G4cout << "\t magnetName              = " << magnetName         <<             G4endl;
-    G4cout << "\t Z0                      = " << getZ0()/mm         << " [mm]"  << G4endl;
+    G4cout << "\t pos                     = " << getZ0()/mm         << " [mm]"  << G4endl;
     G4cout << "\t length                  = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t gradient                = " << gradient           << " [T/m]" << G4endl;
     G4cout << "\t xOffset                 = " << xOffset/mm         << " [mm]"  << G4endl;

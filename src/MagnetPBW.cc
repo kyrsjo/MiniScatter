@@ -120,15 +120,16 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     G4cout << "\t al1Thick                = " << al1Thick/mm        << " [mm]"  << G4endl;
     G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
     G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
-    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
     G4cout << "\t arcPhi                  = " << arcPhi/deg         << " [deg]" << G4endl;
     G4cout << "\t PBW Width               = " << width/mm           << " [mm]"  << G4endl;
     G4cout << "\t Calculated Values:" << G4endl;
+    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
     G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
     G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t Box Center              = " << boxCenter/mm       << " [mm]"  << G4endl;
     G4cout << "\t The PBW first surface " << G4endl;
-    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm]"  << G4endl;
+    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm] from the given pos [mm]."  << G4endl;
+    G4cout << "\t Note that element length is computed based on radius, thickness, and arcPhi." << G4endl;
 
 }
 
