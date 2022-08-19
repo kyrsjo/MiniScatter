@@ -1986,11 +1986,11 @@ void RootFileWriter::finalizeRootFile() {
     for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
         delete tracker_phasespaceX[idx]; tracker_phasespaceX[idx] = NULL;
         delete tracker_phasespaceY[idx]; tracker_phasespaceY[idx] = NULL;
-	      delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
-	
+        delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
+
         delete tracker_phasespaceX_cutoff[idx]; tracker_phasespaceX_cutoff[idx] = NULL;
         delete tracker_phasespaceY_cutoff[idx]; tracker_phasespaceY_cutoff[idx] = NULL;
-	      delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
+        delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
 
         for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
             delete PDG.second;
@@ -2002,7 +2002,7 @@ void RootFileWriter::finalizeRootFile() {
         }
         tracker_phasespaceY_cutoff_PDG[idx].clear();
 
-	      for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
+        for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
             delete PDG.second;
         }
         tracker_phasespaceXY_cutoff_PDG[idx].clear();

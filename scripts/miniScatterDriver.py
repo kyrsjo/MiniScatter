@@ -142,6 +142,12 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
         else:
             assert simSetup["QUICKMODE"] == False
 
+    if "ANASCATTER" in simSetup:
+        if simSetup["ANASCATTER"] == True:
+            cmd += ["--anaScatterTest"]
+        else:
+            assert simSetup["ANASCATTER"] == False
+            
     if "MINIROOT" in simSetup:
         if simSetup["MINIROOT"] == True:
             cmd += ["--miniroot"]

@@ -211,10 +211,10 @@ int main(int argc,char** argv) {
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
+                                           {"histPosLim",            required_argument, NULL, 1005 }, 
+                                           {"histAngLim",            required_argument, NULL, 1006 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {"object",                required_argument, NULL, 1100 }, //synonymous with --magnet
-                                           {"histPosLim",            required_argument, NULL, 1025 }, 
-                                           {"histAngLim",            required_argument, NULL, 1026 },
                                            {0,0,0,0}
     };
 
@@ -588,12 +588,8 @@ int main(int argc,char** argv) {
                 G4cout << "engNbins must be >= 0" << G4endl;
             }
             break;
-
-        case 1100: // Object/Magnet definition
-            magnetDefinitions.push_back(string(optarg));
-            break;
-
-        case 1025: // Position Histogram Limit change
+            
+        case 1005: // Position Histogram Limit change
             try {
                 histPosLim = std::stod(string(optarg));
             }
@@ -605,7 +601,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1026: // Angle Histogram Limit change
+        case 1006: // Angle Histogram Limit change
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -615,6 +611,10 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number!" << G4endl;
                 exit(1);
             }
+            break;
+
+        case 1100: // Object/Magnet definition
+            magnetDefinitions.push_back(string(optarg));
             break;
         
         default: // WTF?
@@ -1157,6 +1157,18 @@ void printHelp(G4double target_thick,
                    << "\t     zScint:    Scintillator position (<double> [mm])" << G4endl
                    << "\t     riShield:  Shield inner radius (<double> [mm])" << G4endl
                    << "\t     roShield:  Shield outer radius (<double> [mm])" << G4endl
+                   << G4endl
+                   << "\t   'PBW':" << G4endl
+                   << "\t     Models the ESS Proton Beam Window, no field." << G4endl
+                   << "\t     User must set pos to be >half length of object, see parameter initialization." << G4endl
+                   << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
+                   << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
+                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0 [mm]" << G4endl
+                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0 [mm]" << G4endl
+                   << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
+                   << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
+                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
+                   << "\t\t\t\t arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;

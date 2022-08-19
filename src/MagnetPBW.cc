@@ -11,19 +11,20 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a cop//180,180 + 240,60 is greaty of the GNU General Public License
+ *  You should have received a copy of the GNU General Public License
  *  along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "MagnetClasses.hh"
 
-#include "G4Box.hh"
 #include "G4Tubs.hh"
-#include "G4SubtractionSolid.hh"
 
 #include "G4PVPlacement.hh"
 #include "G4Colour.hh"
 #include "G4VisAttributes.hh"
+#include "G4Material.hh"
+
+#include <cmath>
 
 MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
                             std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
@@ -36,6 +37,21 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         }
         else if (it.first == "material") {
             targetMaterialName = it.second;
+        }
+        else if (it.first == "al1Thick") {
+            al1Thick = ParseDouble(it.second, "Al 1 Thickness") * mm;
+        }
+        else if (it.first == "waterThick") {
+            waterThick = ParseDouble(it.second, "water Thickness") * mm;
+        }
+        else if (it.first == "al2Thick") {
+            al2Thick = ParseDouble(it.second, "Al 2 Thickness") * mm;
+        }
+        else if (it.first == "arcPhi") {
+            arcPhi = ParseDouble(it.second, "Window Arc Angle") * deg;
+        }
+        else if (it.first == "width") {
+            arcPhi = ParseDouble(it.second, "Window Width") * mm;
         }
         else if (it.first == "xOffset" || it.first == "yOffset" || it.first == "xRot" || it.first == "yRot") {
             ParseOffsetRot(it.first, it.second);
@@ -53,9 +69,66 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
         exit(1);
     }
 
+    //Error catching
+    if (length != 0.0) {
+        G4cerr << "Invalid length for PBW: Length must be 0.0, but was "
+               << length / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (radius <= 0.0) {
+        G4cerr << "Invalid radius for PBW: Radius must be > 0.0, but was "
+               << radius / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (al1Thick <= 0.0) {
+        G4cerr << "Invalid al1Thick for PBW: Al1Thick must be > 0.0, but was "
+               << al1Thick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (waterThick <= 0.0) {
+        G4cerr << "Invalid waterThick for PBW: WaterThick must be > 0.0, but was "
+               << waterThick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (al2Thick <= 0.0) {
+        G4cerr << "Invalid al2Thick for PBW: Al2Thick must be > 0.0, but was "
+               << al2Thick / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (width <= 0.0) {
+        G4cerr << "Invalid width for PBW: Width must be > 0.0, but was "
+               << width / mm << " [mm]" << G4endl; 
+        exit(1);
+    }
+    if (arcPhi / deg < 0.0 || arcPhi / deg > 180.0) {
+        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 0 <= arcPhi <= 180, but was "
+               << arcPhi / deg << " [deg]" << G4endl; 
+        exit(1);
+    }
+
+    //Calculate dimensions for mainLV box and positioning
+    thickness = al1Thick + waterThick + al2Thick;
+    startPhi = rightAng/rad - (arcPhi/rad * 0.5);
+    waterStartPhi = rightAng/rad - (arcPhi/rad * 0.25);
+    length = radius * (1 - cos(arcPhi/rad * 0.5)) + thickness;
+    height = 2 * sin(arcPhi/rad * 0.5) * (radius + thickness);
+    boxCenter = radius * cos(arcPhi/rad * 0.5) + length * 0.5;
+
     PrintCommonParameters();
     G4cout << "\t targetMaterialName      = " << targetMaterialName <<             G4endl;
     G4cout << "\t inner radius            = " << radius/mm          << " [mm]"  << G4endl;
+    G4cout << "\t al1Thick                = " << al1Thick/mm        << " [mm]"  << G4endl;
+    G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
+    G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
+    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
+    G4cout << "\t arcPhi                  = " << arcPhi/deg         << " [deg]" << G4endl;
+    G4cout << "\t PBW Width               = " << width/mm           << " [mm]"  << G4endl;
+    G4cout << "\t Calculated Values:" << G4endl;
+    G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
+    G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
+    G4cout << "\t Box Center              = " << boxCenter/mm       << " [mm]"  << G4endl;
+    G4cout << "\t The PBW first surface " << G4endl;
+    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm]"  << G4endl;
 
 }
 
@@ -72,12 +145,15 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    this->mainLV = MakeNewMainLV("main",2*radius, 2*radius);
+    this->mainLV = MakeNewMainLV("main",width,height);
 
     // Build the target (PBW)
-    G4VSolid* targetSolid      = new G4Tubs(magnetName+"_targetS",
-                                            radius, radius+4.25, length/2.0,
-                                            30.0*deg, 120.0*deg);
+    G4VSolid* targetSolid = new G4Tubs(magnetName+"_targetS",
+                                      radius,
+                                      radius + thickness,
+                                      width * 0.5,
+                                      startPhi/rad,
+                                      arcPhi/rad);
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
@@ -92,20 +168,22 @@ void MagnetPBW::Construct() {
         exit(1);
     }
 
-    //Define rotation so PBW is oriented correct with no user modification
     G4RotationMatrix* pRot = new G4RotationMatrix();
     pRot->rotateX(90.0*deg);
     pRot->rotateY(90.0*deg);
 
-    G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,targetMaterial, magnetName+"_targetLV");
+    G4LogicalVolume*  targetLV  = new G4LogicalVolume (targetSolid,
+                                                      targetMaterial,
+                                                      magnetName+"_targetLV");
+
     G4PVPlacement*    targetPV  = new G4PVPlacement   (pRot,
-                                                      G4ThreeVector(0.0,0.0,radius+5.0), //beam origin is 5mm before PBW
+                                                      G4ThreeVector(0.0, 0.0, boxCenter),
                                                       targetLV,
                                                       magnetName + "_targetPV",
                                                       mainLV,
                                                       false,
                                                       0,
-                                                      false);
+                                                      true);
     if(targetPV->CheckOverlaps()) {
         G4String errormessage = "Overlap detected when placing targetPV for magnet \n"
             "\t'" + magnetName + "' of type '" + magnetType + "'\n"
@@ -114,16 +192,20 @@ void MagnetPBW::Construct() {
     }
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
-                                                      radius+1.25, radius+3.25, (length)/2.0,
-                                                      60.0*deg,60.0*deg);
+                                                      radius + al2Thick,
+                                                      radius + (al2Thick + waterThick),
+                                                      width * 0.5,
+                                                      waterStartPhi/rad,
+                                                      arcPhi/rad * 0.5);
 
     G4LogicalVolume*    waterLV = new G4LogicalVolume (waterSolid,G4Material::GetMaterial("G4_WATER"),
                                                       magnetName + "_waterLV");
+
     G4PVPlacement*      waterPV = new G4PVPlacement   (NULL,
-                                                      G4ThreeVector(0.0,0.0,0.0),
+                                                      G4ThreeVector(0.0, 0.0, 0.0),
                                                       waterLV,
                                                       magnetName + "_waterPV",
-                                                      targetLV,               //Mother volume is targetSolidLV!
+                                                      targetLV,           //mother volume is targetLV!
                                                       false,
                                                       0,
                                                       true);
@@ -146,4 +228,3 @@ void MagnetPBW::Construct() {
     ConstructDetectorLV();
     BuildMainPV_transform();
 }
-
