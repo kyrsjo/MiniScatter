@@ -18,7 +18,11 @@
 #include "RunAction.hh"
 
 #include "G4Run.hh"
+#include "G4RunManager.hh"
+
 #include "RootFileWriter.hh"
+#include "PrimaryGeneratorAction.hh"
+
 
 
 //--------------------------------------------------------------------------------
@@ -44,6 +48,10 @@ void RunAction::BeginOfRunAction(const G4Run*) {
 
 void RunAction::EndOfRunAction(const G4Run*) {
     RootFileWriter::GetInstance()->finalizeRootFile();
+
+    G4RunManager*           run    = G4RunManager::GetRunManager();
+    PrimaryGeneratorAction* genAct = (PrimaryGeneratorAction*)run->GetUserPrimaryGeneratorAction();
+    genAct->endOfRun();
 }
 
 //--------------------------------------------------------------------------------

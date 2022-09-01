@@ -82,6 +82,7 @@ void printHelp(G4double target_thick,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
+               G4String beam_loadfile,
                G4int    rngSeed,
                G4String filename_out,
                G4String foldername_out,
@@ -152,6 +153,8 @@ int main(int argc,char** argv) {
     G4String covarianceString = "";               // Beam covariance matrix parameters
     G4double beam_rCut = 0.0;                     // Beam distribution radial cutoff
 
+    G4String beam_loadFile = "";                  // Filename to load beam distribution from
+
     G4String physListName = "QGSP_FTFP_BERT";     // Name of physics list to use
     G4double physCutoffDist = 0.1;                // Default physics cutoff distance [mm]
 
@@ -199,6 +202,7 @@ int main(int argc,char** argv) {
                                            {"beamAngle",             required_argument, NULL, 1500 },
                                            {"covar",                 required_argument, NULL, 'c'  },
                                            {"beamRcut",              required_argument, NULL, 1200 },
+                                           {"beamFile",              required_argument, NULL, 1700 },
                                            {"outname",               required_argument, NULL, 'f'  },
                                            {"outfolder",             required_argument, NULL, 'o'  },
                                            {"seed",                  required_argument, NULL, 's'  },
@@ -241,6 +245,7 @@ int main(int argc,char** argv) {
                       covarianceString,
                       beam_rCut,
                       doBacktrack,
+                      beam_loadFile,
                       rngSeed,
                       filename_out,
                       foldername_out,
@@ -484,12 +489,12 @@ int main(int argc,char** argv) {
             }
             break;
         
-        case 'c': //Beam covariance matrix from Twiss parameters
+        case 'c': // --covar ; Beam covariance matrix from Twiss parameters
             //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
             break;
 
-        case 1200: //Beam radial cutoff [mm]
+        case 1200: // --beamRcut ; Beam radial cutoff [mm]
             try {
                 beam_rCut = std::stod(string(optarg));
             }
@@ -501,7 +506,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'f': //Output filename
+        case 1700: //  --beamFile ; Input filename to load beam from
+            beam_loadFile = G4String(optarg);
+            break;
+
+        case 'f': // --outname ; Output filename
             filename_out = G4String(optarg);
             break;
 
@@ -653,6 +662,7 @@ int main(int argc,char** argv) {
               covarianceString,
               beam_rCut,
               doBacktrack,
+              beam_loadFile,
               rngSeed,
               filename_out,
               foldername_out,
@@ -770,7 +780,8 @@ int main(int argc,char** argv) {
                                                                     beam_rCut,
                                                                     rngSeed,
                                                                     beam_eFlat_min,
-                                                                    beam_eFlat_max);
+                                                                    beam_eFlat_max,
+                                                                    beam_loadFile);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -898,6 +909,7 @@ void printHelp(G4double target_thick,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
+               G4String beam_loadFile,
                G4int    rngSeed,
                G4String filename_out,
                G4String foldername_out,
@@ -992,7 +1004,7 @@ void printHelp(G4double target_thick,
                    << "\t Particle type" << G4endl
                    << "\t This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
                    << "\t typcial examples are 'e-', 'proton', 'gamma'." << G4endl
-                   << "\t Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl
+                   << "\t Ions can also be specified as 'ion::Z;A' where Z and A are the nucleus charge and mass number." << G4endl
                    << "\t Default/current value = '" << beam_type << "'" << G4endl << G4endl;
 
             G4cout << " --xoffset/-x <double>" << G4endl
@@ -1029,6 +1041,18 @@ void printHelp(G4double target_thick,
                    << "\t If given together with --covar/-c, generate a multivariate gaussian" << G4endl
                    << "\t with all particles starting within the given radius." << G4endl
                    << "\t Default/current value = " << beam_rCut << G4endl << G4endl;
+
+            G4cout << " --beamFile <string>" << G4endl
+                   << "\t Filename to load the initial beam distribution from." << G4endl
+                   << "\t Only the --zoffset flag is taken into account;" << G4endl
+                   << "\t  the other beam-relevant flags are ignored." << G4endl
+                   << "\t The flags --energy and --beam is only used for reference energy in Twiss etc." << G4endl
+                   << "\t Note that the number of particles in the file must be at least as big as --numEvents."
+                   << "\t Expected format is determined from file ending, possibilities are:" << G4endl
+                   << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
+                   << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>"
+                   << "\t\t       Here the particle_type is specified in the same way as in --beam."
+                   << "\t Default/current value = \"" << beam_loadFile << "\"" << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl
                    << "\t Set the initial seed, 0->use the clock etc." << G4endl
