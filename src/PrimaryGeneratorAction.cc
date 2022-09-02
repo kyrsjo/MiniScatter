@@ -87,6 +87,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
 
     //Sanity check
     if (beam_loadFile != "") {
+        beam_loadFromFile = true;
+
         if ( (beam_offset != 0.0) || (beam_angle != 0.0) || (covarianceString != "") || (Rcut != 0.0) || (beam_energy_min != -1) || (beam_energy_max != -1) ) {
             G4cerr << "Error, user specified a flag which is incompatible with --beamFile." << G4endl;
             exit(1);
@@ -421,7 +423,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
         z = beam_zpos*cos(beam_angle/rad);
     }
-    else if (beam_loadFile) {
+    else if (beam_loadFromFile) {
         if (beam_loadFile_csv.is_open()) {
             if (beam_loadFile_csv.eof()) {
                 G4cerr << "ERROR: Got EOF while reading file, event/line no. " << anEvent->GetEventID() << G4endl << G4endl;
@@ -501,7 +503,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     //  This works: With beam_angle, it hits (0,0,0) perfectly even at large angles.
     particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
 
-    if (not beam_loadFile) {
+    if (not beam_loadFromFile) {
         if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {
             E = beam_energy_min+RNG->Uniform()*(beam_energy_max-beam_energy_min);
             E *= MeV;
@@ -512,7 +514,6 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     }
     particleGun->SetParticleEnergy(E); //Setting the kinetic energy (E>0 is valid)
     particleGun->GeneratePrimaryVertex(anEvent);
-
 }
 
 void PrimaryGeneratorAction::endOfRun() {
