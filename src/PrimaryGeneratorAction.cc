@@ -23,6 +23,7 @@
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4String.hh"
+#include "G4Exception.hh"
 
 #include <iostream>
 #include <cmath>
@@ -69,19 +70,18 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
         beam_zpos *= mm;
 
         //Sanity check
-        if (beam_zpos >= - Detector->getTargetThickness() / 2.0) {
-            G4cout << "Beam starting position = " << beam_zpos/mm
-                   << " [mm] is not behind target back plane = "
-                   << - Detector->getTargetThickness() / 2.0 / mm<< " [mm]"
-                   << G4endl;
-            exit(1);
+        if (beam_zpos >= -1*Detector->getTargetThickness() / 2.0) {
+            G4cout << Detector->getWorldSizeZ()/mm << G4endl;
+            G4String errormessage = "Beam starting position = " + std::to_string(beam_zpos/mm) + " [mm] "
+                + "is not behind target back plane = " + std::to_string(-1*Detector->getTargetThickness() / 2.0 / mm) + " [mm]";
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1000",FatalException,errormessage);
         }
-        if (beam_zpos <= - Detector->getWorldSizeZ()/2.0) {
-            G4cout << "Beam starting position = " << beam_zpos/mm
-                   << " [mm] is behind world back plane = "
-                   << - Detector->getWorldSizeZ() / 2.0 / mm<< " [mm]"
-                   << G4endl;
-            exit(1);
+        if (beam_zpos <= -1*Detector->getWorldSizeZ()/2.0) {
+            //We try to make this impossible by taking the beam_zpos into account when constructing the world
+            G4String errormessage = "Beam starting position = " + std::to_string(beam_zpos/mm) + " [mm] "
+                + "is behind world back plane = " + std::to_string(-1*Detector->getWorldSizeZ() / 2.0 / mm) + " [mm]";
+            
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1010",FatalException,errormessage);
         }
     }
 
@@ -90,60 +90,55 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
         beam_loadFromFile = true;
 
         if ( (beam_offset != 0.0) || (beam_angle != 0.0) || (covarianceString != "") || (Rcut != 0.0) || (beam_energy_min != -1) || (beam_energy_max != -1) ) {
-            G4cerr << "Error, user specified a flag which is incompatible with --beamFile." << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1020",FatalException,
+                "Error, user specified a flag which is incompatible with --beamFile.");
         }
         G4String beam_loadFile_lower = beam_loadFile;
         beam_loadFile_lower.toLower();
         if (beam_loadFile.rfind(".csv") == (beam_loadFile.length()-4)) {
             beam_loadFile_csv = std::ifstream(beam_loadFile,std::ifstream::in);
             if (!beam_loadFile_csv.good()) {
-                G4cerr << "Error when opening file '" + beam_loadFile + "', does the file exist?" << G4endl;
-                exit(1);
+                G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1030",FatalException,
+                    G4String("Error when opening file '" + beam_loadFile + "', does the file exist?"));
             }
             G4cout << "Opened CSV file '" + beam_loadFile + "'" << G4endl;
         }
+        //TODO: Support other formats, e.g. .root and .h5
         else {
-            G4cerr << "Error, the file type of '" + beam_loadFile + "' could not be determined." << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1040",FatalException,
+                G4String("Error, the file type of '" + beam_loadFile + "' could not be determined."));
         }
     }
 
     //Sanity check
     if (abs(beam_offset) > Detector->getWorldSizeX()/2.0) {
-        G4cout << "Beam offset = " << beam_offset/mm
-                   << " [mm] is outside of world volume, max = world size / 2 = "
-                   << Detector->getWorldSizeX() / 2.0 / mm<< " [mm]"
-                   << G4endl;
-            exit(1);
+        G4String errormessage = "Beam offset = " + std::to_string(beam_offset/mm) +
+            " [mm] is outside of world volume, max = world size / 2 = " +
+            std::to_string(Detector->getWorldSizeX() / 2.0 / mm) + " [mm]";
+        G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1050",FatalException,errormessage);
     }
 
     //Sanity check
     if(abs(beam_angle) != 0.0) {
         if (abs(beam_angle_in) >= 90.0) {
-            G4cout << "Beam angles >= 90 degrees are not supported."
-                   << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1060",FatalException,
+                G4String("Beam angles >= 90 degrees are not supported, got " + std::to_string(beam_angle_in) + "."));
         }
         if (covarianceString != "") {
-            G4cout << "Beam angle and covariance matrix cannot be used together."
-                   << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1070",FatalException,
+                "Beam angle and covariance matrix cannot be used together.");
         }
         if (Rcut != 0.0)  {
-            G4cout << "Beam angle and Rcut cannot be used together."
-                   << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1080",FatalException,
+                "Beam angle and Rcut cannot be used together.");
         }
         if (beam_offset != 0.0) {
-            G4cout << "Beam angle and beam offset cannot be used together."
-                   << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1090",FatalException,
+                "Beam angle and beam offset cannot be used together.");
         }
         if (doBacktrack) {
-            G4cout << "Beam angle and backtracking cannot be used together."
-                   << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1100",FatalException,
+                "Beam angle and backtracking cannot be used together.");
         }
     }
 }
@@ -275,10 +270,8 @@ void PrimaryGeneratorAction::setupCovariance() {
 }
 G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPos, G4String paramName) {
     if (endPos == std::string::npos) {
-        G4cout << "PrimaryGeneratorAction::convertColons():" << G4endl
-               << " Error while searching for " << paramName << " in '"
-               << covarianceString << "'" << G4endl;
-        exit(1);
+        G4String errormessage = "Error while searching for " + paramName + " in '" + covarianceString + "'";
+        G4Exception("PrimaryGeneratorAction::convertColons()", "MSPrimaryGenerator2000",FatalException,errormessage);
     }
     G4String floatString = covarianceString(startPos,endPos-startPos);
 
@@ -287,8 +280,8 @@ G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPo
         floatData = std::stod(std::string(floatString));
     }
     catch (const std::invalid_argument& ia) {
-        G4cerr << "Invalid float in data '" << floatData << "'" << G4endl;
-        exit(1);
+        G4Exception("PrimaryGeneratorAction::convertColons()", "MSPrimaryGenerator2010",FatalException,
+            G4String("Invalid float in data '" + floatString + "'"));
     }
 
     /*
@@ -308,8 +301,8 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
         str_size ionZpos = particleString.index("::")+2;
         str_size ionApos = particleString.index(";")+1;
         if (ionZpos >= particleString.length() or ionApos >= particleString.length()) {
-            G4cerr << "Error in parsing ion string; expected format: 'ion::Z,A'" << G4endl;
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3000",FatalException,
+                "Error in parsing ion string; expected format: 'ion::Z,A'");
         }
         G4int ionZ, ionA;
         try {
@@ -317,10 +310,10 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
             ionA = std::stoi(particleString(ionApos,particleString.length()));
         }
         catch (const std::invalid_argument& ia) {
-            G4cerr << "Error when extracting ionZ and ionA from string '" << particleString << "'" << G4endl;
-            G4cerr << "ionZpos = " << ionZpos << G4endl;
-            G4cerr << "ionApos = " << ionApos << G4endl;
-            exit(1);
+            G4String errormessage = "Error when extracting ionZ and ionA from string '" + particleString + "'\n"
+                + "ionZpos = " + std::to_string(ionZpos) + '\n'
+                + "ionApos = " + std::to_string(ionApos);
+            G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3010",FatalException, errormessage);
         }
         G4cout << "Initializing ion with Z = " << ionZ << ", A = " << ionA << G4endl;
         particle_ret = ionTable->GetIon(ionZ,ionA);
@@ -340,9 +333,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         particle = NULL;
         particle = parseParticleName(beam_type);
         if (particle == NULL) {
-            G4cerr << "Error - particle named '" << beam_type << "' not found" << G4endl;
-            //particleTable->DumpTable();
-            exit(1);
+            G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4000",FatalException,
+                G4String("Error - particle named '" + beam_type + "' not found"));
         }
         PDG   = get_beam_particlePDG();
         PDG_Q = get_beam_particlecharge();
@@ -389,15 +381,12 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 // No hit; do the anti-hang check.
                 loopCounter++;
                 if (loopCounter == 10000) {
-                    G4cerr << "Warning in PrimaryGeneratorAction::GeneratePrimaries():" << G4endl
-                           << " Number of iterations for the Rcut = " << Rcut/mm << " [mm]"
-                           << " has reached 10k." << G4endl;
+                    G4String errormessage = "Number of iterations for the Rcut = " + std::to_string(Rcut/mm) + " [mm] has reached 10k.";
+                    G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4010",JustWarning, errormessage);
                 }
                 else if (loopCounter > 1000000) {
-                    G4cerr << "Error in PrimaryGeneratorAction::GeneratePrimaries():" << G4endl
-                           << " Number of iterations for the Rcut = " << Rcut/mm << " [mm]"
-                           << " has reached 1M. Aborting." << G4endl;
-                    exit(1);
+                    G4String errormessage = "Number of iterations for the Rcut = " + std::to_string(Rcut/mm) + " [mm] has reached 1M.";
+                    G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4020",FatalException, errormessage);
                 }
             }
         }
@@ -426,8 +415,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     else if (beam_loadFromFile) {
         if (beam_loadFile_csv.is_open()) {
             if (beam_loadFile_csv.eof()) {
-                G4cerr << "ERROR: Got EOF while reading file, event/line no. " << anEvent->GetEventID() << G4endl << G4endl;
-                exit(1);
+                G4String errormessage = "Got EOF while reading file, event/line no. " + std::to_string( anEvent->GetEventID() );
+                G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4030",FatalException, errormessage);
             }
 
             std::string line;
@@ -442,8 +431,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 G4String particle_name = word;
                 particle = parseParticleName(particle_name);
                 if (particle==NULL) {
-                    G4cerr << "ERROR when parsing particle name '" + particle_name + "'." << G4endl;
-                    exit(1);
+                    G4String errormessage = "ERROR when parsing particle name '" + particle_name + "', event/line no. " + std::to_string(anEvent->GetEventID());
+                    G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4040",FatalException, errormessage);
                 }
                 PDG   = get_beam_particlePDG();
                 PDG_Q = get_beam_particlecharge();
@@ -475,8 +464,8 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
                 //G4cout << word << "'" << G4endl;
             }
             catch (const std::invalid_argument& ia) {
-                G4cerr << "Error when parsing line '" + line + "'" << G4endl;
-                exit(1);
+                G4String errormessage = "Error when parsing line '" + line + "', event/line no. " + std::to_string(anEvent->GetEventID());
+                G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4050",FatalException, errormessage);
             }
         }
     }
