@@ -109,15 +109,21 @@ void MagnetCOLLIMATOR1::Construct() {
     }
 
     G4LogicalVolume*   absorberLV = new G4LogicalVolume(absorberSolid,absorberMaterial, magnetName+"_absorberLV");
-    //G4VPhysicalVolume* absorberPV =
-                                    new G4PVPlacement  (NULL,
+    G4VPhysicalVolume* absorberPV = new G4PVPlacement  (NULL,
                                                         G4ThreeVector(0.0,0.0,0.0),
                                                         absorberLV,
                                                         magnetName + "_absorberPV",
                                                         mainLV,
                                                         false,
                                                         0,
-                                                        true);
+                                                        false);
+
+    if(absorberPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing absorberPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetCOLLIMATOR1::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     ConstructDetectorLV();
     BuildMainPV_transform();

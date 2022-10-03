@@ -279,4 +279,33 @@ private:
     G4LogicalVolume* shieldingLV    = NULL;
 };
 
+// PBW -- Replica of the ESS PBW
+// A section of a cylindrical shell from startPhi to (startPhi + arcPhi) of a thickness
+// Includes a water channel in the middle from (startPhi * 2) to (startPhi * 2 + arcPhi * 0.5)
+class MagnetPBW : public MagnetBase {
+public:
+    MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G4double gradient_in,
+                    std::map<G4String,G4String> &keyValPairs_in, DetectorConstruction* detCon_in,
+                    G4String magnetName_in);
+    virtual void Construct();
+
+    virtual G4double GetTypicalDensity() const { return targetMaterial->GetDensity(); };
+
+private:
+    G4String targetMaterialName = "G4_Al";
+    G4Material* targetMaterial;
+    G4double radius = 88.0*mm;  //[G4 length units] Inner radius of cylinder, >0
+    G4double al1Thick = 1.0*mm;  //[G4 length units] Outer thickness of metal window, >0
+    G4double waterThick = 2.0*mm;  //[G4 length units] Thickness of water channel, >0
+    G4double al2Thick = 1.25*mm;  //[G4 length units] Inner thickness of metal window, >0
+    G4double thickness = 4.25*mm;  //[G4 length units] Total thicnkess
+    G4double width = 60.0*mm;  //[G4 length units] Width of cylinder as seen by PBW, >0
+    G4double height = 160.0*mm;  //[G4 length units] Height of window section, >0
+    G4double arcPhi = 120.0*deg;  // [deg] Arc angle of window section, within: 0 <= arcPhi <= 180
+    G4double startPhi = 30*deg;  // [deg] Start angle of window section, = 90 - arcPhi/2 for geometry
+    G4double waterStartPhi = 60*deg; // [deg] Start angle of water channel, = 90 - arcPhi/4 for geometry
+    G4double boxCenter = 68.125*mm;  //[G4 length units] Distance to translate PBW so center lines up with pos
+    G4double rightAng = 90*deg; //[deg] Reference for calculations
+};
+
 #endif

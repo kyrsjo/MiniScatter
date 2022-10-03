@@ -118,22 +118,37 @@ void MagnetCOLLIMATORHV::Construct() {
     G4LogicalVolume*   targetMinLV = new G4LogicalVolume(jawMin,targetMaterial, magnetName+"_targetMinLV");
     
     G4double offset = gap/2+jawThick/2;
-    new G4PVPlacement  (NULL,
-                        G4ThreeVector(isH?offset:0.0,isH?0.0:offset,0.0),
-                        targetPluLV,
-                        magnetName + "_targetPluPV",
-                        mainLV,
-                        false,
-                        0,
-                        true);
-    new G4PVPlacement  (NULL,
-                        G4ThreeVector(isH?-offset:0.0,isH?0.0:-offset,0.0),
-                        targetMinLV,
-                        magnetName + "_targetMinPV",
-                        mainLV,
-                        false,
-                        0,
-                        true);
+
+    G4PVPlacement* targetPluPV =
+        new G4PVPlacement  (NULL,
+                            G4ThreeVector(isH?offset:0.0,isH?0.0:offset,0.0),
+                            targetPluLV,
+                            magnetName + "_targetPluPV",
+                            mainLV,
+                            false,
+                            0,
+                            false);
+    if(targetPluPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing targetPluPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetCOLLIMATORHV::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
+    G4PVPlacement* targetMinPV =
+        new G4PVPlacement  (NULL,
+                            G4ThreeVector(isH?-offset:0.0,isH?0.0:-offset,0.0),
+                            targetMinLV,
+                            magnetName + "_targetMinPV",
+                            mainLV,
+                            false,
+                            0,
+                            false);
+    if(targetMinPV->CheckOverlaps()) {
+        G4String errormessage = "Overlap detected when placing targetMinPV for magnet \n"
+            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
+            "\t, see error message above for more info.";
+        G4Exception("MagnetCOLLIMATORHV::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+    }
 
     ConstructDetectorLV();
     BuildMainPV_transform();

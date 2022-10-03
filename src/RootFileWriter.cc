@@ -16,6 +16,9 @@
  */
 
 #include "RootFileWriter.hh"
+#include "MiniScatterVersion.hh"
+
+#include "TNamed.h"
 
 #include "TGraph.h"
 #include "TCanvas.h"
@@ -39,6 +42,8 @@
 
 #include "G4SystemOfUnits.hh"
 
+#include "G4Exception.hh"
+
 #include <iostream>
 #include <iomanip>
 
@@ -52,9 +57,6 @@ struct stat stat_info;
 using namespace std;
 RootFileWriter* RootFileWriter::singleton = NULL;
 
-const G4double RootFileWriter::phasespacehist_posLim = 10.0*mm;
-const G4double RootFileWriter::phasespacehist_angLim = 5.0*deg;
-
 void RootFileWriter::initializeRootFile(){
     G4RunManager*           run    = G4RunManager::GetRunManager();
     DetectorConstruction*   detCon = (DetectorConstruction*)run->GetUserDetectorConstruction();
@@ -66,8 +68,8 @@ void RootFileWriter::initializeRootFile(){
     TH2D::StatOverflows(true);
 
     if (not has_filename_out) {
-        G4cerr << "Error: filename_out not set." << G4endl;
-        exit(1);
+        G4String errormessage = "filename_out not set";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1000",FatalException,errormessage);
     }
     rootFileName = foldername_out + "/" + filename_out + ".root";
     G4cout << "foldername = '" << foldername_out << "'" << G4endl;
@@ -92,8 +94,8 @@ void RootFileWriter::initializeRootFile(){
 
                 char* cwd = get_current_dir_name();
                 if (cwd == NULL) {
-                    perror("Error getting the current path");
-                    exit(1);
+                    G4String errormessage = "Error getting the current path";
+                    G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1001",FatalException,errormessage);
                 }
 
                 if (cwd[strlen(cwd)-1] == '/') {
@@ -114,9 +116,8 @@ void RootFileWriter::initializeRootFile(){
             const char* path_full = foldername_out_full.c_str();
 
             if( strlen(path_full) < 2 ) {
-                G4cerr << "ERROR: Path string must be more than '/' (and why is '/' not existing?), got '"
-                       << path_full << "' - aborting!" << G4endl;
-                exit(1);
+                G4String errormessage = "Path string must be more than '/' (and why is '/' not existing?), got '" + G4String(path_full) + "'";
+                G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1002",FatalException,errormessage);
             }
 
             //Create the folders recursively
@@ -146,13 +147,13 @@ void RootFileWriter::initializeRootFile(){
             }
         }
         else {
-            G4cerr << "ERROR: Could not lookup folder " << foldername_out << " - aborting!" << G4endl;
-            exit(1);
+            G4String errormessage = "Could not lookup folder '" + foldername_out + "'";
+            G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1003",FatalException,errormessage);
         }
     }
     else if(not S_ISDIR(stat_info.st_mode)) {
-        G4cerr << "ERROR: An non-folder entity named " << foldername_out << " already exist- aborting!" << G4endl;
-        exit(1);
+        G4String errormessage = "A non-folder entity named '" + foldername_out + "' already exist";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1004",FatalException,errormessage);
     }
     else {
         G4cout << "Folder '" << foldername_out << "' already exists -- using it!" << G4endl;
@@ -161,10 +162,15 @@ void RootFileWriter::initializeRootFile(){
     G4cout << "Opening ROOT file '" + rootFileName +"'"<<G4endl;
     histFile = new TFile(rootFileName,"RECREATE");
     if ( not histFile->IsOpen() ) {
-        G4cerr << "Opening TFile '" << rootFileName << "' failed; quitting." << G4endl;
-        exit(1);
+        G4String errormessage = "Opening TFile '" + rootFileName + "' failed.";
+        G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1005",FatalException,errormessage);
     }
     G4cout << G4endl;
+
+    // Add some metadata to the newly opened file
+    TNamed* version_number = new TNamed("MiniScatter_version_number", miniscatter_version);
+    version_number->Write();
+    delete version_number;
 
     eventCounter = 0;
 
@@ -189,7 +195,10 @@ void RootFileWriter::initializeRootFile(){
         trackerHits->Branch("TrackerHitsBranch", &trackerHitsBuffer,
                             "x/D:y:z:px:py:pz:E:PDG/I:charge:eventID");
 
+        // For magnets, branches are created elsewhere, one per magnet.
         magnetEdeps = new TTree("magnetEdeps", "Magnet Edeps tree");
+
+        // For magnetExit phase space data Tree and Branches are created elsewhere
     }
 
     // Target energy deposition
@@ -855,10 +864,17 @@ void RootFileWriter::initializeRootFile(){
         size_t numMagnets = detCon->magnets.size();
         if (numMagnets > 0) {
             magnetEdepsBuffer = new Double_t[numMagnets];
+
             size_t i = 0;
             for (auto mag : detCon->magnets) {
                 G4String magName = mag->magnetName;
+                
                 magnetEdeps->Branch(magName, &(magnetEdepsBuffer[i]), (magName+"/D").c_str());
+                
+                magnetExit[i] = new TTree((magName+"_ExitHits").c_str(), "MagnetExit tree");
+                magnetExitBuffer[i] = trackerHitStruct();
+                magnetExit[i]->Branch("magnetExitBranch",  &(magnetExitBuffer[i]), ("x/D:y:z:px:py:pz:E:PDG/I:charge:eventID"));
+                
                 i++;
             }
         }
@@ -1191,14 +1207,14 @@ void RootFileWriter::doEvent(const G4Event* event){
         initPartsBuffer.y = genAct->y/mm;
         initPartsBuffer.z = genAct->z/mm; //Required to fill struct properly
 
-        initPartsBuffer.px = genAct->xp/rad; //Actually rad here
-        initPartsBuffer.py = genAct->yp/rad;
+        initPartsBuffer.px = genAct->xp;
+        initPartsBuffer.py = genAct->yp;
         initPartsBuffer.pz = 0;
 
         initPartsBuffer.E = genAct->E / MeV;
 
-        initPartsBuffer.PDG = 0; //filler until genAct is updated
-        initPartsBuffer.charge = 0;
+        initPartsBuffer.PDG = genAct->PDG;
+        initPartsBuffer.charge = genAct->PDG_Q;
 
         initPartsBuffer.eventID = eventCounter;
 
@@ -1381,27 +1397,25 @@ void RootFileWriter::doEvent(const G4Event* event){
                         }
                     }
 
-                    /*
-                    //Fill the TTree (TODO: Use correct buffer etc.)
+                    //Fill the TTree
                     if (not miniFile) {
-                        targetExitBuffer.x = hitPos.x()/mm;
-                        targetExitBuffer.y = hitPos.x()/mm;
-                        targetExitBuffer.z = hitPos.z()/mm;
+                        magnetExitBuffer[magIdx].x = hitPos.x()/mm;
+                        magnetExitBuffer[magIdx].y = hitPos.y()/mm;
+                        magnetExitBuffer[magIdx].z = hitPos.z()/mm;
 
-                        targetExitBuffer.px = momentum.x()/MeV;
-                        targetExitBuffer.py = momentum.y()/MeV;
-                        targetExitBuffer.pz = momentum.z()/MeV;
+                        magnetExitBuffer[magIdx].px = momentum.x()/MeV;
+                        magnetExitBuffer[magIdx].py = momentum.y()/MeV;
+                        magnetExitBuffer[magIdx].pz = momentum.z()/MeV;
 
-                        targetExitBuffer.E = energy / MeV;
+                        magnetExitBuffer[magIdx].E = energy / MeV;
 
-                        targetExitBuffer.PDG = PDG;
-                        targetExitBuffer.charge = charge;
+                        magnetExitBuffer[magIdx].PDG = PDG;
+                        magnetExitBuffer[magIdx].charge = charge;
 
-                        targetExitBuffer.eventID = eventCounter;
-
-                        targetExit->Fill();
+                        magnetExitBuffer[magIdx].eventID = eventCounter;
+                        
+                        magnetExit[magIdx]->Fill();
                     }
-                    */
                 }
             }
             else {
@@ -1413,7 +1427,8 @@ void RootFileWriter::doEvent(const G4Event* event){
         }
     } // END loop over magnets
     if (not miniFile) {
-        magnetEdeps->Fill(); // Outside loop over magnets
+        // Outside of the loop over magnets -- Fill to write all branches
+        magnetEdeps->Fill();
     }
 }
 void RootFileWriter::finalizeRootFile() {
@@ -1652,19 +1667,29 @@ void RootFileWriter::finalizeRootFile() {
     if (not quickmode) { //Write the 2D and 3D histograms to the ROOT file (slow)
 
         G4cout << "Writing 2D histograms..." << G4endl;
+
+        init_phasespaceX->SetOption("COLZ");
         init_phasespaceX->Write();
+        init_phasespaceY->SetOption("COLZ");
         init_phasespaceY->Write();
+        init_phasespaceXY->SetOption("COLZ");
         init_phasespaceXY->Write();
 
         if (detCon->GetHasTarget()) {
+            target_exit_phasespaceX->SetOption("COLZ");
             target_exit_phasespaceX->Write();
+            target_exit_phasespaceY->SetOption("COLZ");
             target_exit_phasespaceY->Write();
 
+            target_exit_phasespaceX_cutoff->SetOption("COLZ");
             target_exit_phasespaceX_cutoff->Write();
+            target_exit_phasespaceY_cutoff->SetOption("COLZ");
             target_exit_phasespaceY_cutoff->Write();
 
-	    target_exit_phasespaceXY->Write();
-	    target_exit_phasespaceXY_cutoff->Write();
+            target_exit_phasespaceXY->SetOption("COLZ");
+            target_exit_phasespaceXY->Write();
+            target_exit_phasespaceXY_cutoff->SetOption("COLZ");
+            target_exit_phasespaceXY_cutoff->Write();
 
             if (target_edep_rdens != NULL) {
                 target_edep_rdens->Write();
@@ -1672,23 +1697,32 @@ void RootFileWriter::finalizeRootFile() {
         }
 
         for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
+            tracker_phasespaceX[idx]->SetOption("COLZ");
             tracker_phasespaceX[idx]->Write();
+            tracker_phasespaceY[idx]->SetOption("COLZ");
             tracker_phasespaceY[idx]->Write();
-	    tracker_phasespaceXY[idx]->Write();
+            tracker_phasespaceXY[idx]->SetOption("COLZ");
+	          tracker_phasespaceXY[idx]->Write();
 
+            tracker_phasespaceX_cutoff[idx]->SetOption("COLZ");
             tracker_phasespaceX_cutoff[idx]->Write();
+            tracker_phasespaceY_cutoff[idx]->SetOption("COLZ");
             tracker_phasespaceY_cutoff[idx]->Write();
-	    tracker_phasespaceXY_cutoff[idx]->Write();
+            tracker_phasespaceXY_cutoff[idx]->SetOption("COLZ");
+	          tracker_phasespaceXY_cutoff[idx]->Write();
 
             for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
             for (auto PDG : tracker_phasespaceY_cutoff_PDG[idx]) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
-	    for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
-	      PDG.second->Write();
-	    }
+            for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
+                PDG.second->SetOption("COLZ");
+                PDG.second->Write();
+            }
         }
 
         for (auto it : magnet_edep_rdens) {
@@ -1697,24 +1731,30 @@ void RootFileWriter::finalizeRootFile() {
 	    }
         }
         for (auto it : magnet_exit_phasespaceX) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceY) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceX_cutoff) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto it : magnet_exit_phasespaceY_cutoff) {
+            it->SetOption("COLZ");
             it->Write();
         }
         for (auto mag : magnet_exit_phasespaceX_cutoff_PDG) {
             for (auto PDG : mag) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
         }
         for (auto mag : magnet_exit_phasespaceY_cutoff_PDG) {
             for (auto PDG : mag) {
+                PDG.second->SetOption("COLZ");
                 PDG.second->Write();
             }
         }
@@ -1746,6 +1786,13 @@ void RootFileWriter::finalizeRootFile() {
         magnetEdeps->Write();
         delete magnetEdeps;
         magnetEdeps=NULL;
+
+        for (auto mag : magnetExit) {
+            mag.second->Write();
+            delete mag.second;
+        }
+        magnetExit.clear();
+        magnetExitBuffer.clear();
 
         if (magnetEdepsBuffer != NULL) {
             delete magnetEdepsBuffer;
@@ -1931,19 +1978,19 @@ void RootFileWriter::finalizeRootFile() {
         delete target_exit_phasespaceX_cutoff; target_exit_phasespaceX_cutoff = NULL;
         delete target_exit_phasespaceY_cutoff; target_exit_phasespaceY_cutoff = NULL;
 
-	delete target_exit_phasespaceXY; target_exit_phasespaceXY = NULL;
-	delete target_exit_phasespaceXY_cutoff; target_exit_phasespaceXY_cutoff = NULL;
+        delete target_exit_phasespaceXY; target_exit_phasespaceXY = NULL;
+        delete target_exit_phasespaceXY_cutoff; target_exit_phasespaceXY_cutoff = NULL;
     }
 
     //2D tracker histos
     for (int idx = 0; idx < traCon->getNumTrackers(); idx++) {
         delete tracker_phasespaceX[idx]; tracker_phasespaceX[idx] = NULL;
         delete tracker_phasespaceY[idx]; tracker_phasespaceY[idx] = NULL;
-	delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
-	
+        delete tracker_phasespaceXY[idx]; tracker_phasespaceXY[idx] = NULL;
+
         delete tracker_phasespaceX_cutoff[idx]; tracker_phasespaceX_cutoff[idx] = NULL;
         delete tracker_phasespaceY_cutoff[idx]; tracker_phasespaceY_cutoff[idx] = NULL;
-	delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
+        delete tracker_phasespaceXY_cutoff[idx]; tracker_phasespaceXY_cutoff[idx] = NULL;
 
         for (auto PDG : tracker_phasespaceX_cutoff_PDG[idx]) {
             delete PDG.second;
@@ -1955,7 +2002,7 @@ void RootFileWriter::finalizeRootFile() {
         }
         tracker_phasespaceY_cutoff_PDG[idx].clear();
 
-	for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
+        for (auto PDG : tracker_phasespaceXY_cutoff_PDG[idx]) {
             delete PDG.second;
         }
         tracker_phasespaceXY_cutoff_PDG[idx].clear();
@@ -2110,7 +2157,7 @@ void RootFileWriter::setEngNbins(G4int edepNbins_in) {
         this->engNbins = edepNbins_in;
     }
     else if (edepNbins_in < 0) {
-        G4cerr << "Error: edepNbins must be > 0 (or 0 for auto)" << G4endl;
-        exit(1);
+        G4String errormessage = "edepNbins must be > 0 (or 0 for auto)";
+        G4Exception("RootFileWriter::setEngNbins()", "MSRootFile2000",FatalException,errormessage);
     }
 }

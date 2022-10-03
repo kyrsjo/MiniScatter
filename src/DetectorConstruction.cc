@@ -46,6 +46,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
 
+#include "G4Exception.hh"
+
 #include <cmath>
 #include <string>
 
@@ -189,7 +191,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                           logicWorld,                     //its mother
                                           false,                          //pMany not used
                                           0,                              //copy number
-                                          true);                          //Check for overlaps
+                                          false);                         //Check for overlaps
+        if(physiTarget->CheckOverlaps()) {
+            G4Exception("DetectorConstruction::Construct()", "MSDetCon1000",FatalException,"Overlap detected when placing Target, see error message above for more info.");
+        }
     }
     else {
         solidTarget = NULL;
@@ -217,7 +222,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                                                           logicWorld,
                                                           false,
                                                           0,
-                                                          true);
+                                                          false);
+
+        if(magnetPV->CheckOverlaps()) {
+            G4String errormessage = "Overlap detected when placing magnet \n"
+                "\t'" + magnet->magnetName + "' of type '" + magnet->magnetType + "'\n"
+                "\t, see error message above for more info.";
+            G4Exception("DetectorConstruction::Construct()", "MSDetCon1001",FatalException,errormessage);
+        }
 
         magnetPVs.push_back(magnetPV);
     }
@@ -242,6 +254,7 @@ void DetectorConstruction::DefineMaterials() {
     WMaterial  = man->FindOrBuildMaterial("G4_W");
     UMaterial  = man->FindOrBuildMaterial("G4_U");
     FeMaterial = man->FindOrBuildMaterial("G4_Fe");
+    AuMaterial = man->FindOrBuildMaterial("G4_Au");
 
     MylarMaterial          = man->FindOrBuildMaterial("G4_MYLAR");
     KaptonMaterial         = man->FindOrBuildMaterial("G4_KAPTON");
@@ -275,20 +288,16 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     G4cout << G4endl;
 
     if (not gasMaterialName.contains("::")) {
-        G4cerr << "Error in DetectorConstruction::DefineGas() -- no '::' was found"
-               << "in material name = '" << gasMaterialName << "'"
-               << G4endl;
-        exit(1);
+        G4String errormessage = "No '::' was found in material name '"+gasMaterialName+"'";
+        G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1002",FatalException,errormessage);
     }
 
     str_size colonPos = gasMaterialName.index("::");
     str_size pressurePos = colonPos+2;
 
     if (pressurePos >= gasMaterialName.length()) {
-        G4cerr << "Error in DetectorConstruction::DefineGas() -- no pressure was found"
-               << " after '::' in material name = '" << gasMaterialName << "'"
-               << G4endl;
-        exit(1);
+        G4String errormessage = "No pressure was found after '::' in material name '"+gasMaterialName+"'";
+        G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1003",FatalException,errormessage);
     }
     G4String material_in = gasMaterialName(0, colonPos);
     G4String pressure_in = gasMaterialName(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
@@ -298,10 +307,10 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
         pressure = std::stod(std::string(pressure_in));
     }
     catch (const std::invalid_argument& ia) {
-        G4cerr << "Invalid argument when reading pressure" << G4endl
-               << "Got: '" << pressure_in << "'" << G4endl
-               << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
-        exit(1);
+        G4String errormessage = G4String("Invalid argument when reading pressure\n") +
+                                G4String("Got: '") + pressure_in + G4String("\n") +
+                                G4String("Expected a floating point number! (exponential notation is accepted)");
+        G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1004",FatalException,errormessage);
     }
 
     // ** Define the gas **
@@ -441,9 +450,8 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
         returnMaterial = this->gasAr;
     }
     else {
-        G4cerr << "Error in DetectorConstruction::DefineGas()" << G4endl;
-        G4cerr << "Gas type '" << material_in << "' unknown." << G4endl;
-        exit(1);
+        G4String errormessage = "Gas type '" + material_in + "' unkown.";
+        G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1005",FatalException,errormessage);
     }
 
     G4cout << G4endl;
@@ -458,9 +466,8 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
 
     // search the material by its name
     if(!GetHasTarget() || TargetThickness == 0.0){
-        G4cerr << "Error in DetectorConstruction::SetTargetMaterial():" << G4endl
-               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
-        exit(1);
+        G4String errormessage = " No target material is actually defined; probably target thickness is 0.0.";
+        G4Exception("DetectorConstruction::SetTargetMaterial()", "MSDetCon1006",FatalException,errormessage);
     }
 
     G4Material* pttoMaterial = G4Material::GetMaterial(materialChoice);
@@ -468,14 +475,13 @@ void DetectorConstruction::SetTargetMaterial(G4String materialChoice) {
         TargetMaterial = pttoMaterial;
     }
     else {
-        G4cerr << "Error when setting material '"
-               << materialChoice << "' -- not found!" << G4endl;
+        G4String errormessage = "Error when setting material '" + materialChoice + "', it was not found.\n";
+        errormessage += "Valid choices:\n";
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
-        G4cerr << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            G4cerr << mat->GetName() << G4endl;
+            errormessage += mat->GetName() + "\n";
         }
-        exit(1);
+        G4Exception("DetectorConstruction::SetTargetMaterial()", "MSDetCon1007",FatalException,errormessage);
     }
 }
 
@@ -490,14 +496,13 @@ void DetectorConstruction::SetBackgroundMaterial(G4String materialChoice) {
         BackgroundMaterial = pttoMaterial;
     }
     else {
-        G4cerr << "Error when setting material '"
-               << materialChoice << "' -- not found!" << G4endl;
+        G4String errormessage = "Error when setting material '" + materialChoice + "', it was not found.\n";
+        errormessage += "Valid choices:\n";
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
-        G4cerr << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            G4cerr << mat->GetName() << G4endl;
+            errormessage += mat->GetName() + "\n";
         }
-        exit(1);
+        G4Exception("DetectorConstruction::SetBackgroundMaterial()", "MSDetCon1008",FatalException,errormessage);
     }
 }
 //------------------------------------------------------------------------------
@@ -506,9 +511,8 @@ G4int DetectorConstruction::GetTargetMaterialZ() {
     //Return the nuclear charge of the most common species in the target
 
     if (!GetHasTarget() || TargetMaterial == NULL){
-        G4cerr << "Error in DetectorConstruction::GetTargetMaterialZ():" << G4endl
-               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
-        exit(1);
+        G4String errormessage = "No target material is actually defined; probably target thickness is 0.0.";
+        G4Exception("DetectorConstruction::GetTargetMaterialZ()", "MSDetCon1009",FatalException,errormessage);
     }
 
     const size_t numElements             = TargetMaterial->GetNumberOfElements();
@@ -534,9 +538,8 @@ G4double DetectorConstruction::GetTargetMaterialA() {
     //Return the average mass number of the most common species in the target
 
     if (!GetHasTarget() || TargetMaterial == NULL){
-        G4cerr << "Error in DetectorConstruction::GetTargetMAterialZ():" << G4endl
-               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
-        exit(1);
+        G4String errormessage = "No target material is actually defined; probably target thickness is 0.0.";
+        G4Exception("DetectorConstruction::GetTargetMaterialA()", "MSDetCon1010",FatalException,errormessage);
     }
 
     const size_t numElements             = TargetMaterial->GetNumberOfElements();
@@ -561,9 +564,8 @@ G4double DetectorConstruction::GetTargetMaterialA() {
 
 G4double DetectorConstruction::GetTargetMaterialDensity() {
     if (!GetHasTarget() || TargetMaterial == NULL){
-        G4cerr << "Error in DetectorConstruction::GetTargetMAterialZ():" << G4endl
-               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
-        exit(1);
+        G4String errormessage = "No target material is actually defined; probably target thickness is 0.0.";
+        G4Exception("DetectorConstruction::GetTargetMaterialDensity()", "MSDetCon1011",FatalException,errormessage);
     }
     return TargetMaterial->GetDensity();
 }
@@ -572,9 +574,8 @@ G4double DetectorConstruction::GetTargetMaterialDensity() {
 
 G4Material* DetectorConstruction::GetTargetMaterial() {
     if (!GetHasTarget() || TargetMaterial == NULL) {
-        G4cerr << "Error in DetectorConstruction::GetTargetMaterial():" << G4endl
-               << " No target material is actually defined; probably target thickness is 0.0." << G4endl;
-        exit(1);
+        G4String errormessage = "No target material is actually defined; probably target thickness is 0.0.";
+        G4Exception("DetectorConstruction::GetTargetMaterial()", "MSDetCon1012",FatalException,errormessage);
     }
     return TargetMaterial;
 }
@@ -583,9 +584,8 @@ G4Material* DetectorConstruction::GetTargetMaterial() {
 
 G4Material* DetectorConstruction::GetBackgroundMaterial() {
     if (BackgroundMaterial == NULL) {
-        G4cerr << "Error in DetectorConstruction::GetBackgroundMaterial():" << G4endl
-               << " No background material is actually defined?" << G4endl;
-        exit(1);
+        G4String errormessage = "No background material is actually defined.";
+        G4Exception("DetectorConstruction::GetBackgroundMaterial()", "MSDetCon1013",FatalException,errormessage);
     }
     return BackgroundMaterial;
 }

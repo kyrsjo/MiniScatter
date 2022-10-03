@@ -39,6 +39,8 @@
 
 #include "G4VisAttributes.hh"
 
+#include "G4Exception.hh"
+
 MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction* detCon, G4String magnetName) {
 
     //Split by '::'
@@ -149,6 +151,10 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     }
     else if (magnetType == "SHIELDEDSCINTILLATOR") {
         theMagnet = new MagnetSHIELDEDSCINTILLATOR(magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
+    else if(magnetType == "PBW") {
+        theMagnet = new MagnetPBW                 (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
     else {

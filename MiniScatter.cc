@@ -1,4 +1,8 @@
-/*
+/* MiniScatter.cc:
+ * Helga Holmestad 2015-2019
+ * Kyrre Sjobak    2015-
+ * Eric Fackelman  2022
+ *
  * This file is part of MiniScatter.
  *
  *  MiniScatter is free software: you can redistribute it and/or modify
@@ -35,6 +39,8 @@
 #define G4VIS_USE
 #define G4UI_USE
 #endif
+
+#include "MiniScatterVersion.hh"
 
 #include "RootFileWriter.hh"
 
@@ -76,6 +82,7 @@ void printHelp(G4double target_thick,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
+               G4String beam_loadfile,
                G4int    rngSeed,
                G4String filename_out,
                G4String foldername_out,
@@ -86,6 +93,8 @@ void printHelp(G4double target_thick,
                G4double cutoff_radius,
                G4double edep_dens_dz,
                G4int    engNbins,
+               G4double histPosLim,
+               G4double histAngLim,
                std::vector<G4String> &magnetDefinitions);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -96,6 +105,25 @@ int main(int argc,char** argv) {
     // "Error in <UnknownClass::InitInterpreter()>: LLVM SYMBOLS ARE EXPOSED TO CLING! This will cause problems; please hide them or dlopen() them after the call to TROOT::InitInterpreter()!"
     // when running with GUI.
     gROOT->Reset();
+
+    G4cout << "**********************************************************" << G4endl
+           << "**********************************************************" << G4endl
+           << G4endl;
+    G4cout << " Welcome to MiniScatter, release version " << miniscatter_version << "!" << G4endl
+           << " Release dated: " << miniscatter_date << G4endl
+           << G4endl;
+    G4cout << " MiniScatter is controlled with command line arguments." << G4endl
+           << " Run MiniScatter --help to see all possible arguments,"
+           << "  a description of each of them, and their default/current values." << G4endl
+           << G4endl;
+    G4cout << " If publishing results obtained with this code, " << G4endl
+           << "  please cite K.Sjobak and H.Holmestad, 'MINISCATTER, A SIMPLE GEANT4 WRAPPER'," << G4endl
+           << "  https://dx.doi.org/10.18429/JACoW-IPAC2019-WEPTS025" << G4endl
+           << G4endl;
+
+    G4cout << "**********************************************************" << G4endl
+           << "**********************************************************" << G4endl
+           << G4endl;
 
     //Parse command line arguments
     int getopt_char;
@@ -125,6 +153,8 @@ int main(int argc,char** argv) {
     G4String covarianceString = "";               // Beam covariance matrix parameters
     G4double beam_rCut = 0.0;                     // Beam distribution radial cutoff
 
+    G4String beam_loadFile = "";                  // Filename to load beam distribution from
+
     G4String physListName = "QGSP_FTFP_BERT";     // Name of physics list to use
     G4double physCutoffDist = 0.1;                // Default physics cutoff distance [mm]
 
@@ -146,6 +176,9 @@ int main(int argc,char** argv) {
 
     G4double edep_dens_dz          = 0.0;         // Z bin width for energy deposit histograms [mm]
     G4int    engNbins              = 0;           // Number of bins for the 1D energy histograms
+
+    G4double histPosLim            = 10.0;        // Position histogram Limit, default 10
+    G4double histAngLim            = 5.0;         // Angle histogram Limit, default 5
 
     std::vector<G4String> magnetDefinitions;
 
@@ -169,6 +202,7 @@ int main(int argc,char** argv) {
                                            {"beamAngle",             required_argument, NULL, 1500 },
                                            {"covar",                 required_argument, NULL, 'c'  },
                                            {"beamRcut",              required_argument, NULL, 1200 },
+                                           {"beamFile",              required_argument, NULL, 1700 },
                                            {"outname",               required_argument, NULL, 'f'  },
                                            {"outfolder",             required_argument, NULL, 'o'  },
                                            {"seed",                  required_argument, NULL, 's'  },
@@ -181,6 +215,8 @@ int main(int argc,char** argv) {
                                            {"cutoffRadius",          required_argument, NULL, 1001 },
                                            {"edepDZ",                required_argument, NULL, 1002 },
                                            {"engNbins",              required_argument, NULL, 1003 },
+                                           {"histPosLim",            required_argument, NULL, 1005 }, 
+                                           {"histAngLim",            required_argument, NULL, 1006 },
                                            {"magnet",                required_argument, NULL, 1100 },
                                            {"object",                required_argument, NULL, 1100 }, //synonymous with --magnet
                                            {0,0,0,0}
@@ -209,6 +245,7 @@ int main(int argc,char** argv) {
                       covarianceString,
                       beam_rCut,
                       doBacktrack,
+                      beam_loadFile,
                       rngSeed,
                       filename_out,
                       foldername_out,
@@ -219,6 +256,8 @@ int main(int argc,char** argv) {
                       cutoff_radius,
                       edep_dens_dz,
                       engNbins,
+                      histPosLim,
+                      histAngLim,
                       magnetDefinitions);
             exit(1);
             break;
@@ -450,12 +489,12 @@ int main(int argc,char** argv) {
             }
             break;
         
-        case 'c': //Beam covariance matrix from Twiss parameters
+        case 'c': // --covar ; Beam covariance matrix from Twiss parameters
             //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
             break;
 
-        case 1200: //Beam radial cutoff [mm]
+        case 1200: // --beamRcut ; Beam radial cutoff [mm]
             try {
                 beam_rCut = std::stod(string(optarg));
             }
@@ -467,7 +506,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'f': //Output filename
+        case 1700: //  --beamFile ; Input filename to load beam from
+            beam_loadFile = G4String(optarg);
+            break;
+
+        case 'f': // --outname ; Output filename
             filename_out = G4String(optarg);
             break;
 
@@ -554,11 +597,35 @@ int main(int argc,char** argv) {
                 G4cout << "engNbins must be >= 0" << G4endl;
             }
             break;
-
-        case 1100: //Object/Magnet definition
-            magnetDefinitions.push_back(string(optarg));
+            
+        case 1005: // Position Histogram Limit change
+            try {
+                histPosLim = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading histPosLim" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number!" << G4endl;
+                exit(1);
+            }
             break;
 
+        case 1006: // Angle Histogram Limit change
+            try {
+                histAngLim = std::stod(string(optarg));
+            }
+            catch (const std::invalid_argument& ia) {
+                G4cout << "Invalid argument when reading histAngLim" << G4endl
+                       << "Got: '" << optarg << "'" << G4endl
+                       << "Expected a floating point number!" << G4endl;
+                exit(1);
+            }
+            break;
+
+        case 1100: // Object/Magnet definition
+            magnetDefinitions.push_back(string(optarg));
+            break;
+        
         default: // WTF?
             G4cout << "Got an unknown getopt_char '" << char(getopt_char) << "' ("<< getopt_char<<")"
                    << " when parsing command line arguments." << G4endl;
@@ -595,6 +662,7 @@ int main(int argc,char** argv) {
               covarianceString,
               beam_rCut,
               doBacktrack,
+              beam_loadFile,
               rngSeed,
               filename_out,
               foldername_out,
@@ -605,6 +673,8 @@ int main(int argc,char** argv) {
               cutoff_radius,
               edep_dens_dz,
               engNbins,
+              histPosLim,
+              histAngLim,
               magnetDefinitions);
 
     G4cout << "Status of other arguments:" << G4endl
@@ -710,7 +780,9 @@ int main(int argc,char** argv) {
                                                                     beam_rCut,
                                                                     rngSeed,
                                                                     beam_eFlat_min,
-                                                                    beam_eFlat_max);
+                                                                    beam_eFlat_max,
+                                                                    beam_loadFile,
+                                                                    numEvents);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -738,6 +810,8 @@ int main(int argc,char** argv) {
     RootFileWriter::GetInstance()->setEngNbins(engNbins); // 0 = auto
     RootFileWriter::GetInstance()->setNumEvents(numEvents); // May be 0
     RootFileWriter::GetInstance()->setRNGseed(rngSeed);
+    RootFileWriter::GetInstance()->setHistPosLim(histPosLim);
+    RootFileWriter::GetInstance()->setHistAngLim(histAngLim);
 
 #ifdef G4VIS_USE
     // Initialize visualization
@@ -836,6 +910,7 @@ void printHelp(G4double target_thick,
                G4String covarianceString,
                G4double beam_rCut,
                G4bool   doBacktrack,
+               G4String beam_loadFile,
                G4int    rngSeed,
                G4String filename_out,
                G4String foldername_out,
@@ -846,10 +921,10 @@ void printHelp(G4double target_thick,
                G4double cutoff_radius,
                G4double edep_dens_dz,
                G4int    engNbins,
+               G4double histPosLim,
+               G4double histAngLim,
                std::vector<G4String> &magnetDefinitions) {
-            G4cout << "Welcome to MiniScatter!" << G4endl
-                   << G4endl
-                   << "Usage/options, long and short forms:" << G4endl<<G4endl;
+            G4cout << "Usage/options, long and short forms:" << G4endl<<G4endl;
 
             G4cout << " --thick/-t <double>" << G4endl
                    << "\t Target thickness [mm]"
@@ -858,7 +933,7 @@ void printHelp(G4double target_thick,
 
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
-                   << "\t Valid choices: 'G4_Al', 'G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
+                   << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
                    << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR',"
                    << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << "\t Also possible: 'gas::pressure' "
@@ -930,7 +1005,7 @@ void printHelp(G4double target_thick,
                    << "\t Particle type" << G4endl
                    << "\t This accepts standard Geant4 particle types (see /gun/List for all of them)," << G4endl
                    << "\t typcial examples are 'e-', 'proton', 'gamma'." << G4endl
-                   << "\t Ions can also be specified as 'ion::Z,A' where Z and A are the nucleus charge and mass number." << G4endl
+                   << "\t Ions can also be specified as 'ion::Z;A' where Z and A are the nucleus charge and mass number." << G4endl
                    << "\t Default/current value = '" << beam_type << "'" << G4endl << G4endl;
 
             G4cout << " --xoffset/-x <double>" << G4endl
@@ -947,14 +1022,14 @@ void printHelp(G4double target_thick,
 
             G4cout << " --beamAngle <double>" << G4endl
                    << "\t Initial beam angle [deg]" << G4endl
-                   << "\t If set to nonzero value, rotate beam generation point and axis around x=y=z=0 by this amount."
+                   << "\t If set to nonzero value, rotate beam generation point and axis around x=y=z=0 by this amount." << G4endl
                    << "\t The beam will still be aimed at x=y=z=0." << G4endl
                    << "\t The beam will be generated in the x/z plane, y=y'=0. Positive angle => positive x." << G4endl
                    << "\t Angles with absolute value >= 90 degrees are not accepted." << G4endl
                    << "\t Currently not compatible with --xoffset, --covar, --beamRcut, or backtracking from * in --zoffset." << G4endl
-                   << "\t Note that the absolute value of --zoffset (which is generally negative) will mean the distance from x=y=z=0 to the starting point."
+                   << "\t Note that the absolute value of --zoffset (which is generally negative)" << G4endl
+                   << "\t will mean the distance from x=y=z=0 to the starting point."
                    << "\t Default/current value = " << beam_angle << G4endl << G4endl;
-
 
             G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
                    << "\t Set initial gaussian beam distribution given in terms of Twiss parameters." << G4endl
@@ -964,8 +1039,21 @@ void printHelp(G4double target_thick,
             G4cout << " --beamRcut <double>" << G4endl
                    << "\t Radial cutoff for the beam distribution." << G4endl
                    << "\t If given alone, generate a circular uniform distribution." << G4endl
-                   << "\t If given together with --covar/-c, generate a multivariate gaussian with all particles starting within the given radius." << G4endl
+                   << "\t If given together with --covar/-c, generate a multivariate gaussian" << G4endl
+                   << "\t with all particles starting within the given radius." << G4endl
                    << "\t Default/current value = " << beam_rCut << G4endl << G4endl;
+
+            G4cout << " --beamFile <string>" << G4endl
+                   << "\t Filename to load the initial beam distribution from." << G4endl
+                   << "\t Only the --zoffset flag is taken into account;" << G4endl
+                   << "\t  the other beam-relevant flags are ignored." << G4endl
+                   << "\t The flags --energy and --beam is only used for reference energy in Twiss etc." << G4endl
+                   << "\t Note that the number of particles in the file must be at least as big as --numEvents." << G4endl
+                   << "\t Expected format is determined from file ending, possibilities are:" << G4endl
+                   << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
+                   << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>" << G4endl
+                   << "\t\t       Here the particle_type is specified in the same way as in --beam." << G4endl
+                   << "\t Default/current value = \"" << beam_loadFile << "\"" << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl
                    << "\t Set the initial seed, 0->use the clock etc." << G4endl
@@ -975,7 +1063,7 @@ void printHelp(G4double target_thick,
                    << "\t Display this help-text and exit." << G4endl << G4endl;
 
             G4cout << " --gui/-g" << G4endl
-                   << "\t Use a GUI" << G4endl << G4endl;
+                   << "\t Use the standard Geant4 GUI" << G4endl << G4endl;
 
             G4cout << " --quickmode/-q" << G4endl
                    << "\t Quickmode, skip most post-processing and plots" << G4endl
@@ -1012,6 +1100,14 @@ void printHelp(G4double target_thick,
             G4cout << " --engNbins <int>" << G4endl
                    << "\t Number of bins for 1D energy histograms (0 => internal default), " << G4endl
                    << "\t Default/current value = " << engNbins << G4endl << G4endl;
+
+            G4cout << " --histPosLim <double>" << G4endl
+                   << "\t Range for Position axes in ROOT histograms" << G4endl
+                   << "\t Default/current value = +/-" << histPosLim << G4endl << G4endl;
+
+            G4cout << " --histAngLim <double>" << G4endl
+                   << "\t Range for Angle axes in ROOT histograms" << G4endl
+                   << "\t Default/current value = +/-" << histAngLim << G4endl << G4endl;
 
             G4cout << " --object/--magnet (*)pos:type:length:gradient(:type=val1:specific=val2:arguments=val3)" << G4endl
                    << "\t Create an object (which may be a magnet) of the given type at the given position. " << G4endl
@@ -1076,6 +1172,21 @@ void printHelp(G4double target_thick,
                    << "\t     zScint:    Scintillator position (<double> [mm])" << G4endl
                    << "\t     riShield:  Shield inner radius (<double> [mm])" << G4endl
                    << "\t     roShield:  Shield outer radius (<double> [mm])" << G4endl
+                   << G4endl
+                   << "\t   'PBW':" << G4endl
+                   << "\t     Models the ESS Proton Beam Window, no field." << G4endl
+                   << "\t     Please remember that 'pos' is the position of the enveloping volume," << G4endl
+                   << "\t       which is not the center of the actual window." << G4endl
+                   << "\t     Also please note that the standar parameter 'length' should be set to 0," << G4endl
+                   << "\t       since it is auto-calculated based on the radius etc." << G4endl
+                   << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
+                   << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
+                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0 [mm]" << G4endl
+                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0 [mm]" << G4endl
+                   << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
+                   << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
+                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
+                   << "\t                 arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
