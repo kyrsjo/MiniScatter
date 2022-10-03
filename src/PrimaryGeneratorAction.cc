@@ -45,7 +45,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                                                G4int    rngSeed_in,
                                                G4double beam_energy_min_in,
                                                G4double beam_energy_max_in,
-                                               G4String beam_loadFile_in) :
+                                               G4String beam_loadFile_in,
+                                               G4int    numEvents_in) :
     Detector(DC),
     beam_energy(beam_energy_in),
     beam_type(beam_type_in),
@@ -58,7 +59,8 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
     rngSeed(rngSeed_in),
     beam_energy_min(beam_energy_min_in),
     beam_energy_max(beam_energy_max_in),
-    beam_loadFile(beam_loadFile_in) {
+    beam_loadFile(beam_loadFile_in),
+    numEvents(numEvents_in) {
 
     G4int n_particle = 1;
     particleGun  = new G4ParticleGun(n_particle);
@@ -102,6 +104,26 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
                     G4String("Error when opening file '" + beam_loadFile + "', does the file exist?"));
             }
             G4cout << "Opened CSV file '" + beam_loadFile + "'" << G4endl;
+
+            // Count number of lines
+            std::string line;
+            G4int numLines = 0;
+            while ( std::getline(beam_loadFile_csv,line) ) {
+                numLines++;
+            }
+            beam_loadFile_csv.close();
+            beam_loadFile_csv = std::ifstream(beam_loadFile,std::ifstream::in);
+            if (!beam_loadFile_csv.good()) {
+                G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1032",FatalException,
+                    G4String("Error when re-opening file '" + beam_loadFile + "'"));
+            }
+            //beam_loadFile_csv.seekg(0,beam_loadFile_csv.beg);
+
+            if (numLines < numEvents) {
+                G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1035",FatalException,
+                    G4String("Number of lines in file '" + beam_loadFile + "' = " + std::to_string(numLines)
+                             + " < numEvents = " + std::to_string(numEvents)));
+            }
         }
         //TODO: Support other formats, e.g. .root and .h5
         else {
@@ -304,7 +326,7 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
             G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3000",FatalException,
                 "Error in parsing ion string; expected format: 'ion::Z,A'");
         }
-        G4int ionZ, ionA;
+        G4int ionZ(-1), ionA(-1);
         try {
             ionZ = std::stoi(particleString(ionZpos,ionApos-ionZpos));
             ionA = std::stoi(particleString(ionApos,particleString.length()));
@@ -321,6 +343,12 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
     else {
         particle_ret = particleTable->FindParticle(particleString);
     }
+
+    //This is handled better in the recieving function, which has more context
+    /*if (particle_ret == 0) {
+        G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3015",FatalException,
+            G4String("Invalid particle generated from string '" + particleString + "'"));
+    }*/
     return particle_ret;
 }
 
@@ -425,12 +453,14 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             std::stringstream lineStream(line);
             std::string word;
             try {
-                //G4cout << "Line='" << line << "' -> Words: '";
+                //G4cout << "Line='" << line << "' -> Words: '" << G4endl;
 
                 std::getline(lineStream,word,',');
                 G4String particle_name = word;
+                //G4cout << "\t'" << word << "', " << G4endl;
+
                 particle = parseParticleName(particle_name);
-                if (particle==NULL) {
+                if (particle==0) {
                     G4String errormessage = "ERROR when parsing particle name '" + particle_name + "', event/line no. " + std::to_string(anEvent->GetEventID());
                     G4Exception("PrimaryGeneratorAction::GeneratePrimaries()", "MSPrimaryGenerator4040",FatalException, errormessage);
                 }

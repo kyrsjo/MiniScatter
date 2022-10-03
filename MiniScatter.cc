@@ -781,7 +781,8 @@ int main(int argc,char** argv) {
                                                                     rngSeed,
                                                                     beam_eFlat_min,
                                                                     beam_eFlat_max,
-                                                                    beam_loadFile);
+                                                                    beam_loadFile,
+                                                                    numEvents);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
