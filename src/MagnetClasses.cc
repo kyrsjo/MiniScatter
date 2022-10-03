@@ -145,16 +145,16 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
         theMagnet = new MagnetTARGETR             (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
-    else if(magnetType == "PBW") {
-        theMagnet = new MagnetPBW                 (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                                   keyValPairs, detCon, magnetName);
-    }
     else if (magnetType == "COLLIMATORHV") {
         theMagnet = new MagnetCOLLIMATORHV        (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
     else if (magnetType == "SHIELDEDSCINTILLATOR") {
         theMagnet = new MagnetSHIELDEDSCINTILLATOR(magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
+    else if(magnetType == "PBW") {
+        theMagnet = new MagnetPBW                 (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
     else {

@@ -141,7 +141,7 @@ void MagnetPBW::Construct() {
     //Sanity checks on dimensions
     if (radius > detCon->getWorldSizeX()/2 || radius > detCon->getWorldSizeY()/2) {
         G4cerr << "Error in MagnetPBW::Construct():" << G4endl
-               << " The absorber is bigger than the world volume."  << G4endl;
+               << "  The absorber radius is bigger than the world volume (--worldsize)."  << G4endl;
         exit(1);
     }
 
