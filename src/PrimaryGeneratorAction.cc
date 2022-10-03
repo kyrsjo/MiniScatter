@@ -319,12 +319,12 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
     const G4String ION = "ion";
     G4ParticleDefinition* particle_ret = NULL;
     if (particleString.compare(0, ION.length(), ION) == 0) {
-        // Format: 'ion::Z,A'
+        // Format: 'ion::Z;A'
         str_size ionZpos = particleString.index("::")+2;
         str_size ionApos = particleString.index(";")+1;
         if (ionZpos >= particleString.length() or ionApos >= particleString.length()) {
             G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3000",FatalException,
-                "Error in parsing ion string; expected format: 'ion::Z,A'");
+                "Error in parsing ion string; expected format: 'ion::Z;A'");
         }
         G4int ionZ(-1), ionA(-1);
         try {
