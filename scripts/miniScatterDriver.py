@@ -35,7 +35,7 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
                        "BEAM", "XOFFSET", "ZOFFSET", "ZOFFSET_BACKTRACK",\
                        "BEAMANGLE", "COVAR", "BEAM_RCUT", "SEED","OUTNAME", "OUTFOLDER",\
                        "QUICKMODE", "ANASCATTER", "MINIROOT", "CUTOFF_ENERGYFRACTION",\
-                       "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS", "ANGLIM", "POSLIM"):
+                       "CUTOFF_RADIUS", "EDEP_DZ", "ENG_NBINS", "ANGLIM", "POSLIM","BEAMFILE"):
             if key.startswith("MAGNET"):
                 continue
             raise KeyError("Did not expect key {} in the simSetup".format(key))
@@ -127,6 +127,9 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
     if "BEAM_RCUT" in simSetup:
         cmd += ["--beamRcut", str(simSetup["BEAM_RCUT"])]
 
+    if "BEAMFILE" in simSetup:
+        cmd += ["--beamFile", str(simSetup["BEAMFILE"])]
+
     if "SEED" in simSetup:
         cmd += ["--seed", str(simSetup["SEED"])]
 
@@ -153,6 +156,12 @@ def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=
             cmd += ["--miniroot"]
         else:
             assert simSetup["MINIROOT"] == False
+
+    if "ANASCATTER" in simSetup:
+        if simSetup["ANASCATTER"] == True:
+            cmd += ["--anaScatterTest"]
+        else:
+            assert simSetup["ANASCATTER"] == False
 
     if "CUTOFF_ENERGYFRACTION" in simSetup:
         cmd += ["--cutoffEnergyFraction", str(simSetup["CUTOFF_ENERGYFRACTION"])]

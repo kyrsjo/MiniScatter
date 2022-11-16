@@ -56,7 +56,8 @@ public:
                            G4int    rngSeed,
                            G4double beam_energy_min_in,
                            G4double beam_energy_max_in,
-                           G4String beam_loadFile_in );
+                           G4String beam_loadFile_in,
+                           G4int    numEvents_in );
     virtual ~PrimaryGeneratorAction();
     void GeneratePrimaries(G4Event*);
 
@@ -130,6 +131,10 @@ private:
     G4bool   beam_loadFromFile; // True if we are loading from file
     G4String beam_loadFile; // Filename or empty
     std::ifstream beam_loadFile_csv;
+
+    //Number of particles that will be generated,
+    // needed for sanity checking of beam_loadfile
+    G4int numEvents;
 
 public:
     //Leave the generated positions where RootFileWriter can pick it up [G4 units]
