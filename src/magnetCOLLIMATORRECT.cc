@@ -28,11 +28,11 @@ MagnetCOLLIMATORRECT::MagnetCOLLIMATORRECT(G4double zPos_in, G4bool doRelPos_in,
     MagnetBase(zPos_in, doRelPos_in, length_in, gradient_in, keyValPairs_in, detCon_in, magnetName_in, "COLLIMATORRECT"){
 
     for (auto it : keyValPairs) {
-        if (it.first == "holeWidth") {
-            holeWidth = ParseDouble(it.second, "collimator hole width") * mm;
+        if (it.first == "apertureWidth") {
+            apertureWidth = ParseDouble(it.second, "collimator aperture width") * mm;
         }
-        else if (it.first == "holeHeight") {
-            holeHeight = ParseDouble(it.second, "collimator hole height") * mm;
+        else if (it.first == "apertureHeight") {
+            apertureHeight = ParseDouble(it.second, "collimator aperture height") * mm;
         }
         else if (it.first == "absorberWidth") {
             absorberWidth  = ParseDouble(it.second, "absorber width") * mm;
@@ -47,22 +47,24 @@ MagnetCOLLIMATORRECT::MagnetCOLLIMATORRECT(G4double zPos_in, G4bool doRelPos_in,
             ParseOffsetRot(it.first, it.second);
         }
         else {
-            G4cerr << "MagnetCOLLIMATORRECT did not understand key=value pair '"
+            G4ExceptionDescription errormessage;
+            errormessage << "MagnetCOLLIMATORRECT did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
-            exit(1);
+            G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
         }
     }
 
     if (gradient != 0.0) {
-        G4cerr << "Invalid gradient for COLLIMATORRECT: Gradient must be 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid gradient for COLLIMATORRECT: Gradient must be 0.0, but was "
                << gradient << " [T/m]" << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1002",FatalException,errormessage);
     }
 
     PrintCommonParameters();
     G4cout << "\t absorberMaterialName    = " << absorberMaterialName <<             G4endl;
-    G4cout << "\t hole width              = " << holeWidth/mm         << " [mm]"  << G4endl;
-    G4cout << "\t hole height             = " << holeHeight/mm        << " [mm]"  << G4endl;
+    G4cout << "\t aperture width          = " << apertureWidth/mm     << " [mm]"  << G4endl;
+    G4cout << "\t aperture height         = " << apertureHeight/mm    << " [mm]"  << G4endl;
     G4cout << "\t absorberWidth           = " << absorberWidth/mm     << " [mm]"  << G4endl;
     G4cout << "\t absorberHeight          = " << absorberHeight/mm    << " [mm]"  << G4endl;
 
@@ -70,44 +72,48 @@ MagnetCOLLIMATORRECT::MagnetCOLLIMATORRECT(G4double zPos_in, G4bool doRelPos_in,
 
 void MagnetCOLLIMATORRECT::Construct() {
     if (this->mainLV != NULL) {
-        G4cerr << "Error in MagnetCOLLIMATORRECT::Construct(): The mainLV has already been constructed?" << G4endl;
-        exit(1);
+        G4ExceptionDescription errormessage;
+        errormessage << "Error in MagnetCOLLIMATORRECT::Construct(): The mainLV has already been constructed?" << G4endl;
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1003",FatalException,errormessage);
     }
 
     //Sanity checks on dimensions
     if (absorberWidth > detCon->getWorldSizeX() || absorberHeight > detCon->getWorldSizeY()) {
-        G4cerr << "Error in MagnetCOLLIMATORRECT::Construct():" << G4endl
+        G4ExceptionDescription errormessage;
+        errormessage << "Error in MagnetCOLLIMATORRECT::Construct():" << G4endl
                << " The absorber is wider than the world volume."  << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1004",FatalException,errormessage);
     }
 
     this->mainLV = MakeNewMainLV("main", absorberWidth,absorberHeight);
 
-    if (holeWidth > absorberWidth/2.0 or holeHeight > absorberHeight/2.0) {
-        G4cerr << "Error in MagnetCOLLIMATORRECT::Construct():" << G4endl
+    if (apertureWidth > absorberWidth/2.0 or apertureHeight > absorberHeight/2.0) {
+        G4ExceptionDescription errormessage;
+        errormessage << "Error in MagnetCOLLIMATORRECT::Construct():" << G4endl
                << " The channel doesn't fit in the absorber!" << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1005",FatalException,errormessage);
     }
 
     // Build the absorber
     G4VSolid* absorberBox      = new G4Box(magnetName+"_absorberBoxS",
                                           absorberWidth/2.0, absorberHeight/2.0, length/2.0);
-    G4VSolid* holeBox          = new G4Box(magnetName+"_holeBox",
-                                          holeWidth/2.0, holeHeight/2.0, (length+1)/2.0); //increase to not have rounding error thick film on entrance
+    G4VSolid* apertureBox      = new G4Box(magnetName+"_apertureBox",
+                                          apertureWidth/2.0, apertureHeight/2.0, (length+1)/2.0); //increase to not have rounding error thick film on entrance
     G4VSolid* absorberSolid    = new G4SubtractionSolid(magnetName+"_absorberS",
-                                          absorberBox, holeBox);
+                                          absorberBox, apertureBox);
 
     absorberMaterial = G4Material::GetMaterial(absorberMaterialName);
     if (not absorberMaterial){
-        G4cerr << "Error when setting material '"
+        G4ExceptionDescription errormessage;
+        errormessage << "Error when setting material '"
                << absorberMaterialName << "' for MagnetCollimator '"
                << magnetName << "' -- not found!" << G4endl;
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
-        G4cerr << "Valid choices:" << G4endl;
+        errormessage << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            G4cerr << mat->GetName() << G4endl;
+            errormessage << mat->GetName() << G4endl;
         }
-        exit(1);
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1006",FatalException,errormessage);
     }
 
     G4LogicalVolume*   absorberLV = new G4LogicalVolume(absorberSolid,absorberMaterial, magnetName+"_absorberLV");
@@ -121,10 +127,11 @@ void MagnetCOLLIMATORRECT::Construct() {
                                                         false);
 
     if(absorberPV->CheckOverlaps()) {
-        G4String errormessage = "Overlap detected when placing absorberPV for magnet \n"
-            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
-            "\t, see error message above for more info.";
-        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+        G4ExceptionDescription errormessage;
+        errormessage << "Overlap detected when placing absorberPV for magnet \n"
+            << "\t'" << magnetName << "' of type '" << magnetType << "'\n"
+            << "\t, see error message above for more info.";
+        G4Exception("MagnetCOLLIMATORRECT::Construct()", "MSDetConMagnet1007",FatalException,errormessage);
     }
 
     ConstructDetectorLV();

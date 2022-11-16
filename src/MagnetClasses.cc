@@ -137,6 +137,10 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
         theMagnet = new MagnetCOLLIMATOR1         (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
+    else if(magnetType == "COLLIMATORRECT") {
+        theMagnet = new MagnetCOLLIMATORRECT      (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
     else if(magnetType == "TARGET") {
         theMagnet = new MagnetTARGET              (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);

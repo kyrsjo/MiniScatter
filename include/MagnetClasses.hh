@@ -324,8 +324,8 @@ private:
     G4Material* absorberMaterial = NULL;
     G4double absorberWidth  = 250.0*mm; //[G4 length units]
     G4double absorberHeight = 100.0*mm; //[G4 length units]
-    G4double holeWidth      = 200.0*mm; //[G4 length units]
-    G4double holeHeight     = 80.0*mm;  //[G4 length units]
+    G4double apertureWidth  = 200.0*mm; //[G4 length units]
+    G4double apertureHeight = 80.0*mm;  //[G4 length units]
 };
 
 #endif

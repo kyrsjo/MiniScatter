@@ -1144,6 +1144,14 @@ void printHelp(G4double target_thick,
                    << "\t     height:    Absorber height (<double> [mm])" << G4endl
                    << "\t     material:  Absorber material (similar to -m)" << G4endl
                    << G4endl
+                   << "\t   'COLLIMATORRECT':" << G4endl
+                   << "\t     Models a rectangular collimator with a rectangular hole in the middle along the z-axis, no field." << G4endl
+                   << "\t     apertureWidth:    Channel width (<double> [mm]), default: 200[mm]" << G4endl
+                   << "\t     apertureHeight:   Channel height (<double> [mm]), default: 80[mm]" << G4endl
+                   << "\t     absorberWidth:    Absorber width (<double> [mm]), default: 250[mm]" << G4endl
+                   << "\t     absorberHeight:   Absorber height (<double> [mm]), default: 100[mm]" << G4endl
+                   << "\t     material:  Absorber material (similar to -m), default: G4_Al" << G4endl
+                   << G4endl
                    << "\t   'TARGET':" << G4endl
                    << "\t     Models a rectangular target, no field."
                    << "\t     width:     Target width (<double> [mm])" << G4endl
