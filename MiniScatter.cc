@@ -33,6 +33,7 @@
 #include "G4ParallelWorldPhysics.hh"
 
 #include "G4Version.hh"
+#include "G4Exception.hh"
 #if G4VERSION_NUMBER >= 1060
 //These macros were removed in version 10.6;
 // from what I can see it looks like they are are no longer needed
@@ -551,6 +552,12 @@ int main(int argc,char** argv) {
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
+            }
+            
+            if (cutoff_energyFraction >= 1.0 || cutoff_energyFraction <= 0) {
+                G4ExceptionDescription errormessage;
+                errormessage << "Expected an energy cut off fraction between 0.0 and 1.0, but " << cutoff_energyFraction << " was given!";
+                G4Exception("MiniScatter.cc Flag Check: --cutoff_energyFraction","MSFlagCheck1000",FatalException,errormessage);
             }
             break;
 
