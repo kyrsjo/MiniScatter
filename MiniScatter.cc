@@ -1129,7 +1129,7 @@ void printHelp(G4double target_thick,
                    << "\t     xOffset:   Center offset in X (<double> [mm]) " << G4endl
                    << "\t     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
                    << "\t     xRot:      Rotation around horizontal axis (<double> [deg])" << G4endl
-                   << "\t     yRot:      Rotation around vertical axis (<double> [deg])" << G4endl
+                   << "\t     yRot:      Rotation around vertical axis   (<double> [deg])" << G4endl
                    << "\t   Note that the offset is applied first," << G4endl
                    << "\t     then the object is rotated around the offset point." << G4endl
                    << "\t     The xRot is applied before the yRot." << G4endl
@@ -1146,32 +1146,32 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'COLLIMATOR1':" << G4endl
                    << "\t     Models a rectangular collimator with a circular hole in the middle along the z-axis, no field." << G4endl
-                   << "\t     radius:    Channel radius (<double> [mm])" << G4endl
-                   << "\t     width:     Absorber width (<double> [mm])" << G4endl
-                   << "\t     height:    Absorber height (<double> [mm])" << G4endl
+                   << "\t     radius:    Channel radius   (<double> [mm])" << G4endl
+                   << "\t     width:     Absorber width   (<double> [mm])" << G4endl
+                   << "\t     height:    Absorber height  (<double> [mm])" << G4endl
                    << "\t     material:  Absorber material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'COLLIMATORRECT':" << G4endl
                    << "\t     Models a rectangular collimator with a rectangular hole in the middle along the z-axis, no field." << G4endl
-                   << "\t     apertureWidth:    Channel width (<double> [mm]), default: 200[mm]" << G4endl
-                   << "\t     apertureHeight:   Channel height (<double> [mm]), default: 80[mm]" << G4endl
-                   << "\t     absorberWidth:    Absorber width (<double> [mm]), default: 250[mm]" << G4endl
-                   << "\t     absorberHeight:   Absorber height (<double> [mm]), default: 100[mm]" << G4endl
-                   << "\t     material:  Absorber material (similar to -m), default: G4_Al" << G4endl
+                   << "\t     apertureWidth:    Channel width   (<double> [mm]), default: 200 [mm]" << G4endl
+                   << "\t     apertureHeight:   Channel height  (<double> [mm]), default:  80 [mm]" << G4endl
+                   << "\t     absorberWidth:    Absorber width  (<double> [mm]), default: 250 [mm]" << G4endl
+                   << "\t     absorberHeight:   Absorber height (<double> [mm]), default: 100 [mm]" << G4endl
+                   << "\t     material:         Absorber material (similar to -m), default: G4_Al" << G4endl
                    << G4endl
                    << "\t   'TARGET':" << G4endl
-                   << "\t     Models a rectangular target, no field."
+                   << "\t     Models a rectangular target, no field." << G4endl
                    << "\t     width:     Target width (<double> [mm])" << G4endl
                    << "\t     height:    Target height (<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'TARGETR':" << G4endl
-                   << "\t     Models a cylindrical target, no field."
+                   << "\t     Models a cylindrical target, no field." << G4endl
                    << "\t     radius:    Target radius(<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'COLLIMATORHV':" << G4endl
-                   << "\t     Models two collimating jaws, no field."
+                   << "\t     Models two collimating jaws, no field." << G4endl
                    << "\t     gap:       Gap between collimator jaws (<double> [mm])" << G4endl
                    << "\t     HV:        Horizontal (H) or vertical (V) collimator ('H'/'V')" << G4endl
                    << "\t     jawThick:  Collimator jaw thickness (i.e. in in gap plane) (<double> [mm])" << G4endl
@@ -1196,11 +1196,11 @@ void printHelp(G4double target_thick,
                    << "\t       since it is auto-calculated based on the radius etc." << G4endl
                    << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
                    << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
-                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0 [mm]" << G4endl
-                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0 [mm]" << G4endl
+                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0  [mm]" << G4endl
+                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0  [mm]" << G4endl
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
-                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
+                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120  [deg]" << G4endl
                    << "\t                 arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
