@@ -140,7 +140,8 @@ int main(int argc,char** argv) {
     detector_distances.push_back(50.0);
     G4double detector_angle      = 0.0;           // Detectector angle around y-axis [deg]
 
-    G4double world_size          = 50.0;          // World size X/Y [mm]
+    G4double world_size          = 500.0;        // World full size X/Y [mm]
+                                                 // (not half-size as taken as argument by G4Box etc.)
 
     G4double beam_energy = 200;                   // Beam kinetic energy [MeV]
     G4double beam_eFlat_min = -1.0;               // For flat-spectrum energy distribution,
