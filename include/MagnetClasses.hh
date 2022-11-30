@@ -320,7 +320,7 @@ public:
     virtual G4double GetTypicalDensity() const { return absorberMaterial->GetDensity(); };
 
 private:
-    G4String absorberMaterialName;
+    G4String absorberMaterialName = "G4_Al";
     G4Material* absorberMaterial = NULL;
     G4double absorberWidth  = 250.0*mm; //[G4 length units]
     G4double absorberHeight = 100.0*mm; //[G4 length units]

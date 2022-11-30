@@ -87,7 +87,7 @@ void MagnetCOLLIMATORRECT::Construct() {
 
     this->mainLV = MakeNewMainLV("main", absorberWidth,absorberHeight);
 
-    if (apertureWidth > absorberWidth/2.0 or apertureHeight > absorberHeight/2.0) {
+    if (apertureWidth > absorberWidth or apertureHeight > absorberHeight) {
         G4ExceptionDescription errormessage;
         errormessage << "Error in MagnetCOLLIMATORRECT::Construct():" << G4endl
                << " The channel doesn't fit in the absorber!" << G4endl;
@@ -97,8 +97,9 @@ void MagnetCOLLIMATORRECT::Construct() {
     // Build the absorber
     G4VSolid* absorberBox      = new G4Box(magnetName+"_absorberBoxS",
                                           absorberWidth/2.0, absorberHeight/2.0, length/2.0);
+    //Note: Length of the cutout is increased by 1 mm to not have rounding error "film" on entrance
     G4VSolid* apertureBox      = new G4Box(magnetName+"_apertureBox",
-                                          apertureWidth/2.0, apertureHeight/2.0, (length+1)/2.0); //increase to not have rounding error thick film on entrance
+                                          apertureWidth/2.0, apertureHeight/2.0, (length+1*mm)/2.0);
     G4VSolid* absorberSolid    = new G4SubtractionSolid(magnetName+"_absorberS",
                                           absorberBox, apertureBox);
 
