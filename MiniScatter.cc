@@ -554,7 +554,7 @@ int main(int argc,char** argv) {
                 exit(1);
             }
             
-            if (cutoff_energyFraction >= 1.0 || cutoff_energyFraction <= 0) {
+            if (cutoff_energyFraction > 1.0 || cutoff_energyFraction < 0) {
                 G4ExceptionDescription errormessage;
                 errormessage << "Expected an energy cut off fraction between 0.0 and 1.0, but " << cutoff_energyFraction << " was given!";
                 G4Exception("MiniScatter.cc Flag Check: --cutoff_energyFraction","MSFlagCheck1000",FatalException,errormessage);
