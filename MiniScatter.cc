@@ -1093,11 +1093,13 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = " << foldername_out << G4endl << G4endl;
 
             G4cout << " --cutoffEnergyFraction <double>" << G4endl
-                   << "\t Minimum of beam energy to require for 'cutoff' plots" << G4endl
+                   << "\t Minimum of beam energy to require for 'cutoff' plots," << G4endl
+                   << "\t particles with energy <= to this will not be included." << G4endl
                    << "\t Default/current value = " << cutoff_energyFraction << G4endl << G4endl;
 
             G4cout << " --cutoffRadius <double>" << G4endl
-                   << "\t Maximum radius on target to require for 'cutoff' plots" << G4endl
+                   << "\t Maximum radius on target to require for 'cutoff' plots," << G4endl
+                   << "\t Particles with r >= this will not be included." << G4endl
                    << "\t Default/current value = " << cutoff_radius << " [mm]" << G4endl << G4endl;
 
             G4cout << " --edepDZ <double>" << G4endl
