@@ -57,53 +57,62 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
             ParseOffsetRot(it.first, it.second);
         }
         else {
-            G4cerr << "MagnetPBW did not understand key=value pair '"
+            G4ExceptionDescription errormessage;
+            errormessage << "MagnetPBW did not understand key=value pair '"
                    << it.first << "'='" << it.second << "'." << G4endl;
-            exit(1);
+            G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
         }
     }
 
     if (gradient != 0.0) {
-        G4cerr << "Invalid gradient for PBW: Gradient must be 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid gradient for PBW: Gradient must be 0.0, but was "
                << gradient << " [T/m]" << G4endl;
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1002",FatalException,errormessage);
     }
 
     //Error catching
     if (length != 0.0) {
-        G4cerr << "Invalid length for PBW: Length must be 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid length for PBW: Length must be 0.0, but was "
                << length / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1003",FatalException,errormessage);
     }
     if (radius <= 0.0) {
-        G4cerr << "Invalid radius for PBW: Radius must be > 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid radius for PBW: Radius must be > 0.0, but was "
                << radius / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1004",FatalException,errormessage);
     }
     if (al1Thick <= 0.0) {
-        G4cerr << "Invalid al1Thick for PBW: Al1Thick must be > 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid al1Thick for PBW: Al1Thick must be > 0.0, but was "
                << al1Thick / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1005",FatalException,errormessage);
     }
     if (waterThick <= 0.0) {
-        G4cerr << "Invalid waterThick for PBW: WaterThick must be > 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid waterThick for PBW: WaterThick must be > 0.0, but was "
                << waterThick / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1006",FatalException,errormessage);
     }
     if (al2Thick <= 0.0) {
-        G4cerr << "Invalid al2Thick for PBW: Al2Thick must be > 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid al2Thick for PBW: Al2Thick must be > 0.0, but was "
                << al2Thick / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1007",FatalException,errormessage);
     }
     if (width <= 0.0) {
-        G4cerr << "Invalid width for PBW: Width must be > 0.0, but was "
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid width for PBW: Width must be > 0.0, but was "
                << width / mm << " [mm]" << G4endl; 
-        exit(1);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1008",FatalException,errormessage);
     }
-    if (arcPhi / deg <= 0.0 || arcPhi / deg > 180.0) {
-        G4cerr << "Invalid arc angle for PBW: ArcPhi must be within: 0 < arcPhi <= 180, but was "
-               << arcPhi / deg << " [deg]" << G4endl; 
-        exit(1);
+    if (arcPhi / deg < 0.0 || arcPhi / deg > 180.0) {
+        G4ExceptionDescription errormessage;
+        errormessage << "Invalid arc angle for PBW: ArcPhi must be within: 0 <= arcPhi <= 180, but was "
+		     << arcPhi / deg << " [deg]" << G4endl; 
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1009",FatalException,errormessage);
     }
 
     //Calculate dimensions for mainLV box and positioning
@@ -135,12 +144,17 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
 
 void MagnetPBW::Construct() {
     if (this->mainLV != NULL) {
-        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1000",FatalException,"Internal error -- The mainLV has already been constructed?");
+        G4ExceptionDescription errormessage;
+        errormessage << "Error in MagnetPBW::Construct(): The mainLV has already been constructed?" << G4endl;
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1010",FatalException,errormessage);
     }
 
     //Sanity checks on dimensions
     if (radius > detCon->getWorldSizeX()/2 || radius > detCon->getWorldSizeY()/2) {
-        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1001",FatalException,"The absorber is bigger than the world volume.");
+        G4ExceptionDescription errormessage;
+        errormessage << "Error in MagnetPBW::Construct():" << G4endl
+               << "  The window's radius is bigger than the world volume (--worldsize)."  << G4endl;
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1011",FatalException,errormessage);
     }
 
     this->mainLV = MakeNewMainLV("main",width,height);
@@ -155,13 +169,16 @@ void MagnetPBW::Construct() {
 
     targetMaterial = G4Material::GetMaterial(targetMaterialName);
     if (not targetMaterial){
-        G4String errormessage = "Error when setting material '" + targetMaterialName + "' for MagnetPBW, it was not found.\n";
-        errormessage += "Valid choices:\n";
+        G4ExceptionDescription errormessage;
+        errormessage << "Error when setting material '"
+               << targetMaterialName << "' for MagnetPBW '"
+               << magnetName << "' -- not found!" << G4endl;
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
+        errormessage << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            errormessage += mat->GetName() + "\n";
+            errormessage << mat->GetName() << G4endl;
         }
-        G4Exception("MagnetPBW::Construct()", "MSDetConMagnetPBW1002",FatalException,errormessage);
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1012",FatalException,errormessage);
     }
 
     G4RotationMatrix* pRot = new G4RotationMatrix();
@@ -181,10 +198,11 @@ void MagnetPBW::Construct() {
                                                       0,
                                                       true);
     if(targetPV->CheckOverlaps()) {
-        G4String errormessage = "Overlap detected when placing targetPV for magnet \n"
-            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
-            "\t, see error message above for more info.";
-        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+        G4ExceptionDescription errormessage;
+        errormessage << "Overlap detected when placing targetPV for magnet \n"
+            << "\t'" << magnetName << "' of type '" << magnetType << "'\n"
+            << "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet10013",FatalException,errormessage);
     }
 
     G4VSolid*        waterSolid = new G4Tubs          (magnetName+"_waterS",
@@ -206,10 +224,11 @@ void MagnetPBW::Construct() {
                                                       0,
                                                       true);
     if(waterPV->CheckOverlaps()) {
-        G4String errormessage = "Overlap detected when placing waterPV for magnet \n"
-            "\t'" + magnetName + "' of type '" + magnetType + "'\n"
-            "\t, see error message above for more info.";
-        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1001",FatalException,errormessage);
+        G4ExceptionDescription errormessage;
+        errormessage << "Overlap detected when placing waterPV for magnet \n"
+            << "\t'" << magnetName << "' of type '" << magnetType << "'\n"
+            << "\t, see error message above for more info.";
+        G4Exception("MagnetPBW::Construct()", "MSDetConMagnet10014",FatalException,errormessage);
     }
 
     //Set color and line segments per circle for Visualization

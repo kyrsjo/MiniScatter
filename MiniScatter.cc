@@ -33,6 +33,7 @@
 #include "G4ParallelWorldPhysics.hh"
 
 #include "G4Version.hh"
+#include "G4Exception.hh"
 #if G4VERSION_NUMBER >= 1060
 //These macros were removed in version 10.6;
 // from what I can see it looks like they are are no longer needed
@@ -139,7 +140,8 @@ int main(int argc,char** argv) {
     detector_distances.push_back(50.0);
     G4double detector_angle      = 0.0;           // Detectector angle around y-axis [deg]
 
-    G4double world_size          = 50.0;          // World size X/Y [mm]
+    G4double world_size          = 500.0;        // World full size X/Y [mm]
+                                                 // (not half-size as taken as argument by G4Box etc.)
 
     G4double beam_energy = 200;                   // Beam kinetic energy [MeV]
     G4double beam_eFlat_min = -1.0;               // For flat-spectrum energy distribution,
@@ -552,6 +554,12 @@ int main(int argc,char** argv) {
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
+            
+            if (cutoff_energyFraction > 1.0 || cutoff_energyFraction < 0) {
+                G4ExceptionDescription errormessage;
+                errormessage << "Expected an energy cut off fraction between 0.0 and 1.0, but " << cutoff_energyFraction << " was given!";
+                G4Exception("MiniScatter.cc Flag Check: --cutoff_energyFraction","MSFlagCheck1000",FatalException,errormessage);
+            }
             break;
 
         case 1001: //--cutoffRadius ; Cutoff radius [mm]
@@ -781,7 +789,8 @@ int main(int argc,char** argv) {
                                                                     rngSeed,
                                                                     beam_eFlat_min,
                                                                     beam_eFlat_max,
-                                                                    beam_loadFile);
+                                                                    beam_loadFile,
+                                                                    numEvents);
     runManager->SetUserAction(gen_action);
     //
     RunAction* run_action = new RunAction;
@@ -1047,7 +1056,7 @@ void printHelp(G4double target_thick,
                    << "\t Only the --zoffset flag is taken into account;" << G4endl
                    << "\t  the other beam-relevant flags are ignored." << G4endl
                    << "\t The flags --energy and --beam is only used for reference energy in Twiss etc." << G4endl
-                   << "\t Note that the number of particles in the file must be at least as big as --numEvents." <<G4endl
+                   << "\t Note that the number of particles in the file must be at least as big as --numEvents." << G4endl
                    << "\t Expected format is determined from file ending, possibilities are:" << G4endl
                    << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
                    << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>" << G4endl
@@ -1086,11 +1095,13 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = " << foldername_out << G4endl << G4endl;
 
             G4cout << " --cutoffEnergyFraction <double>" << G4endl
-                   << "\t Minimum of beam energy to require for 'cutoff' plots" << G4endl
+                   << "\t Minimum of beam energy to require for 'cutoff' plots," << G4endl
+                   << "\t particles with energy <= to this will not be included." << G4endl
                    << "\t Default/current value = " << cutoff_energyFraction << G4endl << G4endl;
 
             G4cout << " --cutoffRadius <double>" << G4endl
-                   << "\t Maximum radius on target to require for 'cutoff' plots" << G4endl
+                   << "\t Maximum radius on target to require for 'cutoff' plots," << G4endl
+                   << "\t Particles with r >= this will not be included." << G4endl
                    << "\t Default/current value = " << cutoff_radius << " [mm]" << G4endl << G4endl;
 
             G4cout << " --edepDZ <double>" << G4endl
@@ -1122,7 +1133,7 @@ void printHelp(G4double target_thick,
                    << "\t     xOffset:   Center offset in X (<double> [mm]) " << G4endl
                    << "\t     yOffset:   Center offset in Y (<double> [mm]) " << G4endl
                    << "\t     xRot:      Rotation around horizontal axis (<double> [deg])" << G4endl
-                   << "\t     yRot:      Rotation around vertical axis (<double> [deg])" << G4endl
+                   << "\t     yRot:      Rotation around vertical axis   (<double> [deg])" << G4endl
                    << "\t   Note that the offset is applied first," << G4endl
                    << "\t     then the object is rotated around the offset point." << G4endl
                    << "\t     The xRot is applied before the yRot." << G4endl
@@ -1139,13 +1150,21 @@ void printHelp(G4double target_thick,
                    << "\t     height:    Capillay crystal height (<double> [mm])" << G4endl
                    << G4endl
                    << "\t   'COLLIMATOR1':" << G4endl
-                   << "\t     Models a rectangular collimator with a circular hole" << G4endl
-                   << "\t     in the middle along the z-axis, no field." << G4endl
-                   << "\t     Specific parameters:" << G4endl
-                   << "\t     radius:    Channel radius (<double> [mm])" << G4endl
-                   << "\t     width:     Absorber width (<double> [mm])" << G4endl
-                   << "\t     height:    Absorber height (<double> [mm])" << G4endl
+                   << "\t     Models a rectangular collimator with a circular hole in the middle along the z-axis, no field." << G4endl
+                   << "\t     radius:    Channel radius   (<double> [mm])" << G4endl
+                   << "\t     width:     Absorber width   (<double> [mm])" << G4endl
+                   << "\t     height:    Absorber height  (<double> [mm])" << G4endl
+
                    << "\t     material:  Absorber material (similar to -m)" << G4endl
+                   << G4endl
+                   << "\t   'COLLIMATORRECT':" << G4endl
+                   << "\t     Models a rectangular collimator with a rectangular hole in the middle along the z-axis, no field." << G4endl
+		   << "\t     Specific parameters:" << G4endl
+                   << "\t     apertureWidth:    Channel width   (<double> [mm]), default: 200 [mm]" << G4endl
+                   << "\t     apertureHeight:   Channel height  (<double> [mm]), default:  80 [mm]" << G4endl
+                   << "\t     absorberWidth:    Absorber width  (<double> [mm]), default: 250 [mm]" << G4endl
+                   << "\t     absorberHeight:   Absorber height (<double> [mm]), default: 100 [mm]" << G4endl
+                   << "\t     material:         Absorber material (similar to -m), default: G4_Al" << G4endl
                    << G4endl
                    << "\t   'TARGET':" << G4endl
                    << "\t     Models a rectangular target, no field." << G4endl
@@ -1170,8 +1189,6 @@ void printHelp(G4double target_thick,
                    << "\t     material:  Jaw material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'SHIELDEDSCINTILLATOR':" << G4endl
-                   << "\t     Models a cylindrical scintillator inside a cylindrical shield, no field." << G4endl
-                   << "\t     Specific parameters:" << G4endl
                    << "\t     Models a cylindrical scintilling crystal (sensitive)" << G4endl
                    << "\t     inside a cylindrical shield (not sensitive), no field." << G4endl
                    << "\t     Specific parameters:" << G4endl
@@ -1186,11 +1203,14 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'PBW':" << G4endl
                    << "\t     Models the ESS Proton Beam Window, no field." << G4endl
-                   << "\t     User must set pos to be >half length of object, see parameter initialization." << G4endl
+                   << "\t     Please remember that 'pos' is the position of the enveloping volume," << G4endl
+                   << "\t       which is not the center of the actual window." << G4endl
+                   << "\t     Also please note that the standar parameter 'length' should be set to 0," << G4endl
+                   << "\t       since it is auto-calculated based on the radius etc." << G4endl
                    << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
                    << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
-                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0 [mm]" << G4endl
-                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0 [mm]" << G4endl
+                   << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0  [mm]" << G4endl
+                   << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0  [mm]" << G4endl
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
                    << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl

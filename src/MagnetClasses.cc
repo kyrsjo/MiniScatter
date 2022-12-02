@@ -137,16 +137,16 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
         theMagnet = new MagnetCOLLIMATOR1         (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
+    else if(magnetType == "COLLIMATORRECT") {
+        theMagnet = new MagnetCOLLIMATORRECT      (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
     else if(magnetType == "TARGET") {
         theMagnet = new MagnetTARGET              (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
     else if(magnetType == "TARGETR") {
         theMagnet = new MagnetTARGETR             (magnetPos, doRelPos, magnetLength, magnetGradient,
-                                                   keyValPairs, detCon, magnetName);
-    }
-    else if(magnetType == "PBW") {
-        theMagnet = new MagnetPBW                 (magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
     else if (magnetType == "COLLIMATORHV") {
@@ -157,8 +157,12 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
         theMagnet = new MagnetSHIELDEDSCINTILLATOR(magnetPos, doRelPos, magnetLength, magnetGradient,
                                                    keyValPairs, detCon, magnetName);
     }
+    else if(magnetType == "PBW") {
+        theMagnet = new MagnetPBW                 (magnetPos, doRelPos, magnetLength, magnetGradient,
+                                                   keyValPairs, detCon, magnetName);
+    }
     else {
-        G4cerr << "Uknown magnet type '" << magnetType << "'" << G4endl;
+        G4cerr << "Unknown magnet type '" << magnetType << "'" << G4endl;
         exit(1);
     }
 
