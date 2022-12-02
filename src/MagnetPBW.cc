@@ -111,7 +111,7 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     if (arcPhi / deg < 0.0 || arcPhi / deg > 180.0) {
         G4ExceptionDescription errormessage;
         errormessage << "Invalid arc angle for PBW: ArcPhi must be within: 0 <= arcPhi <= 180, but was "
-		     << arcPhi / deg << " [deg]" << G4endl; 
+                     << arcPhi / deg << " [deg]" << G4endl; 
         G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1009",FatalException,errormessage);
     }
 

@@ -1151,10 +1151,10 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'COLLIMATOR1':" << G4endl
                    << "\t     Models a rectangular collimator with a circular hole in the middle along the z-axis, no field." << G4endl
+		   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:    Channel radius   (<double> [mm])" << G4endl
                    << "\t     width:     Absorber width   (<double> [mm])" << G4endl
                    << "\t     height:    Absorber height  (<double> [mm])" << G4endl
-
                    << "\t     material:  Absorber material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'COLLIMATORRECT':" << G4endl
@@ -1195,11 +1195,11 @@ void printHelp(G4double target_thick,
                    << "\t     scintMat:  Scintillator material (similar to -m)," << G4endl
                    << "\t                defaults to 'G4_SODIUM_IODIDE'" << G4endl
                    << "\t     shieldMat: Shielding material (similar to -m), defaults to 'G4_Pb'" << G4endl
-                   << "\t     rScint:    Scintillator radius (<double> [mm])" << G4endl
-                   << "\t     lScint:    Scintillator length (<double> [mm])" << G4endl
+                   << "\t     rScint:    Scintillator radius   (<double> [mm])" << G4endl
+                   << "\t     lScint:    Scintillator length   (<double> [mm])" << G4endl
                    << "\t     zScint:    Scintillator position (<double> [mm])" << G4endl
-                   << "\t     riShield:  Shield inner radius (<double> [mm])" << G4endl
-                   << "\t     roShield:  Shield outer radius (<double> [mm])" << G4endl
+                   << "\t     riShield:  Shield inner radius   (<double> [mm])" << G4endl
+                   << "\t     roShield:  Shield outer radius   (<double> [mm])" << G4endl
                    << G4endl
                    << "\t   'PBW':" << G4endl
                    << "\t     Models the ESS Proton Beam Window, no field." << G4endl
@@ -1207,6 +1207,7 @@ void printHelp(G4double target_thick,
                    << "\t       which is not the center of the actual window." << G4endl
                    << "\t     Also please note that the standar parameter 'length' should be set to 0," << G4endl
                    << "\t       since it is auto-calculated based on the radius etc." << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
                    << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
                    << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0  [mm]" << G4endl

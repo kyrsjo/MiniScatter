@@ -93,7 +93,8 @@ void MagnetCOLLIMATOR1::Construct() {
 
     absorberMaterial = G4Material::GetMaterial(absorberMaterialName);
     if (not absorberMaterial){
-        G4String errormessage = "Error when setting material '" + absorberMaterialName + "', it was not found.\n";
+        G4String errormessage = "Error when setting material '" + absorberMaterialName +
+                                "' for MagnetCollimator '" + magnetName + "', it was not found.\n";
         errormessage += "Valid choices:\n";
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
         for (auto mat : *materialTable) {
