@@ -1,7 +1,7 @@
 /* MiniScatter.cc:
  * Helga Holmestad 2015-2019
  * Kyrre Sjobak    2015-
- * Eric Fackelman  2022
+ * Eric Fackelman  2022-
  *
  * This file is part of MiniScatter.
  *
@@ -31,6 +31,7 @@
 
 #include "G4PhysListFactory.hh"
 #include "G4ParallelWorldPhysics.hh"
+#include "EMonlyPhysicsList.hh"
 
 #include "G4Version.hh"
 #include "G4Exception.hh"
