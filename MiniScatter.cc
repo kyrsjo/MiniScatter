@@ -942,7 +942,8 @@ void printHelp(G4double target_thick,
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
                    << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe'," << G4endl
-                   << "\t                'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR'," << G4endl
+                   << "\t                'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_POLYPROPYLENE'" << G4endl
+		   << "\t                'G4_Galactic', 'G4_AIR'," << G4endl
                    << "\t                'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << "\t Also possible: 'gas::pressure' " << G4endl
                    << "\t                where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar'," << G4endl

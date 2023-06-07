@@ -93,6 +93,7 @@ private:
     G4Material*        StainlessSteelMaterial = NULL;
     G4Material*        WaterMaterial          = NULL;
     G4Material*        NaIMaterial            = NULL;
+    G4Material*        PolyPropyleneMaterial  = NULL;
 
     G4Material*        SapphireMaterial       = NULL;
 
