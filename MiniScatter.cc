@@ -714,27 +714,36 @@ int main(int argc,char** argv) {
 
     // Physics
     G4int verbose=0;
-    G4PhysListFactory plFactory;
-    G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
-    if (physlist==NULL) {
-        G4cerr << "Bad physics list!" << G4endl;
-        G4cerr << G4endl;
+    G4VModularPhysicsList* physlist = NULL;
+    if (physListName(0,7) == "EMonly_") {
+      G4String EMlistName = physListName(7,physListName.length()-7);
+      physlist =  new EMonlyPhysicsList(EMlistName);
+    }
+    else {
+        G4PhysListFactory plFactory;
+        physlist = plFactory.GetReferencePhysList(physListName);
+	
+	if (physlist==NULL) {
+            G4cerr << "Bad physics list!" << G4endl;
+	    G4cerr << G4endl;
 
-        G4cerr << "Possiblities:" << G4endl;
-        const std::vector<G4String>& listnames_hadr =  plFactory.AvailablePhysLists();
-        for (auto l : listnames_hadr) {
-            G4cerr << "'" << l << "'" << G4endl;
-        }
-        G4cerr << G4endl;
+	    G4cerr << "Possiblities:" << G4endl;
+	    const std::vector<G4String>& listnames_hadr =  plFactory.AvailablePhysLists();
+	    for (auto l : listnames_hadr) {
+  	        G4cerr << "'" << l << "'" << G4endl;
+	    }
+	    G4cerr << G4endl;
 
-        G4cerr << "EM options:" << G4endl;
-        const std::vector<G4String>& listnames_em =  plFactory.AvailablePhysListsEM();
-        for (auto l : listnames_em) {
-            G4cerr << "'" << l << "'" << G4endl;
-        }
-        G4cerr << G4endl;
+	    G4cerr << "EM options:" << G4endl;
+	    const std::vector<G4String>& listnames_em =  plFactory.AvailablePhysListsEM();
+	    for (auto l : listnames_em) {
+	        G4cerr << "'" << l << "'" << G4endl;
+	    }
+	    G4cerr << G4endl;
 
-        exit(1);
+	    G4String errormessage = "Physics list '" + physListName +"' not found.";
+	    G4Exception("MiniScatter.cc physics list selection", "MSPhysList1000", FatalException, errormessage);
+	}
     }
     physlist->SetVerboseLevel(verbose);
     runManager->SetUserInitialization(physlist);
@@ -987,6 +996,9 @@ void printHelp(G4double target_thick,
 
             G4cout << " --phys/-p <string>" << G4endl
                    << "\t Physics list name" << G4endl
+		   << "\t Run with an invalid value to see options. To disable hadronic physics," << G4endl
+		   << "\t use the \"base\" physics list 'EMonly_' followed by one of the usual EM options ('EMY' etc)," << G4endl
+		   << "\t or 'EM' for the usual default." << G4endl
                    << "\t Default/current value = '"
                    << physListName << "'" << G4endl << G4endl;
 

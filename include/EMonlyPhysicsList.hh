@@ -19,11 +19,15 @@
 
 #include "G4VModularPhysicsList.hh"
 
+/* 
+ * The purpose of this class is to make it possible to build a physics list
+ * which only contains the electromagnetic part, no hadronics.
+ * This is not really correct, but will be used for testing multiple scattering.
+ */
+
 class EMonlyPhysicsList : public G4VModularPhysicsList {
 public:
-  
-  EMonlyPhysicsList();
-
+     EMonlyPhysicsList(G4String EMlistName);
 };
 
 #endif
