@@ -21,6 +21,7 @@
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTable.hh"
 #include "G4IonTable.hh"
+#include "G4String.hh"
 #include "globals.hh"
 
 //System of units defines variables like "s" and "m" in the global scope,
@@ -95,7 +96,7 @@ private:
     // Setup for covariance
     G4bool hasCovariance = false;
     void setupCovariance();
-    G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
+    G4double convertColons(size_t startPos, size_t endPos, G4String paramName);
 
     G4String covarianceString; // String defining the covariance matrix via Twiss parameters
     G4double epsN_x;  // Normalized emittance  (x) [um]

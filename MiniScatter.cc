@@ -283,15 +283,15 @@ int main(int argc,char** argv) {
         case 'd': //Detector distance
             { //Scope to avoid spilling temp variables
                 detector_distances.clear();
-                G4String detectorString = std::string(optarg);
+                std::string detectorString = std::string(optarg);
                 if (detectorString == "NONE") break; //Just clear it
 
                 //Split by :
-                str_size startPos = 0;
-                str_size endPos = 0;
+                size_t startPos = 0;
+                size_t endPos   = 0;
                 do {
-                    endPos          = detectorString.index(":",startPos);
-                    G4String detStr = detectorString(startPos,endPos-startPos);
+                    endPos             = detectorString.find(":",startPos);
+                    std::string detStr = detectorString.substr(startPos,endPos-startPos);
 
                     G4double dist;
                     try {
@@ -299,8 +299,8 @@ int main(int argc,char** argv) {
                     }
                     catch (const std::invalid_argument& ia) {
                         G4cout << "Invalid argument when reading detector distance" << G4endl
-                            << "Got: '" << detStr << "'" << G4endl
-                            << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
+                               << "Got: '" << detStr << "'" << G4endl
+                               << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                         exit(1);
                     }
                     detector_distances.push_back(dist);
@@ -397,10 +397,10 @@ int main(int argc,char** argv) {
             break;
 
         case 1300: {//beam energy (flat distribution)
-            G4String edist_str = G4String(optarg);
+            std::string edist_str = std::string(optarg);
 
-            str_size startPos = 0;
-            str_size endPos   = edist_str.index(":",startPos);
+            size_t startPos = 0;
+            size_t endPos   = edist_str.find(':',startPos);
             if (endPos == std::string::npos) {
                 G4cout << " Error while searching for ':' in edist_str = "
                        << edist_str << "', did not find?" << G4endl;
@@ -408,17 +408,17 @@ int main(int argc,char** argv) {
             }
 
             try {
-                beam_eFlat_min = std::stod(string(edist_str(0,endPos)));
+                beam_eFlat_min = std::stod(string(edist_str.substr(0,endPos)));
             }
             catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading minimum energy '" << edist_str(0,endPos) << "' for eFlat." << G4endl
+                G4cout << "Invalid argument when reading minimum energy '" << edist_str.substr(0,endPos) << "' for eFlat." << G4endl
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
             }
 
             startPos = endPos+1;
-            endPos   = edist_str.index(":",startPos);
+            endPos   = edist_str.find(":",startPos);
             if (endPos != std::string::npos) {
                 G4cout << " Error while searching for ':' in edist_str = "
                        << edist_str << "', found a second one?" << G4endl;
@@ -426,10 +426,10 @@ int main(int argc,char** argv) {
             }
 
             try {
-                beam_eFlat_max = std::stod(string(edist_str(startPos,endPos-startPos)));
+                beam_eFlat_max = std::stod(string(edist_str.substr(startPos,endPos-startPos)));
             }
             catch (const std::invalid_argument& ia) {
-                G4cout << "Invalid argument when reading maximum energy '" << edist_str(startPos,endPos-startPos) << "' for eFlat." << G4endl
+                G4cout << "Invalid argument when reading maximum energy '" << edist_str.substr(startPos,endPos-startPos) << "' for eFlat." << G4endl
                        << "Got: '" << optarg << "'" << G4endl
                        << "Expected a floating point number! (exponential notation is accepted)" << G4endl;
                 exit(1);
