@@ -309,7 +309,7 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     }
     catch (const std::invalid_argument& ia) {
         G4String errormessage = G4String("Invalid argument when reading pressure\n") +
-                                G4String("Got: '") + pressure_in + G4String("\n") +
+                                G4String("Got: '") + pressure_in + G4String("'\n") +
                                 G4String("Expected a floating point number! (exponential notation is accepted)");
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1004",FatalException,errormessage);
     }

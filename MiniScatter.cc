@@ -402,7 +402,7 @@ int main(int argc,char** argv) {
             size_t startPos = 0;
             size_t endPos   = edist_str.find(':',startPos);
             if (endPos == std::string::npos) {
-                G4cout << " Error while searching for ':' in edist_str = "
+                G4cout << " Error while searching for ':' in edist_str = '"
                        << edist_str << "', did not find?" << G4endl;
                 exit(1);
             }
@@ -950,7 +950,7 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = '"
                    << target_material << "'" << G4endl << G4endl;
 
-            G4cout << "--backgroundMaterial <string>" << G4endl
+            G4cout << " --backgroundMaterial <string>" << G4endl
                    << " \t Background material name" << G4endl
                    << "\t Default/current value = '"
                    << background_material << "'" << G4endl << G4endl;
