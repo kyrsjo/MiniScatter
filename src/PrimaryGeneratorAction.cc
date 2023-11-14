@@ -193,7 +193,7 @@ void PrimaryGeneratorAction::setupCovariance() {
     endPos   = covarianceString.find(":",startPos);
     beta_x   = convertColons(startPos,endPos, "beta");
 
-    if ( G4StrUtil::contains(covarianceString,"::") ) {
+    if ( covarianceString.find("::") != std::string::npos ) {
         startPos = endPos+1;
         endPos   = covarianceString.find(":",startPos);
         alpha_x  = convertColons(startPos,endPos, "alpha");
