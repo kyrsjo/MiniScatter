@@ -262,6 +262,7 @@ void DetectorConstruction::DefineMaterials() {
     StainlessSteelMaterial = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
     WaterMaterial          = man->FindOrBuildMaterial("G4_WATER");
     NaIMaterial            = man->FindOrBuildMaterial("G4_SODIUM_IODIDE");
+    PolyPropyleneMaterial  = man->FindOrBuildMaterial("G4_POLYPROPYLENE");
 
     vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
     airMaterial    = man->FindOrBuildMaterial("G4_AIR");

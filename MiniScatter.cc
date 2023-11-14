@@ -1,7 +1,7 @@
 /* MiniScatter.cc:
  * Helga Holmestad 2015-2019
  * Kyrre Sjobak    2015-
- * Eric Fackelman  2022
+ * Eric Fackelman  2022-
  *
  * This file is part of MiniScatter.
  *
@@ -31,6 +31,7 @@
 
 #include "G4PhysListFactory.hh"
 #include "G4ParallelWorldPhysics.hh"
+#include "EMonlyPhysicsList.hh"
 
 #include "G4Version.hh"
 #include "G4Exception.hh"
@@ -226,7 +227,7 @@ int main(int argc,char** argv) {
 
     while ( (getopt_char = getopt_long(argc,argv, "t:m:d:a:A:w:p:n:e:b:x:z:c:f:o:s:hgqr", long_options, &getopt_idx)) != -1) {
         switch(getopt_char) {
-        case 'h': //Help
+        case 'h': //--help ; Print help
             printHelp(target_thick,
                       target_material,
                       background_material,
@@ -264,11 +265,11 @@ int main(int argc,char** argv) {
             exit(1);
             break;
 
-        case 'g': //Use GUI
+        case 'g': //--gui ; Use the GUI
             useGUI = true;
             break;
 
-        case 't': //Target thickness
+        case 't': //--thick ; Target thickness
             try {
                 target_thick = std::stod(string(optarg));
             }
@@ -280,7 +281,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'd': //Detector distance
+        case 'd': //--dist ; Detector distance(s)
             { //Scope to avoid spilling temp variables
                 detector_distances.clear();
                 std::string detectorString = std::string(optarg);
@@ -312,7 +313,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'a': //Detector angle
+        case 'a': //--angle ; Detector angle
             try {
                 detector_angle = std::stod(string(optarg));
             }
@@ -324,7 +325,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'A': //Target angle
+        case 'A': //--targetAngle ; Target angle
             try {
                 target_angle = std::stod(string(optarg));
             }
@@ -336,7 +337,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'w': //World size
+        case 'w': //--worldsize ; World size
             try {
                 world_size = std::stod(string(optarg));
             }
@@ -348,11 +349,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'p': //Named physics list
+        case 'p': //--phys ; Named physics list
             physListName = G4String(optarg);
             break;
 
-        case 1400: //Physics cutoff distance (--physCutoffDist)
+        case 1400: //--physCutoffDist ; Physics cutoff distance (--physCutoffDist)
             try {
                 physCutoffDist = std::stod(string(optarg));
             }
@@ -364,15 +365,15 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'm': //Target material
+        case 'm': //--mat ; Target material
             target_material = G4String(optarg);
             break;
 
-        case 1600: //Background material
+        case 1600: //--backgroundMaterial ; Background material
             background_material = G4String(optarg);
             break;
 
-        case 'n': //Number of events
+        case 'n': //--numEvents ; Number of events
             try {
                 numEvents = std::stoi(string(optarg));
             }
@@ -384,7 +385,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'e': //beam energy
+        case 'e': //--energy ; The (reference) beam kinetic energy
             try {
                 beam_energy = std::stod(string(optarg));
             }
@@ -396,7 +397,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1300: {//beam energy (flat distribution)
+        case 1300: {//--energyDistFlat ; beam energy (flat distribution)
             std::string edist_str = std::string(optarg);
 
             size_t startPos = 0;
@@ -443,11 +444,11 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'b': //Beam type
+        case 'b': //--beam ; Beam particle type
             beam_type = G4String(optarg);
             break;
 
-        case 'x': //beam offset (x)
+        case 'x': //--xoffset / Beam offset (x)
             try {
                 beam_offset = std::stod(string(optarg));
             }
@@ -459,7 +460,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'z': //beam offset (z)
+        case 'z': //--zoffset ; Beam offset (z)
             if (strlen(optarg) > 0 && optarg[0] == '*') {
                 doBacktrack = true;
             }
@@ -479,7 +480,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1500: //--beamAngle
+        case 1500: //--beamAngle ; Initial angle of beam particles
             try {
                 beam_angle = std::stod(string(optarg));
             }
@@ -491,12 +492,12 @@ int main(int argc,char** argv) {
             }
             break;
         
-        case 'c': // --covar ; Beam covariance matrix from Twiss parameters
+        case 'c': //--covar ; Beam covariance matrix from Twiss parameters
             //-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)
             covarianceString = G4String(optarg);
             break;
 
-        case 1200: // --beamRcut ; Beam radial cutoff [mm]
+        case 1200: //--beamRcut ; Beam radial cutoff [mm]
             try {
                 beam_rCut = std::stod(string(optarg));
             }
@@ -508,23 +509,23 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1700: //  --beamFile ; Input filename to load beam from
+        case 1700: //--beamFile ; Input filename to load beam from
             beam_loadFile = G4String(optarg);
             break;
 
-        case 'f': // --outname ; Output filename
+        case 'f': //--outname ; Output filename
             filename_out = G4String(optarg);
             break;
 
-        case 'o': //Output foldername
+        case 'o': //--outname ; Output foldername
             foldername_out = G4String(optarg);
             break;
 
-        case 'r': //Mini ROOT file
+        case 'r': //--miniroot ; Mini ROOT file
             miniROOTfile = true;
             break;
 
-        case 's': //RNG seed
+        case 's': //--seed ; RNG seed
             try {
                 rngSeed = std::stoi(string(optarg));
             }
@@ -536,15 +537,15 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 'q': // Quick mode (skip most plots)
+        case 'q': //--quickmode ; Quick mode (skip most plots)
             quickmode = true;
             break;
 
-        case 1004: // anaScatterTest
+        case 1004: //--anaScatterTest ; Make analytical plots for scattering
             anaScatterTest = true;
             break;
 
-        case 1000: // Cutoff energy fraction
+        case 1000: //--cutoffEnergyFraction ; Cutoff energy fraction
             try {
                 cutoff_energyFraction = std::stod(string(optarg));
             }
@@ -562,7 +563,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1001: // Cutoff radius [mm]
+        case 1001: //--cutoffRadius ; Cutoff radius [mm]
             try {
                 cutoff_radius = std::stod(string(optarg));
             }
@@ -574,7 +575,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1002: // Z bin width for energy deposit histograms [mm]
+        case 1002: //--edepDZ ; Z bin width for energy deposit histograms [mm]
             try {
                 edep_dens_dz = std::stod(string(optarg));
             }
@@ -586,7 +587,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1003: // Number of bins for the energy 1D histograms
+        case 1003: //--engNbins ; Number of bins for the energy 1D histograms
             if (engNbins != 0) {
                 G4cout << "Can only set engNbins once." << G4endl;
             }
@@ -606,7 +607,7 @@ int main(int argc,char** argv) {
             }
             break;
             
-        case 1005: // Position Histogram Limit change
+        case 1005: //--histPosLim ; Position Histogram Limit change
             try {
                 histPosLim = std::stod(string(optarg));
             }
@@ -618,7 +619,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1006: // Angle Histogram Limit change
+        case 1006: //--histAngLim ; Angle Histogram Limit change
             try {
                 histAngLim = std::stod(string(optarg));
             }
@@ -630,7 +631,7 @@ int main(int argc,char** argv) {
             }
             break;
 
-        case 1100: // Object/Magnet definition
+        case 1100: //--object/--magnet ; Definition of an Object, also known as a Magnet
             magnetDefinitions.push_back(string(optarg));
             break;
         
@@ -713,27 +714,36 @@ int main(int argc,char** argv) {
 
     // Physics
     G4int verbose=0;
-    G4PhysListFactory plFactory;
-    G4VModularPhysicsList* physlist = plFactory.GetReferencePhysList(physListName);
-    if (physlist==NULL) {
-        G4cerr << "Bad physics list!" << G4endl;
-        G4cerr << G4endl;
+    G4VModularPhysicsList* physlist = NULL;
+    if (physListName.substr(0,7) == "EMonly_") {
+      G4String EMlistName = physListName.substr(7,physListName.length()-7);
+      physlist =  new EMonlyPhysicsList(EMlistName);
+    }
+    else {
+        G4PhysListFactory plFactory;
+        physlist = plFactory.GetReferencePhysList(physListName);
+	
+	if (physlist==NULL) {
+            G4cerr << "Bad physics list!" << G4endl;
+	    G4cerr << G4endl;
 
-        G4cerr << "Possiblities:" << G4endl;
-        const std::vector<G4String>& listnames_hadr =  plFactory.AvailablePhysLists();
-        for (auto l : listnames_hadr) {
-            G4cerr << "'" << l << "'" << G4endl;
-        }
-        G4cerr << G4endl;
+	    G4cerr << "Possiblities:" << G4endl;
+	    const std::vector<G4String>& listnames_hadr =  plFactory.AvailablePhysLists();
+	    for (auto l : listnames_hadr) {
+  	        G4cerr << "'" << l << "'" << G4endl;
+	    }
+	    G4cerr << G4endl;
 
-        G4cerr << "EM options:" << G4endl;
-        const std::vector<G4String>& listnames_em =  plFactory.AvailablePhysListsEM();
-        for (auto l : listnames_em) {
-            G4cerr << "'" << l << "'" << G4endl;
-        }
-        G4cerr << G4endl;
+	    G4cerr << "EM options:" << G4endl;
+	    const std::vector<G4String>& listnames_em =  plFactory.AvailablePhysListsEM();
+	    for (auto l : listnames_em) {
+	        G4cerr << "'" << l << "'" << G4endl;
+	    }
+	    G4cerr << G4endl;
 
-        exit(1);
+	    G4String errormessage = "Physics list '" + physListName +"' not found.";
+	    G4Exception("MiniScatter.cc physics list selection", "MSPhysList1000", FatalException, errormessage);
+	}
     }
     physlist->SetVerboseLevel(verbose);
     runManager->SetUserInitialization(physlist);
@@ -941,17 +951,18 @@ void printHelp(G4double target_thick,
 
             G4cout << " --mat/-m <string>" << G4endl
                    << "\t Target material name" << G4endl
-                   << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe',"
-                   << "'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_Galactic', 'G4_AIR',"
-                   << "'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
-                   << "\t Also possible: 'gas::pressure' "
-                   << " where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar',"
-                   << " and pressure is given in mbar (T=300K is assumed)."  << G4endl
+                   << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe'," << G4endl
+                   << "\t                'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_POLYPROPYLENE'" << G4endl
+		   << "\t                'G4_Galactic', 'G4_AIR'," << G4endl
+                   << "\t                'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
+                   << "\t Also possible: 'gas::pressure' " << G4endl
+                   << "\t                where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar'," << G4endl
+                   << "\t                and pressure is given in mbar (T=300K is assumed)."  << G4endl
                    << "\t Default/current value = '"
                    << target_material << "'" << G4endl << G4endl;
 
-            G4cout << " --backgroundMaterial <string>" << G4endl
-                   << " \t Background material name" << G4endl
+            G4cout << "--backgroundMaterial <string>" << G4endl
+                   << "\t The name of the background material (world volume) to use." << G4endl
                    << "\t Default/current value = '"
                    << background_material << "'" << G4endl << G4endl;
 
@@ -985,6 +996,9 @@ void printHelp(G4double target_thick,
 
             G4cout << " --phys/-p <string>" << G4endl
                    << "\t Physics list name" << G4endl
+		   << "\t Run with an invalid value to see options. To disable hadronic physics," << G4endl
+		   << "\t use the \"base\" physics list 'EMonly_' followed by one of the usual EM options ('EMY' etc)," << G4endl
+		   << "\t or 'EM' for the usual default." << G4endl
                    << "\t Default/current value = '"
                    << physListName << "'" << G4endl << G4endl;
 
@@ -1061,13 +1075,14 @@ void printHelp(G4double target_thick,
                    << "\t\t .csv: Comma-separated list with 1 particle per row, fields are" << G4endl
                    << "\t\t       particle_type, x<double, mm>, x' <double,px/pz>, y, y', z, Ekin<double,MeV>" << G4endl
                    << "\t\t       Here the particle_type is specified in the same way as in --beam." << G4endl
+                   << "\t\t       Please see beamFile.csv for an example." << G4endl
                    << "\t Default/current value = \"" << beam_loadFile << "\"" << G4endl << G4endl;
 
             G4cout << " --seed/-s <int>" << G4endl
                    << "\t Set the initial seed, 0->use the clock etc." << G4endl
                    << "\t Default/current value = " << rngSeed << G4endl << G4endl;
 
-            G4cout << " --help/-g" << G4endl
+            G4cout << " --help/-h" << G4endl
                    << "\t Display this help-text and exit." << G4endl << G4endl;
 
             G4cout << " --gui/-g" << G4endl
@@ -1141,6 +1156,7 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'PLASMA1':" << G4endl
                    << "\t     Models a linear-field plasma lens, only vacuum, in a saphire crystal" << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:    Capillary radius (<double> [mm])" << G4endl
                    << "\t     totalAmps: Flag (<True/False>) to interpret the gradient parameter" << G4endl
                    << "\t                as the total current [A] instead of in [T/m]." << G4endl
@@ -1149,6 +1165,7 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'COLLIMATOR1':" << G4endl
                    << "\t     Models a rectangular collimator with a circular hole in the middle along the z-axis, no field." << G4endl
+		   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:    Channel radius   (<double> [mm])" << G4endl
                    << "\t     width:     Absorber width   (<double> [mm])" << G4endl
                    << "\t     height:    Absorber height  (<double> [mm])" << G4endl
@@ -1156,6 +1173,7 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'COLLIMATORRECT':" << G4endl
                    << "\t     Models a rectangular collimator with a rectangular hole in the middle along the z-axis, no field." << G4endl
+		   << "\t     Specific parameters:" << G4endl
                    << "\t     apertureWidth:    Channel width   (<double> [mm]), default: 200 [mm]" << G4endl
                    << "\t     apertureHeight:   Channel height  (<double> [mm]), default:  80 [mm]" << G4endl
                    << "\t     absorberWidth:    Absorber width  (<double> [mm]), default: 250 [mm]" << G4endl
@@ -1164,17 +1182,20 @@ void printHelp(G4double target_thick,
                    << G4endl
                    << "\t   'TARGET':" << G4endl
                    << "\t     Models a rectangular target, no field." << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     width:     Target width (<double> [mm])" << G4endl
                    << "\t     height:    Target height (<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'TARGETR':" << G4endl
                    << "\t     Models a cylindrical target, no field." << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:    Target radius(<double> [mm])" << G4endl
                    << "\t     material:  Target material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'COLLIMATORHV':" << G4endl
                    << "\t     Models two collimating jaws, no field." << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     gap:       Gap between collimator jaws (<double> [mm])" << G4endl
                    << "\t     HV:        Horizontal (H) or vertical (V) collimator ('H'/'V')" << G4endl
                    << "\t     jawThick:  Collimator jaw thickness (i.e. in in gap plane) (<double> [mm])" << G4endl
@@ -1182,14 +1203,17 @@ void printHelp(G4double target_thick,
                    << "\t     material:  Jaw material (similar to -m)" << G4endl
                    << G4endl
                    << "\t   'SHIELDEDSCINTILLATOR':" << G4endl
-                   << "\t     Models a cylindrical scintilling crystal (sensitive) inside a cylindrical shield (not sensitive), no field." << G4endl
-                   << "\t     scintMat:  Scintillator material (similar to -m), defaults to 'G4_SODIUM_IODIDE'" << G4endl
+                   << "\t     Models a cylindrical scintilling crystal (sensitive)" << G4endl
+                   << "\t     inside a cylindrical shield (not sensitive), no field." << G4endl
+                   << "\t     Specific parameters:" << G4endl
+                   << "\t     scintMat:  Scintillator material (similar to -m)," << G4endl
+                   << "\t                defaults to 'G4_SODIUM_IODIDE'" << G4endl
                    << "\t     shieldMat: Shielding material (similar to -m), defaults to 'G4_Pb'" << G4endl
-                   << "\t     rScint:    Scintillator radius (<double> [mm])" << G4endl
-                   << "\t     lScint:    Scintillator length (<double> [mm])" << G4endl
+                   << "\t     rScint:    Scintillator radius   (<double> [mm])" << G4endl
+                   << "\t     lScint:    Scintillator length   (<double> [mm])" << G4endl
                    << "\t     zScint:    Scintillator position (<double> [mm])" << G4endl
-                   << "\t     riShield:  Shield inner radius (<double> [mm])" << G4endl
-                   << "\t     roShield:  Shield outer radius (<double> [mm])" << G4endl
+                   << "\t     riShield:  Shield inner radius   (<double> [mm])" << G4endl
+                   << "\t     roShield:  Shield outer radius   (<double> [mm])" << G4endl
                    << G4endl
                    << "\t   'PBW':" << G4endl
                    << "\t     Models the ESS Proton Beam Window, no field." << G4endl
@@ -1197,14 +1221,15 @@ void printHelp(G4double target_thick,
                    << "\t       which is not the center of the actual window." << G4endl
                    << "\t     Also please note that the standar parameter 'length' should be set to 0," << G4endl
                    << "\t       since it is auto-calculated based on the radius etc." << G4endl
+                   << "\t     Specific parameters:" << G4endl
                    << "\t     radius:     Inner radius of cylinder, >0         (<double> [mm]),    default: 88.0 [mm]" << G4endl
                    << "\t     material:   Target material (similar to -m),                         default: G4_Al" << G4endl
                    << "\t     al1Thick:   Outer thickness of metal window, >0  (<double> [mm]),    default: 1.0  [mm]" << G4endl
                    << "\t     waterThick: Thickness of water channel, >0       (<double> [mm]),    default: 2.0  [mm]" << G4endl
                    << "\t     al2Thick:   Inner thickness of metal window, >0  (<double> [mm]),    default: 1.25 [mm]" << G4endl
                    << "\t     width:      Width of cylinder as seen by PBW, >0 (<double> [mm]),    default: 60.0 [mm]" << G4endl
-                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120  [deg]" << G4endl
-                   << "\t                 arcPhi should be within: 0 <= arcPhi <= 180 [deg]" << G4endl
+                   << "\t     arcPhi:     Arc angle of window section          (<double> [deg]),   default: 120 [deg]" << G4endl
+                   << "\t                 arcPhi should be within: 0 < arcPhi <= 180 [deg]" << G4endl
                    << G4endl;
 
             G4cout << "\t Currently the following magnet setups are specified:" << G4endl;
