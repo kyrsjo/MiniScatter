@@ -715,8 +715,8 @@ int main(int argc,char** argv) {
     // Physics
     G4int verbose=0;
     G4VModularPhysicsList* physlist = NULL;
-    if (physListName(0,7) == "EMonly_") {
-      G4String EMlistName = physListName(7,physListName.length()-7);
+    if (physListName.substr(0,7) == "EMonly_") {
+      G4String EMlistName = physListName.substr(7,physListName.length()-7);
       physlist =  new EMonlyPhysicsList(EMlistName);
     }
     else {
