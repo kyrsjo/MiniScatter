@@ -45,6 +45,7 @@
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
+#include "G4String.hh"
 
 #include "G4Exception.hh"
 
@@ -135,7 +136,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         // No target, only magnets!
         TargetMaterial = NULL;
     }
-    else if (TargetMaterial_in.contains("::")) {
+    else if (G4StrUtil::contains(TargetMaterial_in,"::")) {
         // Gas target
         TargetMaterial = DefineGas(TargetMaterial_in);
     }
@@ -288,20 +289,20 @@ void DetectorConstruction::DefineMaterials() {
 G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     G4cout << G4endl;
 
-    if (not gasMaterialName.contains("::")) {
+    if (not G4StrUtil::contains(gasMaterialName,"::")) {
         G4String errormessage = "No '::' was found in material name '"+gasMaterialName+"'";
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1002",FatalException,errormessage);
     }
 
-    str_size colonPos = gasMaterialName.index("::");
-    str_size pressurePos = colonPos+2;
+    size_t colonPos = gasMaterialName.find("::");
+    size_t pressurePos = colonPos+2;
 
     if (pressurePos >= gasMaterialName.length()) {
         G4String errormessage = "No pressure was found after '::' in material name '"+gasMaterialName+"'";
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1003",FatalException,errormessage);
     }
-    G4String material_in = gasMaterialName(0, colonPos);
-    G4String pressure_in = gasMaterialName(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
+    G4String material_in = gasMaterialName.substr(0, colonPos);
+    G4String pressure_in = gasMaterialName.substr(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
 
     G4double pressure = 0.0;
     try {
@@ -309,7 +310,7 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     }
     catch (const std::invalid_argument& ia) {
         G4String errormessage = G4String("Invalid argument when reading pressure\n") +
-                                G4String("Got: '") + pressure_in + G4String("\n") +
+                                G4String("Got: '") + pressure_in + G4String("'\n") +
                                 G4String("Expected a floating point number! (exponential notation is accepted)");
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1004",FatalException,errormessage);
     }
