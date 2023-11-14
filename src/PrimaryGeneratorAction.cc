@@ -95,8 +95,6 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
             G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1020",FatalException,
                 "Error, user specified a flag which is incompatible with --beamFile.");
         }
-        G4String beam_loadFile_lower = beam_loadFile;
-        beam_loadFile_lower.toLower();
         if (beam_loadFile.rfind(".csv") == (beam_loadFile.length()-4)) {
             beam_loadFile_csv = std::ifstream(beam_loadFile,std::ifstream::in);
             if (!beam_loadFile_csv.good()) {
@@ -187,25 +185,25 @@ void PrimaryGeneratorAction::setupCovariance() {
     G4cout << "Initializing covariance matrices..." << G4endl;
 
     // Convert the string to relevant variables
-    str_size startPos = 0;
-    str_size endPos   = covarianceString.index(":",startPos);
-    epsN_x            = convertColons(startPos,endPos, "epsN");
+    size_t startPos = 0;
+    size_t endPos   = covarianceString.find(":",startPos);
+    epsN_x          = convertColons(startPos,endPos, "epsN");
 
     startPos = endPos+1;
-    endPos   = covarianceString.index(":",startPos);
+    endPos   = covarianceString.find(":",startPos);
     beta_x   = convertColons(startPos,endPos, "beta");
 
-    if ( covarianceString.contains("::") ) {
+    if ( G4StrUtil::contains(covarianceString,"::") ) {
         startPos = endPos+1;
-        endPos   = covarianceString.index(":",startPos);
+        endPos   = covarianceString.find(":",startPos);
         alpha_x  = convertColons(startPos,endPos, "alpha");
 
         startPos = endPos+2;
-        endPos   = covarianceString.index(":",startPos);
+        endPos   = covarianceString.find(":",startPos);
         epsN_y   = convertColons(startPos,endPos, "epsN_y");
 
         startPos = endPos+1;
-        endPos   = covarianceString.index(":",startPos);
+        endPos   = covarianceString.find(":",startPos);
         beta_y   = convertColons(startPos,endPos, "beta_y");
 
         startPos = endPos+1;
@@ -290,12 +288,12 @@ void PrimaryGeneratorAction::setupCovariance() {
 
     G4cout << G4endl;
 }
-G4double PrimaryGeneratorAction::convertColons(str_size startPos, str_size endPos, G4String paramName) {
+G4double PrimaryGeneratorAction::convertColons(size_t startPos, size_t endPos, G4String paramName) {
     if (endPos == std::string::npos) {
         G4String errormessage = "Error while searching for " + paramName + " in '" + covarianceString + "'";
         G4Exception("PrimaryGeneratorAction::convertColons()", "MSPrimaryGenerator2000",FatalException,errormessage);
     }
-    G4String floatString = covarianceString(startPos,endPos-startPos);
+    G4String floatString = covarianceString.substr(startPos,endPos-startPos);
 
     G4double floatData = 0.0;
     try {
@@ -320,16 +318,16 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
     G4ParticleDefinition* particle_ret = NULL;
     if (particleString.compare(0, ION.length(), ION) == 0) {
         // Format: 'ion::Z;A'
-        str_size ionZpos = particleString.index("::")+2;
-        str_size ionApos = particleString.index(";")+1;
+        size_t ionZpos = particleString.find("::")+2;
+        size_t ionApos = particleString.find(";")+1;
         if (ionZpos >= particleString.length() or ionApos >= particleString.length()) {
             G4Exception("PrimaryGeneratorAction::parseParticleName()", "MSPrimaryGenerator3000",FatalException,
                 "Error in parsing ion string; expected format: 'ion::Z;A'");
         }
         G4int ionZ(-1), ionA(-1);
         try {
-            ionZ = std::stoi(particleString(ionZpos,ionApos-ionZpos));
-            ionA = std::stoi(particleString(ionApos,particleString.length()));
+            ionZ = std::stoi(particleString.substr(ionZpos,ionApos-ionZpos));
+            ionA = std::stoi(particleString.substr(ionApos,particleString.length()));
         }
         catch (const std::invalid_argument& ia) {
             G4String errormessage = "Error when extracting ionZ and ionA from string '" + particleString + "'\n"
