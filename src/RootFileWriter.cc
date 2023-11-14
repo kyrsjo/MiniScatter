@@ -102,7 +102,7 @@ void RootFileWriter::initializeRootFile(){
                     foldername_out_full = G4String(cwd) + foldername_out;
                 }
                 else {
-                    foldername_out_full = G4String(cwd) + G4String(1, '/') + foldername_out;
+                    foldername_out_full = G4String(cwd) + G4String("/") + foldername_out;
                 }
 
                 delete[] cwd;

@@ -961,7 +961,7 @@ void printHelp(G4double target_thick,
                    << "\t Default/current value = '"
                    << target_material << "'" << G4endl << G4endl;
 
-            G4cout << "--backgroundMaterial <string>" << G4endl
+            G4cout << " --backgroundMaterial <string>" << G4endl
                    << "\t The name of the background material (world volume) to use." << G4endl
                    << "\t Default/current value = '"
                    << background_material << "'" << G4endl << G4endl;

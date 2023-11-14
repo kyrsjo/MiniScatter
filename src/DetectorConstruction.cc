@@ -136,7 +136,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         // No target, only magnets!
         TargetMaterial = NULL;
     }
-    else if (G4StrUtil::contains(TargetMaterial_in,"::")) {
+    else if (TargetMaterial_in.find("::") != std::string::npos) {
         // Gas target
         TargetMaterial = DefineGas(TargetMaterial_in);
     }
@@ -289,7 +289,7 @@ void DetectorConstruction::DefineMaterials() {
 G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     G4cout << G4endl;
 
-    if (not G4StrUtil::contains(gasMaterialName,"::")) {
+    if (not (gasMaterialName.find("::") != std::string::npos) ) {
         G4String errormessage = "No '::' was found in material name '"+gasMaterialName+"'";
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1002",FatalException,errormessage);
     }
