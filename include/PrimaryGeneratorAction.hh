@@ -34,6 +34,7 @@
 #include "TRandom.h"
 
 #include <fstream>
+#include <string>
 
 class G4ParticleGun;
 class G4Event;
@@ -95,7 +96,7 @@ private:
     // Setup for covariance
     G4bool hasCovariance = false;
     void setupCovariance();
-    G4double convertColons(str_size startPos, str_size endPos, G4String paramName);
+    G4double convertColons(std::string::size_type startPos, std::string::size_type endPos, G4String paramName);
 
     G4String covarianceString; // String defining the covariance matrix via Twiss parameters
     G4double epsN_x;  // Normalized emittance  (x) [um]

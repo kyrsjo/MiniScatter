@@ -45,11 +45,11 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
 
     //Split by '::'
     std::vector<G4String> argList;
-    str_size startPos = 0;
-    str_size endPos = 0;
+    std::string::size_type startPos = 0;
+    std::string::size_type endPos = 0;
     do {
-        endPos   = inputString.index(":",startPos);
-        argList.push_back(inputString(startPos,endPos-startPos));
+        endPos   = inputString.find(":",startPos);
+        argList.push_back(inputString.substr(startPos,endPos-startPos));
         startPos = endPos+1;
     } while (endPos != std::string::npos);
 
@@ -67,12 +67,12 @@ MagnetBase* MagnetBase::MagnetFactory(G4String inputString, DetectorConstruction
     //Type-specific key=val pairs
     std::map<G4String,G4String> keyValPairs;
     for (size_t i = 4; i < argList.size(); i++) {
-        str_size eqPos = argList[i].index("=",0);
+        std::string::size_type eqPos = argList[i].find("=",0);
         if (eqPos == std::string::npos) {
             G4cerr << "Error when parsing key=val pair '" << argList[i] << "', no '=' found!" << G4endl;
             exit(1);
         }
-        keyValPairs[argList[i](0,eqPos)] = argList[i](eqPos+1,std::string::npos);
+        keyValPairs[argList[i].substr(0,eqPos)] = argList[i].substr(eqPos+1,std::string::npos);
     }
 
     //Debug

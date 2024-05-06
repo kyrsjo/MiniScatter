@@ -135,7 +135,7 @@ DetectorConstruction::DetectorConstruction(G4double TargetThickness_in,
         // No target, only magnets!
         TargetMaterial = NULL;
     }
-    else if (TargetMaterial_in.contains("::")) {
+    else if (G4StrUtil::contains(TargetMaterial_in, "::")) {
         // Gas target
         TargetMaterial = DefineGas(TargetMaterial_in);
     }
@@ -287,20 +287,20 @@ void DetectorConstruction::DefineMaterials() {
 G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     G4cout << G4endl;
 
-    if (not gasMaterialName.contains("::")) {
+    if ( not G4StrUtil::contains(gasMaterialName, "::") ) {
         G4String errormessage = "No '::' was found in material name '"+gasMaterialName+"'";
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1002",FatalException,errormessage);
     }
 
-    str_size colonPos = gasMaterialName.index("::");
-    str_size pressurePos = colonPos+2;
+    std::string::size_type colonPos = gasMaterialName.find("::");
+    std::string::size_type pressurePos = colonPos+2;
 
     if (pressurePos >= gasMaterialName.length()) {
         G4String errormessage = "No pressure was found after '::' in material name '"+gasMaterialName+"'";
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1003",FatalException,errormessage);
     }
-    G4String material_in = gasMaterialName(0, colonPos);
-    G4String pressure_in = gasMaterialName(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
+    G4String material_in = gasMaterialName.substr(0, colonPos);
+    G4String pressure_in = gasMaterialName.substr(pressurePos, gasMaterialName.length()-pressurePos);
 
     G4double pressure = 0.0;
     try {
