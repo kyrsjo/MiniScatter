@@ -302,7 +302,7 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1003",FatalException,errormessage);
     }
     G4String material_in = gasMaterialName.substr(0, colonPos);
-    G4String pressure_in = gasMaterialName.substr(pressurePos, gasMaterialName.length()); // Bug, 2nd argument is length not position
+    G4String pressure_in = gasMaterialName.substr(pressurePos, gasMaterialName.length()-pressurePos);
 
     G4double pressure = 0.0;
     try {

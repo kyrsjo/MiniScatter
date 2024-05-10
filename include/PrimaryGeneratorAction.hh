@@ -130,7 +130,7 @@ private:
     G4double beam_energy_max; // [MeV]
 
     G4bool   beam_loadFromFile; // True if we are loading from file
-    G4String beam_loadFile; // Filename or empty
+    G4String beam_loadFile;     // Filename or empty
     std::ifstream beam_loadFile_csv;
 
     //Number of particles that will be generated,
