@@ -93,6 +93,7 @@ private:
     G4Material*        StainlessSteelMaterial = NULL;
     G4Material*        WaterMaterial          = NULL;
     G4Material*        NaIMaterial            = NULL;
+    G4Material*        PolyPropyleneMaterial  = NULL;
 
     G4Material*        SapphireMaterial       = NULL;
 
@@ -106,11 +107,11 @@ private:
     G4Material*        gasAr                  = NULL;
 
     //These are all in G4 units
-    G4double           WorldSizeX;
+    G4double           WorldSizeX; // Full width of world
     G4double           WorldSizeY;
     G4double           WorldSizeZ;
 
-    G4double           TargetSizeX;
+    G4double           TargetSizeX; // Full width of target
     G4double           TargetSizeY;
     G4double           TargetThickness;
 

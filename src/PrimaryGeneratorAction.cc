@@ -95,7 +95,6 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
             G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1020",FatalException,
                 "Error, user specified a flag which is incompatible with --beamFile.");
         }
-        G4String beam_loadFile_lower = G4StrUtil::to_lower_copy(beam_loadFile);
         if (beam_loadFile.rfind(".csv") == (beam_loadFile.length()-4)) {
             beam_loadFile_csv = std::ifstream(beam_loadFile,std::ifstream::in);
             if (!beam_loadFile_csv.good()) {

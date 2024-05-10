@@ -21,6 +21,7 @@
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTable.hh"
 #include "G4IonTable.hh"
+#include "G4String.hh"
 #include "globals.hh"
 
 //System of units defines variables like "s" and "m" in the global scope,
@@ -130,7 +131,7 @@ private:
     G4double beam_energy_max; // [MeV]
 
     G4bool   beam_loadFromFile; // True if we are loading from file
-    G4String beam_loadFile; // Filename or empty
+    G4String beam_loadFile;     // Filename or empty
     std::ifstream beam_loadFile_csv;
 
     //Number of particles that will be generated,

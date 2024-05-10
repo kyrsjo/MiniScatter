@@ -89,15 +89,12 @@ MagnetPLASMA1::MagnetPLASMA1(G4double zPos_in, G4bool doRelPos_in, G4double leng
 void MagnetPLASMA1::Construct() {
 
     if (this->mainLV != NULL) {
-        G4cerr << "Error in MagnetPLASMA1::Construct(): The mainLV has already been constructed?" << G4endl;
-        exit(1);
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnetPlasma1000",FatalException,"Internal error -- The mainLV has already been constructed?");
     }
 
     //Sanity checks on dimensions
     if (cryWidth > detCon->getWorldSizeX() || cryHeight > detCon->getWorldSizeY()) {
-        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
-               << " The absorber is wider than the world volume."  << G4endl;
-        exit(1);
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnetPlasma1001",FatalException,"Internal error -- The crystal is bigger than the world volume.");
     }
 
     this->mainLV = MakeNewMainLV("main", cryWidth,cryHeight);
@@ -114,16 +111,12 @@ void MagnetPLASMA1::Construct() {
     mainLV->SetFieldManager(fieldMgr,true);
 
     if (cryWidth > mainLV_w || cryHeight > mainLV_h) {
-        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
-               << " The crystal is wider than it's allowed envelope "
-               << " including offsets and rotations."  << G4endl;
-        exit(1);
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnetPlasma1002",FatalException,"The crystal is wider than it's allowed envelope, including offsets and rotations.");
+
     }
 
     if (capRadius > cryWidth/2.0 or capRadius > cryHeight/2.0) {
-        G4cerr << "Error in MagnetPLASMA1::Construct():" << G4endl
-               << " The capillary doesn't fit in the crystal!" << G4endl;
-        exit(1);
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnetPlasma1003",FatalException,"The capillary doesn't fit in the crystal!");
     }
 
     //TODO: Insert here a "gas box" that is exactly the same size as the crystal
@@ -140,8 +133,7 @@ void MagnetPLASMA1::Construct() {
 
     sapphireMaterial = G4Material::GetMaterial("Sapphire");
     if (not sapphireMaterial) {
-        G4cerr << "Internal error -- material Sapphire not found in MagnetPLASMA1::Construct()!" << G4endl;
-        exit(1);
+        G4Exception("MagnetPLASMA1::Construct()", "MSDetConMagnetPlasma1004",FatalException,"Internal error -- material Sapphire not found");
     }
     G4LogicalVolume*   crystalLV = new G4LogicalVolume(crystalSolid,sapphireMaterial, magnetName+"_crystalLV");
     G4VPhysicalVolume* crystalPV =

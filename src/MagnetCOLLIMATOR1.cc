@@ -67,23 +67,19 @@ MagnetCOLLIMATOR1::MagnetCOLLIMATOR1(G4double zPos_in, G4bool doRelPos_in, G4dou
 
 void MagnetCOLLIMATOR1::Construct() {
     if (this->mainLV != NULL) {
-        G4cerr << "Error in MagnetCOLLIMATOR1::Construct(): The mainLV has already been constructed?" << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATOR1::Construct()", "MSDetConMagnetCollimator1000",FatalException,"Internal error -- The mainLV has already been constructed?");
     }
 
     //Sanity checks on dimensions
     if (width > detCon->getWorldSizeX() || height > detCon->getWorldSizeY()) {
-        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
-               << " The absorber is wider than the world volume."  << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATOR1::Construct()", "MSDetConMagnetCollimator1001",FatalException,"The absorber is wider than the world volume.");
+
     }
 
     this->mainLV = MakeNewMainLV("main", width,height);
 
     if (radius > width/2.0 or radius > height/2.0) {
-        G4cerr << "Error in MagnetCOLLIMATOR1::Construct():" << G4endl
-               << " The channel doesn't fit in the absorber!" << G4endl;
-        exit(1);
+        G4Exception("MagnetCOLLIMATOR1::Construct()", "MSDetConMagnetCollimator1002",FatalException,"The channel doesn't fit in the absorber!");
     }
 
     // Build the absorber
@@ -97,15 +93,14 @@ void MagnetCOLLIMATOR1::Construct() {
 
     absorberMaterial = G4Material::GetMaterial(absorberMaterialName);
     if (not absorberMaterial){
-        G4cerr << "Error when setting material '"
-               << absorberMaterialName << "' for MagnetCollimator '"
-               << magnetName << "' -- not found!" << G4endl;
+        G4String errormessage = "Error when setting material '" + absorberMaterialName +
+                                "' for MagnetCollimator '" + magnetName + "', it was not found.\n";
+        errormessage += "Valid choices:\n";
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
-        G4cerr << "Valid choices:" << G4endl;
         for (auto mat : *materialTable) {
-            G4cerr << mat->GetName() << G4endl;
+            errormessage += mat->GetName() + "\n";
         }
-        exit(1);
+        G4Exception("MagnetCOLLIMATOR1::Construct()", "MSDetConMagnetCollimator1003",FatalException,errormessage);
     }
 
     G4LogicalVolume*   absorberLV = new G4LogicalVolume(absorberSolid,absorberMaterial, magnetName+"_absorberLV");

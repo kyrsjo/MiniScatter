@@ -256,8 +256,15 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 for scanVarRange_iter in scanVarRange:
                     scanVarRange_safe.append( scanVarRange_iter.encode('ascii') )
 
-            if len(scanVarRange) != len(scanVarRange_loaded) or \
-               not np.all(np.equal(scanVarRange_safe, scanVarRange_loaded)):
+            scanVarRange_sameLen = len(scanVarRange) != len(scanVarRange_loaded)
+            scanVarRange_sameContent = False
+            if scanVarRange_sameLen:
+                scanVarRange_sameContent = True
+                for i in range(len(scanVarRange_safe)):
+                    if scanVarRange_safe[i] != scanVarRange_loaded[i]:
+                        scanVarRange_sameContent = False
+
+            if scanVarRange_sameContent:
                 print ("Scan variable ranges did not match, run with tryLoad=False to recompute.")
                 print ("Now :", scanVarRange)
                 print ("File:", scanVarRange_loaded)
@@ -266,7 +273,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                 #              scanVarRange[i]-scanVarRange_loaded[i], \
                 #            ( scanVarRange[i]-scanVarRange_loaded[i])==0.0)
                 loadFile.close()
-                raise ValueError("ScanVar range did not match with loaded file")
+                raise ValueError("ScanVarRange did not match with loaded file")
 
             print ("Scan variable ranges match, let's load!")
 

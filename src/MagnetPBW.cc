@@ -111,7 +111,7 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     if (arcPhi / deg < 0.0 || arcPhi / deg > 180.0) {
         G4ExceptionDescription errormessage;
         errormessage << "Invalid arc angle for PBW: ArcPhi must be within: 0 <= arcPhi <= 180, but was "
-               << arcPhi / deg << " [deg]" << G4endl; 
+                     << arcPhi / deg << " [deg]" << G4endl; 
         G4Exception("MagnetPBW::Construct()", "MSDetConMagnet1009",FatalException,errormessage);
     }
 
@@ -129,15 +129,16 @@ MagnetPBW::MagnetPBW(G4double zPos_in, G4bool doRelPos_in, G4double length_in, G
     G4cout << "\t al1Thick                = " << al1Thick/mm        << " [mm]"  << G4endl;
     G4cout << "\t waterThick              = " << waterThick/mm      << " [mm]"  << G4endl;
     G4cout << "\t al2Thick                = " << al2Thick/mm        << " [mm]"  << G4endl;
-    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
     G4cout << "\t arcPhi                  = " << arcPhi/deg         << " [deg]" << G4endl;
     G4cout << "\t PBW Width               = " << width/mm           << " [mm]"  << G4endl;
     G4cout << "\t Calculated Values:" << G4endl;
+    G4cout << "\t PBW thickness           = " << thickness/mm       << " [mm]"  << G4endl;
     G4cout << "\t MainLV Height           = " << height/mm          << " [mm]"  << G4endl;
     G4cout << "\t MainLV Length           = " << length/mm          << " [mm]"  << G4endl;
     G4cout << "\t Box Center              = " << boxCenter/mm       << " [mm]"  << G4endl;
     G4cout << "\t The PBW first surface " << G4endl;
-    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm]"  << G4endl;
+    G4cout << "\t    position is shifted by " << -length/mm * 0.5   <<  " [mm] from the given pos [mm]."  << G4endl;
+    G4cout << "\t Note that element length is computed based on radius, thickness, and arcPhi." << G4endl;
 
 }
 
@@ -170,7 +171,7 @@ void MagnetPBW::Construct() {
     if (not targetMaterial){
         G4ExceptionDescription errormessage;
         errormessage << "Error when setting material '"
-               << targetMaterialName << "' for MagnetCollimator '"
+               << targetMaterialName << "' for MagnetPBW '"
                << magnetName << "' -- not found!" << G4endl;
         G4MaterialTable* materialTable = G4Material::GetMaterialTable();
         errormessage << "Valid choices:" << G4endl;

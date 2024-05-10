@@ -45,6 +45,7 @@
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4RunManager.hh"
+#include "G4String.hh"
 
 #include "G4Exception.hh"
 
@@ -261,6 +262,7 @@ void DetectorConstruction::DefineMaterials() {
     StainlessSteelMaterial = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
     WaterMaterial          = man->FindOrBuildMaterial("G4_WATER");
     NaIMaterial            = man->FindOrBuildMaterial("G4_SODIUM_IODIDE");
+    PolyPropyleneMaterial  = man->FindOrBuildMaterial("G4_POLYPROPYLENE");
 
     vacuumMaterial = man->FindOrBuildMaterial("G4_Galactic");
     airMaterial    = man->FindOrBuildMaterial("G4_AIR");
@@ -308,7 +310,7 @@ G4Material* DetectorConstruction::DefineGas(G4String gasMaterialName) {
     }
     catch (const std::invalid_argument& ia) {
         G4String errormessage = G4String("Invalid argument when reading pressure\n") +
-                                G4String("Got: '") + pressure_in + G4String("\n") +
+                                G4String("Got: '") + pressure_in + G4String("'\n") +
                                 G4String("Expected a floating point number! (exponential notation is accepted)");
         G4Exception("DetectorConstruction::DefineGas()", "MSDetCon1004",FatalException,errormessage);
     }
