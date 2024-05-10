@@ -25,6 +25,7 @@
 #include "G4SubtractionSolid.hh"
 
 #include "G4PVPlacement.hh"
+#include "G4TouchableHandle.hh"
 
 #include "TargetSD.hh"
 #include "G4SDManager.hh"
@@ -347,21 +348,8 @@ void FieldBase::SetupTransform() {
             fNavigator->SetWorldVolume(theNavigator->GetWorldVolume());
     }
 
-    //·set·fGlobalToLocal·transform
-    fNavigator->LocateGlobalPointAndSetup(centerPoint,0,false);
-    G4TouchableHistoryHandle touchable = fNavigator->CreateTouchableHistoryHandle();
-    G4int depth = touchable->GetHistoryDepth();
-    G4bool foundVolume = false;
-    for (G4int i = 0; i<depth; ++i) {
-        if(touchable->GetVolume()->GetLogicalVolume() == fieldLV) {
-            foundVolume = true;
-            break;
-        }
-        touchable->MoveUpHistory();
-    }
-    if (not foundVolume) {
-        G4cerr << "Internal error in FieldBase::InitializeTransform(): Could not find the volume!" << G4endl;
-        exit(1);
-    }
+    //Set fGlobalToLocal transform
+    fNavigator->LocateGlobalPointAndSetup(centerPoint,nullptr,false);
+    G4TouchableHandle touchable = fNavigator->CreateTouchableHistoryHandle();
     fGlobalToLocal = touchable->GetHistory()->GetTopTransform();
 }

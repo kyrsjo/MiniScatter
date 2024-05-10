@@ -327,7 +327,7 @@ G4ParticleDefinition* PrimaryGeneratorAction::parseParticleName(G4String particl
         G4int ionZ(-1), ionA(-1);
         try {
             ionZ = std::stoi(particleString.substr(ionZpos,ionApos-ionZpos));
-            ionA = std::stoi(particleString.substr(ionApos,particleString.length()));
+            ionA = std::stoi(particleString.substr(ionApos,particleString.length()-ionApos));
         }
         catch (const std::invalid_argument& ia) {
             G4String errormessage = "Error when extracting ionZ and ionA from string '" + particleString + "'\n"
