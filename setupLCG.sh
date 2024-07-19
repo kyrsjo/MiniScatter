@@ -2,7 +2,7 @@
 # capable of building and running MiniScatter
 # K. Sjobak, 11/02-2019
 
-LCGREL=LCG_100
-LCGPLAT=x86_64-centos7-gcc10-opt
+LCGREL=LCG_106
+LCGPLAT=x86_64-el9-gcc13-opt
 
 source /cvmfs/sft.cern.ch/lcg/views/$LCGREL/$LCGPLAT/setup.sh
