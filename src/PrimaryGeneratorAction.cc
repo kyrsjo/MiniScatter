@@ -148,10 +148,12 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* DC,
             G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1070",FatalException,
                 "Beam angle and covariance matrix cannot be used together.");
         }
+        /*
         if (Rcut != 0.0)  {
             G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1080",FatalException,
                 "Beam angle and Rcut cannot be used together.");
         }
+        */
         if (beam_offset != 0.0) {
             G4Exception("PrimaryGeneratorAction::PrimaryGeneratorAction()", "MSPrimaryGenerator1090",FatalException,
                 "Beam angle and beam offset cannot be used together.");
@@ -428,8 +430,21 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
         yp = 0.0;
 
         z = beam_zpos;
+
+        if (beam_angle != 0.0) {
+            //Note: beam_angle is actually a negative angle wrt. normal rotation matrix def!
+            G4double zTmp = cos(beam_angle/rad)*beam_zpos + sin(beam_angle/rad)*x;
+            G4double xTmp = -sin(beam_angle/rad)*beam_zpos + cos(beam_angle/rad)*x;
+
+            //G4double zpTmp;
+            G4double xpTmp = tan(-beam_angle/rad);
+
+            z = zTmp;
+            x = xTmp;
+            xp = xpTmp;
+        }
     }
-    else if (beam_angle != 0.0) {
+    else if (beam_angle != 0.0 && Rcut == 0.0) {
         x  = -beam_zpos*sin(beam_angle/rad);
         xp = tan(-beam_angle/rad);
 
@@ -515,10 +530,13 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
 
     particleGun->SetParticlePosition(G4ThreeVector(x,y,z));
 
-    //Gives a non-unit vector, however it is normalized by
-    //  SetParticleMomentumDirection, which fixes it.
+    //Normalize like in SetParticleMomentumDirection, so that xp and yp is correct for RootFileWriter.
     //  This works: With beam_angle, it hits (0,0,0) perfectly even at large angles.
-    particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1));
+    G4double tot = xp*xp + yp*yp + 1*1;
+    tot = 1/sqrt(tot);
+    xp *= tot;
+    yp *= tot;
+    particleGun->SetParticleMomentumDirection(G4ThreeVector(xp,yp,1*tot));
 
     if (not beam_loadFromFile) {
         if (beam_energy_min >= 0.0 and beam_energy_max > 0.0) {
