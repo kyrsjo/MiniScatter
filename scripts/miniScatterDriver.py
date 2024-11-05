@@ -20,7 +20,7 @@ along with MiniScatter.  If not, see <https://www.gnu.org/licenses/>.
 import subprocess
 import os
 import ROOT
-import ROOT.TFile, ROOT.TVector
+#import ROOT.TFile, ROOT.TVector
 import datetime
 
 def runScatter(simSetup, quiet=False,allOutput=False, logName=None, onlyCommand=False):
