@@ -65,7 +65,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
         analysis_output = {}
         assert type(detailedAnalysisRoutine_names)==list
         for name in detailedAnalysisRoutine_names:
-            analysis_output[name] = np.zeros_like(scanVarRange,dtype=float)
+            analysis_output[name] = np.zeros(len(scanVarRange),dtype=float)
     else:
         assert detailedAnalysisRoutine_names == None
 
@@ -491,8 +491,8 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                         twiss[det]['x'] = {}
                         twiss[det]['y'] = {}
                         for var in twissVar:
-                            twiss[det]['x'][var] = np.zeros_like(scanVarRange,dtype=float)
-                            twiss[det]['y'][var] = np.zeros_like(scanVarRange,dtype=float)
+                            twiss[det]['x'][var] = np.zeros(len(scanVarRange),dtype=float)
+                            twiss[det]['y'][var] = np.zeros(len(scanVarRange),dtype=float)
                     #Load data from this simulation
                     for xy in ('x','y'):
                         for var in twiss_singleSim[det][xy]:
@@ -504,7 +504,7 @@ def ScanMiniScatter(scanVar,scanVarRange,baseSimSetup, \
                     if not det in numPart:
                         numPart[det] = {}
                         for pdg in PDG_keep:
-                            numPart[det][pdg] = np.zeros_like(scanVarRange,dtype=int)
+                            numPart[det][pdg] = np.zeros(len(scanVarRange),dtype=int)
                     #Load data from this simulation
                     for pdg in numPart_singleSim[det].keys():
                         if pdg in PDG_keep:
