@@ -49,7 +49,7 @@
 #include <iomanip>
 
 #include <unistd.h>
-
+#include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -94,9 +94,6 @@ void RootFileWriter::initializeRootFile(){
             if (foldername_out.c_str()[0] != '/') {
 
 		#ifdef __APPLE__
-		#include <unistd.h>
-		#include <limits.h>
-
 		char cwd[PATH_MAX];
 		if (getcwd(cwd, sizeof(cwd)) == nullptr) {
    		 perror("getcwd failed");
