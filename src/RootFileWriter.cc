@@ -1,3 +1,4 @@
+
 /*
  * This file is part of MiniScatter.
  *
@@ -83,7 +84,7 @@ void RootFileWriter::initializeRootFile(){
     // This will not do recursive folder creation, but it should work.
     // Note: no guarantees that some other part of the code won't drink all your beer, this is untested...
     #if not ( defined(unix) || defined(__unix__) || defined(__unix) )
-    #error Only UNIX is supported.
+    // #error Only UNIX is supported.
     #endif
     if(stat(foldername_out.c_str(), &stat_info) != 0) {
         if (errno == ENOENT) {
@@ -92,11 +93,25 @@ void RootFileWriter::initializeRootFile(){
             G4String foldername_out_full;
             if (foldername_out.c_str()[0] != '/') {
 
-                char* cwd = get_current_dir_name();
+		#ifdef __APPLE__
+		#include <unistd.h>
+		#include <limits.h>
+
+		char cwd[PATH_MAX];
+		if (getcwd(cwd, sizeof(cwd)) == nullptr) {
+   		 perror("getcwd failed");
+		}
+
+		#else
+		char* cwd = get_current_dir_name();
+		//#endif
+
+                //char* cwd = get_current_dir_name();
                 if (cwd == NULL) {
                     G4String errormessage = "Error getting the current path";
                     G4Exception("RootFileWriter::initializeRootFile()", "MSRootFile1001",FatalException,errormessage);
                 }
+		#endif
 
                 if (cwd[strlen(cwd)-1] == '/') {
                     foldername_out_full = G4String(cwd) + foldername_out;
@@ -104,8 +119,10 @@ void RootFileWriter::initializeRootFile(){
                 else {
                     foldername_out_full = G4String(cwd) + G4String("/") + foldername_out;
                 }
-
+		
+		#ifndef __APPLE__
                 delete[] cwd;
+		#endif
 
                 G4cout << "Converted relative path '" << foldername_out << "' to absolute path '" 
                        << foldername_out_full << "'." << G4endl;
