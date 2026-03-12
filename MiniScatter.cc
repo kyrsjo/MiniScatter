@@ -954,7 +954,7 @@ void printHelp(G4double target_thick,
                    << "\t Valid choices: 'G4_Al', 'G4_Au','G4_C', 'G4_Cu', 'G4_Pb', 'G4_Ti', 'G4_Si', 'G4_W', 'G4_U', 'G4_Fe'," << G4endl
                    << "\t                'G4_MYLAR', 'G4_KAPTON', 'G4_STAINLESS-STEEL', 'G4_WATER', 'G4_SODIUM_IODIDE', 'G4_POLYPROPYLENE'" << G4endl
 		   << "\t                'G4_Galactic', 'G4_AIR'," << G4endl
-                   << "\t                'Sapphire', 'ChromoxPure', 'ChromoxScreen'." << G4endl
+                   << "\t                'Sapphire', 'Diamond', 'ChromoxPure', 'ChromoxScreen'." << G4endl
                    << "\t Also possible: 'gas::pressure' " << G4endl
                    << "\t                where 'gas' is 'H_2', 'He', 'N_2', 'Ne', or 'Ar'," << G4endl
                    << "\t                and pressure is given in mbar (T=300K is assumed)."  << G4endl
@@ -1050,7 +1050,7 @@ void printHelp(G4double target_thick,
                    << "\t Angles with absolute value >= 90 degrees are not accepted." << G4endl
                    << "\t Currently not compatible with --xoffset, --covar, --beamRcut, or backtracking from * in --zoffset." << G4endl
                    << "\t Note that the absolute value of --zoffset (which is generally negative)" << G4endl
-                   << "\t will mean the distance from x=y=z=0 to the starting point."
+                   << "\t will mean the distance from x=y=z=0 to the starting point." << G4endl
                    << "\t Default/current value = " << beam_angle << G4endl << G4endl;
 
             G4cout << " --covar/-c epsN[um]:beta[m]:alpha(::epsN_Y[um]:betaY[m]:alphaY)" << G4endl
