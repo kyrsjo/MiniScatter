@@ -247,7 +247,7 @@ void DetectorConstruction::DefineMaterials() {
     man->SetVerbose(1);
 
     AlMaterial = man->FindOrBuildMaterial("G4_Al");
-    CuMaterial = man->FindOrBuildMaterial("G4_C");
+    CMaterial  = man->FindOrBuildMaterial("G4_C");
     CuMaterial = man->FindOrBuildMaterial("G4_Cu");
     PbMaterial = man->FindOrBuildMaterial("G4_Pb");
     TiMaterial = man->FindOrBuildMaterial("G4_Ti");
@@ -272,6 +272,8 @@ void DetectorConstruction::DefineMaterials() {
     SapphireMaterial = new G4Material("Sapphire", 4.0*g/cm3, 2);
     SapphireMaterial->AddElement(elAl, 2);
     SapphireMaterial->AddElement(elO,  3);
+
+    G4Material* DiamondMaterial = new G4Material("Diamond", 6, 12.01*g/mole, 3.515*g/cm3);
 
     G4Element* elCr = new G4Element("Chromium", "Cr", 24.0, 51.9961*g/mole);
     ChromoxMaterial = new G4Material("ChromoxPure",5.22*g/cm3,2);
