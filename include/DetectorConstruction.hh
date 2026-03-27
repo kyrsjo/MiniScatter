@@ -99,6 +99,8 @@ private:
 
     G4Material*        DiamondMaterial        = NULL;
 
+    G4Material*        Si3N4Material          = NULL;
+
     G4Material*        ChromoxMaterial        = NULL;
     G4Material*        ChromoxScreenMaterial  = NULL;
 

@@ -273,12 +273,21 @@ void DetectorConstruction::DefineMaterials() {
     SapphireMaterial->AddElement(elAl, 2);
     SapphireMaterial->AddElement(elO,  3);
 
-    G4Material* DiamondMaterial = new G4Material("Diamond", 6, 12.01*g/mole, 3.515*g/cm3);
+    //G4Material* DiamondMaterial = new G4Material("Diamond", 6, 12.01*g/mole, 3.515*g/cm3);
+    DiamondMaterial = new G4Material("Diamond", 6, 12.01*g/mole, 3.515*g/cm3);
 
     G4Element* elCr = new G4Element("Chromium", "Cr", 24.0, 51.9961*g/mole);
     ChromoxMaterial = new G4Material("ChromoxPure",5.22*g/cm3,2);
     ChromoxMaterial->AddElement(elCr,2);
     ChromoxMaterial->AddElement(elO,3);
+
+    G4Element* elSi = man->FindOrBuildElement("Si");
+    G4Element* elN  = man->FindOrBuildElement("N");
+
+    Si3N4Material = new G4Material("Si3N4", 3.17*g/cm3, 2);
+    Si3N4Material->AddElement(elSi, 3);
+    Si3N4Material->AddElement(elN, 4);
+
 
     // Chromox parameters from https://www.advatech-uk.co.uk/chromox.html
     ChromoxScreenMaterial = new G4Material("ChromoxScreen", 3.85*g/cm3,2);
