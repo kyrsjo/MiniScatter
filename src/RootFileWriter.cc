@@ -325,6 +325,7 @@ void RootFileWriter::initializeRootFile(){
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
         target_exit_phasespaceXY->GetXaxis()->SetTitle("Position x [mm]");
         target_exit_phasespaceXY->GetYaxis()->SetTitle("Position y [mm]");
+
         target_exit_phasespaceXY_cutoff = new TH2D("target_exit_cutoff_xy",
 						   "Target exit phase space (x,y) (charged, energy > Ecut, r < Rcut)",
 						   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
@@ -465,7 +466,7 @@ void RootFileWriter::initializeRootFile(){
             PDG.second->GetXaxis()->SetTitle("X [mm]");
             PDG.second->GetYaxis()->SetTitle("X' [rad]");
         }
-	
+
         tracker_phasespaceY_cutoff_PDG.back()[11]  = new TH2D((trackerName+"_cutoff_y_PDG11").c_str(),
                                                                   (trackerName+" phase space (y) (electrons, energy > Ecut, r < Rcut)").c_str(),
                                                                   1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
@@ -567,6 +568,7 @@ void RootFileWriter::initializeRootFile(){
     //init_phasespaceX->Sumw2();
     init_phasespaceX->GetXaxis()->SetTitle("X [mm]");
     init_phasespaceX->GetYaxis()->SetTitle("X' [rad]");
+
     init_phasespaceY   =
         new TH2D("init_y",
                  "Initial phase space (y)",
@@ -575,16 +577,21 @@ void RootFileWriter::initializeRootFile(){
     //init_phasespaceY->Sumw2();
     init_phasespaceY->GetXaxis()->SetTitle("Y [mm]");
     init_phasespaceY->GetYaxis()->SetTitle("Y' [rad]");
+
     init_phasespaceXY   =
         new TH2D("init_xy",
                  "Initial phase space (x,y)",
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm,
                  1000, -phasespacehist_posLim/mm,phasespacehist_posLim/mm);
+    init_phasespaceXY->GetXaxis()->SetTitle("X [mm]");
+    init_phasespaceXY->GetYaxis()->SetTitle("Y [mm]");
+
     init_E =
         new TH1D("init_E",
                  "Initial particle energy",
                  1000, 0.0, max(beamEnergy*1.1,genAct->get_beam_energy_flatMax()));
     init_E->GetXaxis()->SetTitle("Energy [MeV]");
+    init_E->GetYaxis()->SetTitle("counts/bin");
 
     // Target R position
     if (detCon->GetHasTarget()) {
@@ -605,6 +612,7 @@ void RootFileWriter::initializeRootFile(){
                                         1000,0,minR);
         for (auto hist : target_exit_Rpos) {
             hist.second->GetXaxis()->SetTitle("R [mm]");
+            hist.second->GetYaxis()->SetTitle("counts/bin");
         }
         target_exit_Rpos_cutoff[11]  = new TH1D("target_exit_rpos_cutoff_PDG11",
                                                 "target exit rpos (electrons, energy > E_cut)",
@@ -623,6 +631,7 @@ void RootFileWriter::initializeRootFile(){
                                                 1000,0,minR);
         for (auto hist : target_exit_Rpos_cutoff) {
             hist.second->GetXaxis()->SetTitle("R [mm]");
+            hist.second->GetYaxis()->SetTitle("counts/bin");
         }
     }
 
@@ -660,9 +669,9 @@ void RootFileWriter::initializeRootFile(){
                                               100,-phasespacehist_posLim/mm, phasespacehist_posLim/mm,
                                               100,-phasespacehist_posLim/mm, phasespacehist_posLim/mm,
                                               mag_edep_nbins_dz, 0.0, mag->GetLength()/mm);
-                mag_edep_dens->GetXaxis()->SetTitle("X position [mm]");
-                mag_edep_dens->GetYaxis()->SetTitle("Y position [mm]");
-                mag_edep_dens->GetZaxis()->SetTitle("Z position [mm]");
+                mag_edep_dens->GetXaxis()->SetTitle("X [mm]");
+                mag_edep_dens->GetYaxis()->SetTitle("Y [mm]");
+                mag_edep_dens->GetZaxis()->SetTitle("Z [mm]");
             
                 magnet_edep_dens.push_back(mag_edep_dens);
             }
@@ -675,8 +684,8 @@ void RootFileWriter::initializeRootFile(){
                                             mag_edep_nbins_dz, 0.0, mag->GetLength()/mm,
                                             1000, 0.0, 2*phasespacehist_posLim / mm );
 
-            mag_edep_rdens->GetXaxis()->SetTitle("Z position [mm]");
-            mag_edep_rdens->GetYaxis()->SetTitle("R position [mm]");
+            mag_edep_rdens->GetXaxis()->SetTitle("Z [mm]");
+            mag_edep_rdens->GetYaxis()->SetTitle("R [mm]");
 
             magnet_edep_rdens.push_back(mag_edep_rdens);
         }
